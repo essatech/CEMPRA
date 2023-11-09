@@ -1,0 +1,41 @@
+Parameters,Name,Value
+Number of life stages,Nstage,5
+Adult capacity,k,
+Spawn events per female,events,1
+Eggs per female spawn,eps,3000
+spawning interval,int,1
+egg survival,SE,1
+yoy survival,S0,1
+sex ratio,SR,0.5
+Hatchling Survival,surv_1,0.9
+Juvenile Survival,surv_2,0.9
+Sub-adult Survival,surv_3,0.9
+Adult Survival,surv_4,0.9
+Adult Survival,surv_5,0.9
+Years as hatchling,year_1,1
+years as juvenile,year_2,1
+years as subadult,year_3,1
+years as adult,year_4,1
+years as adult,year_5,1
+egg survival compensation ratio,cr_E,1
+yoy survival compensation ratio,cr_0,1
+hatchling survival compensation ratio,cr_1,1
+juvenile survival compensation ratio,cr_2,1
+subadult survival compensation ratio,cr_3,1
+adult survival compensation ratio,cr_4,1
+adult survival compensation ratio,cr_5,1
+maturity as hatchling,mat_1,0
+maturity as juvenile,mat_2,0
+maturity as subadult,mat_3,0
+maturity as adult,mat_4,1
+maturity as adult,mat_5,1
+variance in eggs per female,eps_sd,1.00E+01
+correlation in egg fecundity through time,egg_rho,0.00E+00
+coefficient of variation in stage-specific mortality,M.cv,0.00E+00
+correlation in mortality through time,M.rho,0.00E+00
+hockey stick DD,dd_hs_0,1.00E+00
+BH DD 1,bh_stage_1,0.00E+00
+BH DD 2,bh_stage_2,0.00E+00
+BH DD 3,bh_stage_3,0
+BH DD 4,bh_stage_4,0
+BH DD 5,bh_stage_5,0

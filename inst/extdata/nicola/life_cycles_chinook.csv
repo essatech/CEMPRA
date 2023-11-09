@@ -1,0 +1,43 @@
+Parameters,Name,Value,SD,Note
+Number of life stages,Nstage,5,,Source Spromber and Meador 2006 Ecological Modelling
+Adult capacity,k,10000000000,,
+Spawn events per female,events,1,,
+Eggs per female spawn,eps,5400,473,"5400; UofW course 5,122"
+spawning interval,int,1,,
+Egg and fry transition until the end of the first fall,SE,0.1,,UofW course 63.5%
+Part of SE (set S0 to 1.0),S0,0.99,,DD Freshwater density-dependent survival density of smolts capped at 1031 smolts/km of stream
+sex ratio,SR,0.5,,
+,surv_1,0.061,,UofW SAR 2.38
+,surv_2,0.4925,,
+,surv_3,0.5328,,
+,surv_4,0.3744,,
+,surv_5,0,,
+,year_1,1,,
+,year_2,1,,
+,year_3,1,,
+,year_4,1,,
+,year_5,1,,
+,cr_E,1,,
+,cr_0,1,,
+,cr_1,1,,
+,cr_2,1,,
+,cr_3,1,,
+,cr_4,1,,
+,cr_5,1,,
+,mat_1,0,,
+,mat_2,0,,
+,mat_3,0.07,,From Beechie 2021
+,mat_4,0.35,,From Beechie 2022
+,mat_5,0.85,,From Beechie 2023
+variance in eggs per female,eps_sd,500,,
+correlation in egg fecundity through time,egg_rho,0,,
+coefficient of variation in stage-specific mortality,M.cv,0.1,,
+correlation in mortality through time,M.rho,0.2,,"We included a temporal autocorrelation of 0.6 from the previous year to reflect the long-term trends observed in ocean survival due to large-scale climatic events like the El Nino Southern Oscillation and Paci ˜ fic Decadal Oscillation (Bradford et al.
+2005). The ocean survival rate was then split for each brood year between the six months of ocean survival in Year 2 (?oceY2)
+and 12 months in the ocean of Year 3 (?oceY3)"
+hockey stick DD,dd_hs_0,1,,
+,bh_stage_1,1,,
+,bh_stage_2,0,,
+,bh_stage_3,0,,
+,bh_stage_4,0,,
+,bh_stage_5,1,,

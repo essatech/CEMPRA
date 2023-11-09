@@ -1,0 +1,244 @@
+---
+title: "5. BC CEF Data Import"
+output: rmarkdown::html_vignette
+date: '`r Sys.Date()`'
+vignette: >
+  %\VignetteIndexEntry{5. BC CEF Data Import}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+# browseVignettes()
+```
+
+## Import data from the BC-CEF Assessment Units
+
+This example was developed to transform data outputs from the BC Provincial Cumulative Effects Framework into a stressor-magnitude and stressor-response file that can be readily imported into the Joe Model. The BCCEF is centered around risk and hazard potential for assessment units with readily available GIS metrics such as road density, total landcover alternation and various natural vulnerability indicators. By integrating the BCCEF with the Joe Model, we can adjust the risk level benchmarks as stressor-response curves to modify assumptions for variables of interest.
+
+BC CEF: Cumulative Effects Framework
+https://www2.gov.bc.ca/gov/content/environment/natural-resource-stewardship/cumulative-effects-framework
+
+BC CEF: Data Portal (download data here)
+https://experience.arcgis.com/experience/3aed6c004103495c85252051931a1b29/
+
+To begin navigate to the BC CEF and area of interest. Launch the ERSI application and download the data for an area of interest. The downloaded file should be available as a gdb (file geodatabase). The following blocks of code will convert the data into a format compatible with the Joe Model.
+
+```{r m0, message=FALSE, warning=FALSE, eval=FALSE}
+# Install the CEMPRA (first-time users)
+# devtools::install_github("essatech/CEMPRA")
+library(CEMPRA)
+
+# Use the sf library and dplyr
+library(sf); library(dplyr)
+
+# Update the path to your geodatabase file
+path_to_gdb <- "C:/Users/mattj/Downloads/NicolaWSs.gdb"
+# Load the data
+bccef <- st_read(path_to_gdb, layer = "NicolaWSs")
+
+# Ensure this looks right for your areas of interest
+plot(st_geometry(bccef))
+
+# Review the attribute
+colnames(bccef)[1:10]
+
+```
+
+
+## Isolate target variables of interest
+
+The BC CEF dataset contains numerous indicators, vulnerability metrics, precursor variables and informational attributes. It’s best to isolate a target list of meaningful stressor magnitude variables (or proxies) that you will bring forward into the Joe Model as stressors.
+
+In this example we will isolate our assessment to the following variables from the BC CEF framework for aquatic ecosystems:
+
+```{r m1, message=FALSE, warning=FALSE, eval=FALSE}
+
+# Ensure this looks right for your areas of interest
+plot(st_geometry(bccef))
+
+# Review the attribute
+colnames(bccef)[1:10]
+
+# Remove any duplicate ID object
+bccef <- bccef[!(duplicated(bccef$ASSESS_UNI_NUM)), ]
+bccef <- bccef[!(bccef$ASSESS_UNI_NAME == "Nicola Watershed"), ]
+bccef <- bccef[bccef$AU_AREA_HA < 30000, ]
+
+
+# Need to cut smaller polygons out of larger polygons
+plot(st_geometry(bccef), col = "grey")
+plot(st_geometry(bccef))
+
+# ECA_PERCENT
+head(bccef)
+summary(bccef$ECA_PERCENT)
+
+var1 <- conversion_bc_cef(
+  data = bccef,
+  Stressor = "ECA_PERCENT",
+  Function = "continuous",
+  Units = "%",
+  Low_Limit = 0,
+  Up_Limit = 50,
+  value_vector = rev(c(0, 10, 15, 20, 30, 50)),
+  msc_vector = rev(c(100, 90, 80, 60, 40, 0))
+)
+
+summary(bccef$RUNOFF_GEN_POT_SUM)
+boxplot(bccef$RUNOFF_GEN_POT_SUM ~ bccef$RUNOFF_GEN_POT_RATING)
+var2 <- conversion_bc_cef(
+  data = bccef,
+  Stressor = "RUNOFF_GEN_POT_SUM",
+  Function = "continuous",
+  Units = "",
+  Low_Limit = 4,
+  Up_Limit = 6,
+  value_vector = c(6, 5, 4),
+  msc_vector = c(30, 50, 100)
+)
+var2$stressor_response$sr_data
+
+
+summary(bccef$RUNOFF_ATTENUATION_SUM)
+boxplot(bccef$RUNOFF_ATTENUATION_SUM ~ bccef$RUNOFF_ATTENUATION_RATING)
+var3 <- conversion_bc_cef(
+  data = bccef,
+  Stressor = "RUNOFF_ATTENUATION_SUM",
+  Function = "continuous",
+  Units = "",
+  Low_Limit = 2,
+  Up_Limit = 5,
+  value_vector = c(2, 3, 4, 5),
+  msc_vector = c(40, 60, 80, 100)
+)
+var3$stressor_response$sr_data
+
+
+summary(bccef$HYDROLOGIC_RESP_POT_SUM)
+boxplot(bccef$HYDROLOGIC_RESP_POT_SUM ~ bccef$HYDROLOGIC_RESP_POT_RATING)
+var4 <- conversion_bc_cef(
+  data = bccef,
+  Stressor = "HYDROLOGIC_RESP_POT_SUM",
+  Function = "continuous",
+  Units = "",
+  Low_Limit = 6,
+  Up_Limit = 9,
+  value_vector = c(9, 8, 7, 6),
+  msc_vector = c(40, 60, 80, 100)
+)
+var4$stressor_response$sr_data
+
+
+summary(bccef$STREAMFLOW_HAZARD_SUM)
+boxplot(bccef$STREAMFLOW_HAZARD_SUM ~ bccef$STREAMFLOW_HAZARD_RATING)
+var5 <- conversion_bc_cef(
+  data = bccef,
+  Stressor = "STREAMFLOW_HAZARD_SUM",
+  Function = "continuous",
+  Units = "",
+  Low_Limit = 2,
+  Up_Limit = 6,
+  value_vector = c(6, 5, 4, 3, 2),
+  msc_vector = c(20, 40, 60, 80, 100)
+)
+var5$stressor_response$sr_data
+
+
+summary(bccef$SEDIMENT_GEN_DELIV_POT_SUM)
+boxplot(bccef$SEDIMENT_GEN_DELIV_POT_SUM ~ bccef$SEDIMENT_GEN_DELIV_POT_RATING)
+var6 <- conversion_bc_cef(
+  data = bccef,
+  Stressor = "SEDIMENT_GEN_DELIV_POT_SUM",
+  Function = "continuous",
+  Units = "",
+  Low_Limit = 3,
+  Up_Limit = 6,
+  value_vector = c(9, 8, 7, 6),
+  msc_vector = c(40, 60, 80, 100)
+)
+var6$stressor_response$sr_data
+
+table(bccef$SEDIMENT_HAZARD_RATING)
+bccef$shr <- 1
+bccef$shr <- ifelse(bccef$SEDIMENT_HAZARD_RATING == "H", 4, bccef$shr)
+bccef$shr <- ifelse(bccef$SEDIMENT_HAZARD_RATING == "M", 3, bccef$shr)
+bccef$shr <- ifelse(bccef$SEDIMENT_HAZARD_RATING == "L", 2, bccef$shr)
+boxplot(bccef$shr ~ bccef$SEDIMENT_HAZARD_RATING)
+bccef$SEDIMENT_HAZARD_RATING <- bccef$shr
+var7 <- conversion_bc_cef(
+  data = bccef,
+  Stressor = "SEDIMENT_HAZARD_RATING",
+  Function = "continuous",
+  Units = "",
+  Low_Limit = 1,
+  Up_Limit = 4,
+  value_vector = c(4, 3, 2, 1),
+  msc_vector = c(40, 60, 80, 100)
+)
+var7$stressor_response$sr_data
+
+
+summary(bccef$RIPARIAN_LANDUSE_SUM)
+boxplot(bccef$RIPARIAN_LANDUSE_SUM ~ bccef$RIPARIAN_HAZARD_RATING)
+var8 <- conversion_bc_cef(
+  data = bccef,
+  Stressor = "RIPARIAN_LANDUSE_SUM",
+  Function = "continuous",
+  Units = "",
+  Low_Limit = 3,
+  Up_Limit = 7,
+  value_vector = c(3, 4, 5, 6, 7),
+  msc_vector = c(20, 40, 60, 80, 100)
+)
+var8$stressor_response$sr_data
+
+```
+
+## Compile objects together and export files
+
+
+```{r m2, message=FALSE, warning=FALSE, eval=FALSE}
+
+all <- list(var1, var2, var3, 
+            var4, var5, var6,
+            var7, var8)
+
+sm_dat <- list()
+sr_main <- list()
+sr_dat <- list()
+sheet_names <- c()
+
+for(i in 1:length(all)) {
+  
+  this_set <- all[[i]]
+  sm_dat[[i]] <- this_set$stressor_magnitude
+  sr_main[[i]] <- this_set$stressor_response$sr_main
+  sr_dat[[i]] <- this_set$stressor_response$sr_data
+  sheet_names <- c(sheet_names, this_set$stressor_response$sr_name)
+
+}
+
+sm_dat <- do.call("rbind", sm_dat)
+sr_main <- do.call("rbind", sr_main)
+
+sr_out <- append(list(sr_main), sr_dat)
+names(sr_out) <- c("Main", sheet_names)
+
+writexl::write_xlsx(sm_dat, path = "stressor_magnitude.xlsx")
+writexl::write_xlsx(sr_out, path = "stressor_response.xlsx")
+
+
+# Export geometry
+bccef_geom <- bccef[, c("ASSESS_UNI_NUM", "ASSESS_UNI_NAME")]
+colnames(bccef_geom) <- c("HUC_ID", "NAME", "Shape")
+sf::st_write(bccef_geom, dsn = "watersheds.gpkg", delete_dsn = TRUE)
+
+
+```
+
+
