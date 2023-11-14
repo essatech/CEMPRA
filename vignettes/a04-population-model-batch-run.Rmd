@@ -106,3 +106,81 @@ library(ggplot2)
             strip.text = element_text(size = 8))
 ```
 
+
+# Location and life stage-specific BH capacities
+Run an Example with BH carrying capacities
+
+
+```{r m99}
+    
+# Load the stress-response workbook
+    filename_sr <- system.file("extdata", "./species_profiles/stressor_response_coho.xlsx", package = "CEMPRA")
+    stressor_response <- StressorResponseWorkbook(filename = filename_sr)
+    
+    # Load the stress-magnitude workbook
+    filename_rm <- system.file("extdata", "./species_profiles/stressor_magnitude_coho.xlsx", package = "CEMPRA")
+    stressor_magnitude <- StressorMagnitudeWorkbook(filename = filename_rm)
+
+    # Load the life cycle parameters
+    filename_lc <- system.file("extdata", "./species_profiles/life_cycles_coho_nicola.csv", package = "CEMPRA")
+    life_cycle_params <- read.csv(filename_lc)
+    
+    # Location and life stage-specific BH capacities
+    filename_dd <- system.file("extdata", "./species_profiles/habitat_dd_k_coho.xlsx", package = "CEMPRA")
+    habitat_dd_k <- readxl::read_excel(filename_dd)
+
+```
+
+Look at the location specific carrying capacity data
+
+```{r m767}
+head(habitat_dd_k)
+```
+
+Run the population model again
+
+```{r m5fd}
+    
+  data <- PopulationModel_Run(
+        dose = stressor_magnitude,
+        sr_wb_dat = stressor_response,
+        life_cycle_params = life_cycle_params,
+        HUC_ID = 1,
+        n_years = 150,
+        MC_sims = 5,
+        output_type = "adults",
+        habitat_dd_k = habitat_dd_k
+    )
+
+    # Review output
+    head(data, 3)
+
+    # Look the median adult abundance
+    
+    # with stressor variables (cumulative effects)
+    median(data$N[which(data$group == "ce")], na.rm = TRUE)
+    
+    # and without stressor variables (baseline status quo)
+    median(data$N[which(data$group == "baseline")], na.rm = TRUE)
+
+```
+
+Plot out the results again for each scenario
+
+```{r mjhh}
+    library(ggplot2)
+
+    ggplot(data, aes(x = year, y = N, color = group)) +
+        stat_smooth(method="loess", span=0.1, se=TRUE, aes(fill = group), alpha=0.3) +
+        theme_bw() +
+        theme(
+            legend.position = "bottom",
+            legend.title = element_blank(),
+            legend.text = element_text(size = 8),
+            legend.key = element_blank(),
+            axis.text.x = element_text(angle = 90, hjust = 1, size = 8),
+            axis.text.y = element_text(size = 8),
+            #axis.title.x = element_blank(),
+            #axis.title.y = element_blank(),
+            strip.text = element_text(size = 8))
+```
