@@ -6,21 +6,26 @@
 The Cumulative Effects Model for Prioritizing Recovery Actions (CEMPRA) is a cumulative effects modelling framework. The CEMPRA tool uses a series of standardized stressor-response functions to link environmental attributes to the system capacity and productivity of a target species/system. This framework design is as generalizable, simple, and versatile as possible so that users can apply the model to various geographic regions, contexts, systems, and species. As the name suggests, the CEMPRA tool helps prioritize recovery actions for data-limited species and species-at-risk, with the flexibility to  accommodate both data-rich and data-poor study systems. The CEMPRA tool is accessible as an open-source R package (https://github.com/essatech/CEMPRA) and R Shiny interactive web application (https://github.com/essatech/CEMPRAShiny).
 
 
-* [R-Package Tutorials](https://essatech.github.io/CEMPRA/index.html)
-* [GitHUB Repository download](https://essatech.github.io/CEMPRA/index.html)
+## Project Components
+
+-   GitHub Repository for R-Package (<https://github.com/essatech/CEMPRA>)
+-   GitHub Repository for R-Shiny Application (<https://github.com/essatech/CEMPRAShiny>)
+-   LIVE (online R-Shiny Application) (<https://essa.shinyapps.io/CEMPRAShiny/>)
+-   R-Package Tutorials (<https://essatech.github.io/CEMPRA/index.html>)
+-   Guidance Document: (<https://mattjbayly.github.io/CEMPRA_documentation/>)
 
 
-**[Shiny App Tutorial Video](https://youtu.be/Cp3UdWlkaKU)** [access the tool](https://essa.shinyapps.io/CEMPRAShiny)
+**[Shiny App Tutorial Video](https://youtu.be/Ln9EYi_NVPo)** [access the tool](https://essa.shinyapps.io/CEMPRAShiny)
 
-[![Tutorial Video](./man/figures/shiny_app_cover.png)](https://youtu.be/Cp3UdWlkaKU)
+[![Tutorial Video](./man/figures/shiny_app_cover.png)](https://youtu.be/Ln9EYi_NVPo)
 
 
 ## Package Contributors:
 This is a broad collaboration between Fisheries and Oceans Canada (DFO), B.C. Ministry of Environment and Climate Change Strategy (ECCS), Alberta Environment and Parks (AEP), and Simon Fraser University (SFU). 
 
 Contributors include:
--   [Matthew Bayly](https://github.com/mattjbayly): Core application development.
--   Alexandra Tekatch: Core application development.
+-   [Matthew Bayly](https://github.com/mattjbayly): MJBA, Core application development.
+-   Alexandra Tekatch: ESSA, Core application development.
 -   [Jordan Rosenfeld](http://www.aferu.ca/rosenfeld-lab): Project design and coordination; ECCS Aquatic Ecologist
 -   [Lauren Jarvis](https://github.com/andrewpaul68): Collaborator; AEP Research Scientist
 -   [Andrew Paul](https://github.com/andrewpaul68): Collaborator; AEP Research Scientist
@@ -34,13 +39,6 @@ Contributors include:
 -   Julian Heavyside
 
 
-## Features
-- Run custom implementations of the CEMPRA/Joe Model on non-standard data formats.
-- Batch-run the integrated CEMPRA (Joe Model + Population model) across large datasets.
-- Run sensitivity tests.
-- Explore model extensions.
-
-
 ## Installation
 
 The easiest way to install the `CEMPRA` package is from within the [RStudio IDE](https://www.rstudio.com/products/rstudio/download/) using `remotes::install_github()`. At this time the package has not been published to CRAN so the default `install.packages()` will not work. Instead use remotes (or devtools) to install the packge directly from GitHub:
@@ -51,10 +49,10 @@ remotes::install_github("essatech/CEMPRA")
 ```
 
 ## Usage
-There are several vignettes available that provide detailed guidance for `CEMPRA` usage and common workflows. See articles availabe on the main [CEMPRA project page](https://essatech.github.io/CEMPRA/index.html):
+There are several vignettes available that provide detailed guidance for `CEMPRA` usage and common workflows. See articles availabe in the guidance document [CEMPRA project page](https://mattjbayly.github.io/CEMPRA_documentation/):
 
-- [Tutorial 1: Joe Model Overview](https://essatech.github.io/CEMPRA/articles/joe-model.html)
-- [Tutorial 2: Population Model Overview](https://essatech.github.io/CEMPRA/articles/population-model.html)
+- [Setup and installation](https://mattjbayly.github.io/CEMPRA_documentation/04_initial_setup.html)
+- [Data inputs](https://mattjbayly.github.io/CEMPRA_documentation/05_data_inputs.html)
 
 ## Code of Conduct
 

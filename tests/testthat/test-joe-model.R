@@ -95,4 +95,31 @@ test_that("Joe Model Setup", {
   # expect 0.08
   expect_true(round(mcheck, 2) == 0.08)
 
+
+  # ----------------------------------------------------------
+  # Load and test FREP dataset
+  # Import of stressor response and magnitude workbook
+  filename_rm <- system.file("extdata", "./frep/FREP_Stressor_Magnitude.xlsx", package = "CEMPRA")
+  filename_sr <- system.file("extdata", "./frep/FREP_Stressor_Response.xlsx", package = "CEMPRA")
+  dose <- StressorMagnitudeWorkbook(filename = filename_rm)
+  sr_wb_dat <- StressorResponseWorkbook(filename = filename_sr)
+  # Run the Basic Joe Model
+  nsims <- 5
+  jmr <- JoeModel_Run(dose = dose, sr_wb_dat = sr_wb_dat, MC_sims = nsims)
+
+  # Check for realistic values in run
+  expect_true(mean(jmr$ce.df$CE) > 0)
+  expect_true(mean(jmr$ce.df$CE) < 1)
+  expect_true(mean(jmr$sc.dose.df$sys.cap, na.rm = TRUE) > 0)
+  expect_true(mean(jmr$sc.dose.df$sys.cap, na.rm = TRUE) < 1)
+
+  jmr <- JoeModel_Run(dose = dose[dose$HUC_ID == 168976, ], sr_wb_dat = sr_wb_dat, MC_sims = nsims, adult_sys_cap = FALSE)
+
+  # Check for realistic values in run
+  expect_true(round(mean(jmr$ce.df$CE), 3) == 0)
+  expect_true(mean(jmr$sc.dose.df$sys.cap, na.rm = TRUE) > 0)
+  expect_true(mean(jmr$sc.dose.df$sys.cap, na.rm = TRUE) < 1)
+
+
+
 })

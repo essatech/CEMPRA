@@ -1,10 +1,11 @@
 Package: CEMPRA
 Type: Package
-Title: Joe Model for Cumulative Effects
+Title: Cumulative Effects Model for Prioritizing Recovery Actions (CEMPRA)
 Version: 0.1.0
-Author: Andrew Paul, Kyle Wilson, Matthew Bayly 
+Date: 2023-11-10
+Author: Matthew Bayly, Kyle Wilson, Andrew Paul, Jordan Rosenfeld, and others 
 Maintainer: Matthew Bayly <mbayly@essa.com>
-Description: Joe Model cumulative effect tool with population modelling extension for evaluating stressor levels and risk to cumulative system capacity.
+Description: Cumulative Effects Model for Prioritizing Recovery Actions (CEMPRA)
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

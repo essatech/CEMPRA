@@ -115,7 +115,8 @@ ce.func <- function(df) {
   # NOTE - Total mortality is addressed prior to calculation of system capacity
   # Calculate the product across all cumulative effects
   # accounting for interactions
-  ce.df <- data.frame(CE = prod(c(sys.cap.no.int, sys.cap.min, sys.cap.max)))
+  # MJB fix Nov 9 2023: prod() returns NA if any of the values are NA
+  ce.df <- data.frame(CE = prod(c(sys.cap.no.int, sys.cap.min, sys.cap.max), na.rm = TRUE))
 
   return(ce.df)
 }

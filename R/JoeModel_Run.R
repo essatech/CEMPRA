@@ -164,9 +164,18 @@ JoeModel_Run <- function(dose = NA,
 
   for (i in 1:length(hucs)) {
     for (j in 1:length(stressors)) {
+
       # find combination of HUC and stressor in the dose table
       pnt.dose <- intersect(grep(hucs[i], dose$HUC_ID),
                             grep(stressors[j], dose$Stressor))
+
+      # MJB fix (Nov 12, 2023) - older AEP code uses grep(...)
+      # - older AEP code uses grep(...)
+      # which is problematic - some stressors may share same prefix
+      # e.g., road density; road density H60..
+      if(length(pnt.dose) > 1) {
+        pnt.dose <- which(dose$HUC_ID == hucs[j] & dose$Stressor == stressors[j])
+      }
 
       # If nothing set - assume system capacity is 100%
       if (length(pnt.dose) == 0) {
@@ -178,6 +187,14 @@ JoeModel_Run <- function(dose = NA,
 
       # find stressor in main.sheet for relationship
       pnt.curv <- grep(stressors[j], main.sheet$Stressors)
+
+      # MJB fix (Nov 12, 2023) - older AEP code uses grep(...)
+      # which is problematic - some stressors may share same prefix
+      # e.g., road density; road density H60..
+      if(length(pnt.curv) > 1) {
+        pnt.curv <- which(main.sheet$Stressors == stressors[j])
+      }
+
 
       # call system capacity function for each stressor
       temp.list <- SystemCapacity(
@@ -195,6 +212,8 @@ JoeModel_Run <- function(dose = NA,
       # The next dose array stores doses as a list and includes
       # the individual additive doses (i.e., mortality doses)
       dose.values.list[i, j][[1]] <- temp.list$dose.mat
+
+
     }
     # end j
   }
