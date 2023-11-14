@@ -75,18 +75,18 @@
 
     
     
-<div class="section level2">
-<h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
-</h2>
+<div class="section level3">
+<h3 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
+</h3>
 <p>Run the population model in batch mode. The population model in run
 separately for each spatial unit and each scenario. This helper function
 providers a wrapper to quickly explore alternative scenarios. Users may
 change the population vital rates, environmental parameters (stressors)
 or stressor-response curves between each batch model run.</p>
 </div>
-<div class="section level2">
-<h2 id="load-input-data">Load Input Data<a class="anchor" aria-label="anchor" href="#load-input-data"></a>
-</h2>
+<div class="section level3">
+<h3 id="load-input-data">Load Input Data<a class="anchor" aria-label="anchor" href="#load-input-data"></a>
+</h3>
 <p>In this example we will load the stressor-response, stressor
 magnitude file and life cycles file. The polygon geometry is not needed
 to run the population model. Reset <code>filename_</code> to point to a
@@ -106,9 +106,9 @@ local file on your computer.</p>
 <span>    <span class="va">filename_lc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"life_cycles.csv"</span>, package <span class="op">=</span> <span class="st">"CEMPRA"</span><span class="op">)</span></span>
 <span>    <span class="va">life_cycle_params</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="va">filename_lc</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="choose-a-target-spatial-unit">Choose a Target Spatial Unit<a class="anchor" aria-label="anchor" href="#choose-a-target-spatial-unit"></a>
-</h2>
+<div class="section level3">
+<h3 id="choose-a-target-spatial-unit">Choose a Target Spatial Unit<a class="anchor" aria-label="anchor" href="#choose-a-target-spatial-unit"></a>
+</h3>
 <p>The <code>PopulationModel_Run</code> run function runs the population
 model for spatial units (e.g., watershed) individually. If users wish to
 run the population model for all watersheds, they can simply wrap
@@ -120,9 +120,9 @@ need to be tweaked between the various watershed subunits.</p>
 <span><span class="co"># In this example just use the first watershed</span></span>
 <span><span class="va">HUC_ID</span> <span class="op">&lt;-</span> <span class="va">dose</span><span class="op">$</span><span class="va">HUC_ID</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="run-the-population-model">Run the Population Model<a class="anchor" aria-label="anchor" href="#run-the-population-model"></a>
-</h2>
+<div class="section level3">
+<h3 id="run-the-population-model">Run the Population Model<a class="anchor" aria-label="anchor" href="#run-the-population-model"></a>
+</h3>
 <p>Next, we can run the population model for a number of years
 <code>n_years</code> and batch replicates <code>MC_sims</code>.
 <code>dose</code> is the stressor-magnitude data object,
@@ -163,23 +163,23 @@ variables “ce” or baseline reference conditions “baseline”.</p>
 <span>    <span class="co"># Review output</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">data</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   year        N MC_sim group</span></span>
-<span><span class="co">#&gt; 1    0 162.6673      1    ce</span></span>
-<span><span class="co">#&gt; 2    1 143.6845      1    ce</span></span>
-<span><span class="co">#&gt; 3    2 132.3861      1    ce</span></span>
+<span><span class="co">#&gt; 1    0 84.34276      1    ce</span></span>
+<span><span class="co">#&gt; 2    1 86.27280      1    ce</span></span>
+<span><span class="co">#&gt; 3    2 84.98696      1    ce</span></span>
 <span></span>
 <span>    <span class="co"># Look the median adult abundance</span></span>
 <span>    </span>
 <span>    <span class="co"># with stressor variables (cumulative effects)</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">N</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">group</span> <span class="op">==</span> <span class="st">"ce"</span><span class="op">)</span><span class="op">]</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 99.18901</span></span>
+<span><span class="co">#&gt; [1] 94.56709</span></span>
 <span>    </span>
 <span>    <span class="co"># and without stressor variables (baseline status quo)</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">N</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">group</span> <span class="op">==</span> <span class="st">"baseline"</span><span class="op">)</span><span class="op">]</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 98.69169</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 96.91005</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="visualize-the-time-series-projections">Visualize the Time Series Projections<a class="anchor" aria-label="anchor" href="#visualize-the-time-series-projections"></a>
-</h2>
+<div class="section level3">
+<h3 id="visualize-the-time-series-projections">Visualize the Time Series Projections<a class="anchor" aria-label="anchor" href="#visualize-the-time-series-projections"></a>
+</h3>
 <p>Simple plots can be included to visualize trends</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
@@ -199,6 +199,86 @@ variables “ce” or baseline reference conditions “baseline”.</p>
 <span>            strip.text <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">8</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; `geom_smooth()` using formula = 'y ~ x'</span></span></code></pre></div>
 <p><img src="a04-population-model-batch-run_files/figure-html/m3-1.png" width="700"></p>
+</div>
+<div class="section level2">
+<h2 id="location-and-life-stage-specific-bh-capacities">Location and life stage-specific BH capacities<a class="anchor" aria-label="anchor" href="#location-and-life-stage-specific-bh-capacities"></a>
+</h2>
+<p>Run an Example with BH carrying capacities</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span>    </span>
+<span><span class="co"># Load the stress-response workbook</span></span>
+<span>    <span class="va">filename_sr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"./species_profiles/stressor_response_coho.xlsx"</span>, package <span class="op">=</span> <span class="st">"CEMPRA"</span><span class="op">)</span></span>
+<span>    <span class="va">stressor_response</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StressorResponseWorkbook.html">StressorResponseWorkbook</a></span><span class="op">(</span>filename <span class="op">=</span> <span class="va">filename_sr</span><span class="op">)</span></span>
+<span>    </span>
+<span>    <span class="co"># Load the stress-magnitude workbook</span></span>
+<span>    <span class="va">filename_rm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"./species_profiles/stressor_magnitude_coho.xlsx"</span>, package <span class="op">=</span> <span class="st">"CEMPRA"</span><span class="op">)</span></span>
+<span>    <span class="va">stressor_magnitude</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StressorMagnitudeWorkbook.html">StressorMagnitudeWorkbook</a></span><span class="op">(</span>filename <span class="op">=</span> <span class="va">filename_rm</span><span class="op">)</span></span>
+<span></span>
+<span>    <span class="co"># Load the life cycle parameters</span></span>
+<span>    <span class="va">filename_lc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"./species_profiles/life_cycles_coho_nicola.csv"</span>, package <span class="op">=</span> <span class="st">"CEMPRA"</span><span class="op">)</span></span>
+<span>    <span class="va">life_cycle_params</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="va">filename_lc</span><span class="op">)</span></span>
+<span>    </span>
+<span>    <span class="co"># Location and life stage-specific BH capacities</span></span>
+<span>    <span class="va">filename_dd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"./species_profiles/habitat_dd_k_coho.xlsx"</span>, package <span class="op">=</span> <span class="st">"CEMPRA"</span><span class="op">)</span></span>
+<span>    <span class="va">habitat_dd_k</span> <span class="op">&lt;-</span> <span class="fu">readxl</span><span class="fu">::</span><span class="fu"><a href="https://readxl.tidyverse.org/reference/read_excel.html" class="external-link">read_excel</a></span><span class="op">(</span><span class="va">filename_dd</span><span class="op">)</span></span></code></pre></div>
+<p>Look at the location specific carrying capacity data</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">habitat_dd_k</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 11</span></span></span>
+<span><span class="co">#&gt;   HUC_ID NAME  k_stage_0_mean k_stage_1_mean k_stage_2_mean k_stage_3_mean</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>      1 <span style="color: #BB0000;">NA</span>    <span style="color: #BB0000;">NA</span>                   10<span style="text-decoration: underline;">000</span>000 <span style="color: #BB0000;">NA</span>                       <span style="text-decoration: underline;">1</span>000</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 5 more variables: k_stage_0_cv &lt;lgl&gt;, k_stage_1_cv &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   k_stage_2_cv &lt;lgl&gt;, k_stage_3_cv &lt;dbl&gt;, notes &lt;lgl&gt;</span></span></span></code></pre></div>
+<p>Run the population model again</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span>    </span>
+<span>  <span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/PopulationModel_Run.html">PopulationModel_Run</a></span><span class="op">(</span></span>
+<span>        dose <span class="op">=</span> <span class="va">stressor_magnitude</span>,</span>
+<span>        sr_wb_dat <span class="op">=</span> <span class="va">stressor_response</span>,</span>
+<span>        life_cycle_params <span class="op">=</span> <span class="va">life_cycle_params</span>,</span>
+<span>        HUC_ID <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>        n_years <span class="op">=</span> <span class="fl">150</span>,</span>
+<span>        MC_sims <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>        output_type <span class="op">=</span> <span class="st">"adults"</span>,</span>
+<span>        habitat_dd_k <span class="op">=</span> <span class="va">habitat_dd_k</span></span>
+<span>    <span class="op">)</span></span>
+<span></span>
+<span>    <span class="co"># Review output</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">data</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   year          N MC_sim group</span></span>
+<span><span class="co">#&gt; 1    0   1153.581      1    ce</span></span>
+<span><span class="co">#&gt; 2    1   9641.748      1    ce</span></span>
+<span><span class="co">#&gt; 3    2 332015.073      1    ce</span></span>
+<span></span>
+<span>    <span class="co"># Look the median adult abundance</span></span>
+<span>    </span>
+<span>    <span class="co"># with stressor variables (cumulative effects)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">N</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">group</span> <span class="op">==</span> <span class="st">"ce"</span><span class="op">)</span><span class="op">]</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 183422.7</span></span>
+<span>    </span>
+<span>    <span class="co"># and without stressor variables (baseline status quo)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">N</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">group</span> <span class="op">==</span> <span class="st">"baseline"</span><span class="op">)</span><span class="op">]</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 269136.9</span></span></code></pre></div>
+<p>Plot out the results again for each scenario</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span>    <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">data</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">year</span>, y <span class="op">=</span> <span class="va">N</span>, color <span class="op">=</span> <span class="va">group</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>        <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html" class="external-link">stat_smooth</a></span><span class="op">(</span>method<span class="op">=</span><span class="st">"loess"</span>, span<span class="op">=</span><span class="fl">0.1</span>, se<span class="op">=</span><span class="cn">TRUE</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">group</span><span class="op">)</span>, alpha<span class="op">=</span><span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span></span>
+<span>        <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>        <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
+<span>            legend.position <span class="op">=</span> <span class="st">"bottom"</span>,</span>
+<span>            legend.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>            legend.text <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">8</span><span class="op">)</span>,</span>
+<span>            legend.key <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>            axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>angle <span class="op">=</span> <span class="fl">90</span>, hjust <span class="op">=</span> <span class="fl">1</span>, size <span class="op">=</span> <span class="fl">8</span><span class="op">)</span>,</span>
+<span>            axis.text.y <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">8</span><span class="op">)</span>,</span>
+<span>            <span class="co">#axis.title.x = element_blank(),</span></span>
+<span>            <span class="co">#axis.title.y = element_blank(),</span></span>
+<span>            strip.text <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">8</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; `geom_smooth()` using formula = 'y ~ x'</span></span></code></pre></div>
+<p><img src="a04-population-model-batch-run_files/figure-html/mjhh-1.png" width="700"></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>
