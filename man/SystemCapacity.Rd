@@ -9,7 +9,8 @@ SystemCapacity(
   f.main.df,
   f.stressor.df,
   f.mean.resp.list,
-  n.sims = 100
+  n.sims = 100,
+  socioeconomic_inputs = NULL
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ SystemCapacity(
 \item{f.mean.resp.list}{Response function list for target variable returned from \code{mean_Response()}.}
 
 \item{n.sims}{Number of simulations to generate. Defaults t0 100.}
+
+\item{socioeconomic_inputs}{(Optional) list object of SE inputs.}
 }
 \description{
 Calculates the system capacity for each stressor.

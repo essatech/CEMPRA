@@ -9,7 +9,8 @@ JoeModel_Run(
   sr_wb_dat = NA,
   MC_sims = 100,
   stressors = NA,
-  adult_sys_cap = TRUE
+  adult_sys_cap = TRUE,
+  socioeconomic_inputs = NULL
 )
 }
 \arguments{
@@ -21,7 +22,9 @@ JoeModel_Run(
 
 \item{stressors}{(optional) character vector of stressor names to include in the Joe Model. Leave the default value as NA if you wish to include all stressors applicable to the adult life stage or provide a character vector of stressors if you only want to run the model on a subset of the stressors.}
 
-\item{adult_sys_cap}{Should the Joe Model be run only with variables identified for adult system capacity.
+\item{adult_sys_cap}{Should the Joe Model be run only with variables identified for adult system capacity.}
+
+\item{socioeconomic_inputs}{(optional) list object. Socioeconomic inputs returned from SocioEconomicWorkbook().
 
 set number of Monte Carlo simulations for the Joe model.}
 }
@@ -30,7 +33,7 @@ Runs the Joe Model.
 }
 \details{
 Runs the Joe Model for cumulative system capacity
-across stressors and watersheds. Note that only stressors with the applicable to the 'adult' Life_stages from the 'main_sheet' of the Stressor Response workbook are included in the Joe Model
+across stressors and watersheds. Note that only stressors with the applicable to the 'adult' Life_stages from the 'main_sheet' of the Stressor Response workbook are included in the Joe Model. socioeconomic_inputs can be optionally supplied to run the Joe Model with socioeconomic inputs reductions.
 }
 \examples{
 \dontrun{

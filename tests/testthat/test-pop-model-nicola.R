@@ -52,7 +52,7 @@ test_that("test-pop-model-nicola", {
       # years to run simulation
       p.cat = 0,      # Probability of catastrophe
       CE_df = NULL,
-      stage_k_override = c(NA, 238053, NA, NA, NA, NA),
+      stage_k_override = c(NA, 238053, NA, NA, NA),
       bh_dd_stages = c("bh_stage_1")
     )
 

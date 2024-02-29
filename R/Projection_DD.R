@@ -321,7 +321,6 @@ Projection_DD <- function(M.mx = NA,
     }
 
 
-
     # MJB (new): Allow for stage-specific DD effects
     # using Beverton-Holt functions
     if (is.null(bh_dd_stages) == FALSE) {

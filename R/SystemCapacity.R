@@ -9,14 +9,17 @@
 #' @param f.stressor.df Dose response data frame returned from `StressorResponseWorkbook()$sr_dat` for target stressor.
 #' @param f.mean.resp.list Response function list for target variable returned from `mean_Response()`.
 #' @param n.sims Number of simulations to generate. Defaults t0 100.
+#' @param socioeconomic_inputs (Optional) list object of SE inputs.
 #'
 #' @export
 SystemCapacity <- function(f.dose.df,
                            f.main.df,
                            f.stressor.df,
                            f.mean.resp.list,
-                           n.sims = 100) {
+                           n.sims = 100,
+                           socioeconomic_inputs = NULL) {
 
+  id <- stressor_reductions <- NULL
 
   # rtlnorm copied from TruncatedDistributions
   td_rtlnorm <- function (n,
@@ -95,12 +98,37 @@ SystemCapacity <- function(f.dose.df,
   }
   # end i loop for doses
 
+
   # Combine multiple stressors across rows into a single dose vector
   # multiple stressors must be proportions (ie, conditional mortalities)
   rnd.dose <- 1 - apply(rnd.dose.mat, 2, function(x) {
     prod(1 - x)
   })
 
+
+  # --------------------------------------------
+  # Apply socioeconomic modifiers to stressors
+  # --------------------------------------------
+  if (!(is.null(socioeconomic_inputs))) {
+    rdcts <- socioeconomic_inputs$stressor_reductions
+    rdcts <- rdcts[rdcts$linked_stressor == f.main.df$Stressors &
+                     rdcts$id == f.dose.df$ID, ]
+    # summarize if more than one restoration action targeting stressor
+    rdcts <-
+      suppressMessages({
+        rdcts %>% dplyr::group_by(id, replicate) %>% dplyr::summarize(reduction = sum(stressor_reductions))
+      })
+    rdcts <- as.data.frame(rdcts)
+    if (length(f.main.df$Stressors) != 1 |
+        length(f.dose.df$ID) != 1) {
+      stop("Unexpected case... TODO handle")
+    }
+    if(nrow(rdcts) == length(rnd.dose)) {
+      # Modify dose based on change in values from restoration
+      # use addition as the modifier
+      rnd.dose <- rnd.dose + rdcts$reduction
+    }
+  } # end of socio-economic modifiers
 
 
   # Constrain dose to be >= smallest dose and <= largest dose

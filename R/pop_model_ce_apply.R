@@ -19,6 +19,7 @@
 pop_model_ce_apply <- function(dat = NA, CE_df = NA, alevin_stage = NA, all_juv = NA, fry_stages = NA, fry_parr_stages = NA, parr_stages = NA, subadult_stages = NA, adult_stages = NA) {
 
   if (!is.null(CE_df)) {
+
         CE_cap <- CE_df[CE_df$parameter == "capacity", ]
         CE_surv <- CE_df[CE_df$parameter == "survival", ]
         CE_fecund <- CE_df[CE_df$parameter == "fecundity", ]

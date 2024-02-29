@@ -3,13 +3,14 @@
 #' @description Runs the Joe Model.
 #'
 #' @details Runs the Joe Model for cumulative system capacity
-#' across stressors and watersheds. Note that only stressors with the applicable to the 'adult' Life_stages from the 'main_sheet' of the Stressor Response workbook are included in the Joe Model
+#' across stressors and watersheds. Note that only stressors with the applicable to the 'adult' Life_stages from the 'main_sheet' of the Stressor Response workbook are included in the Joe Model. socioeconomic_inputs can be optionally supplied to run the Joe Model with socioeconomic inputs reductions.
 #'
 #' @param dose dataframe. Stressor magnitude file exported from StressorMagnitudeWorkbook().
 #' @param sr_wb_dat list object. Stressor response workbook returned from StressorResponseWorkbook().
 #' @param MC_sims numeric. set number of Monte Carlo simulations for the Joe Model.
 #' @param stressors (optional) character vector of stressor names to include in the Joe Model. Leave the default value as NA if you wish to include all stressors applicable to the adult life stage or provide a character vector of stressors if you only want to run the model on a subset of the stressors.
 #' @param adult_sys_cap Should the Joe Model be run only with variables identified for adult system capacity.
+#' @param socioeconomic_inputs (optional) list object. Socioeconomic inputs returned from SocioEconomicWorkbook().
 #'
 #'   set number of Monte Carlo simulations for the Joe model.
 #' @importFrom rlang .data
@@ -43,7 +44,8 @@ JoeModel_Run <- function(dose = NA,
                          sr_wb_dat = NA,
                          MC_sims = 100,
                          stressors = NA,
-                         adult_sys_cap = TRUE) {
+                         adult_sys_cap = TRUE,
+                         socioeconomic_inputs = NULL) {
 
   # Define variables in function as null
   .data <- HUC <- simulation <- NULL
@@ -159,8 +161,36 @@ JoeModel_Run <- function(dose = NA,
                                     length(stressors)))
 
 
+  # ---------------------------------------------------------------
+  # (optional) Run the socioeconomic model for each of the MC_sims
+  if (!is.null(socioeconomic_inputs)) {
+    se_costs <- list()
+    se_sr_reductions <- list()
+    se_counter <- 1
 
+    while(se_counter < (MC_sims + 1)) {
+      socioeconomic_inputs <- SocioEconomicRun(socioeconomic_inputs)
+      sub1 <- socioeconomic_inputs$cost_summary[, c("action", "id", "total_cost")]
+      sub1$replicate <- se_counter
+      se_costs[[se_counter]] <- sub1
+      sub2 <- socioeconomic_inputs$stressor_reductions[, c("action", "id", "linked_stressor", "stressor_reductions")]
+      sub2$replicate <- se_counter
+      se_sr_reductions[[se_counter]] <- sub2
+      se_counter <- se_counter + 1
+    }
+    se_costs <- do.call("rbind", se_costs)
+    se_sr_reductions <- do.call("rbind", se_sr_reductions)
+
+    # Override with batch outputs
+    socioeconomic_inputs$cost_summary <- se_costs
+    socioeconomic_inputs$stressor_reductions <- se_sr_reductions
+
+  } # end of socio-economic setup
+
+
+  # ---------------------------------------------------------------
   # Loop through HUCs and stressors
+  # Apply stressor-response functions across locations
 
   for (i in 1:length(hucs)) {
     for (j in 1:length(stressors)) {
@@ -202,7 +232,8 @@ JoeModel_Run <- function(dose = NA,
         f.main.df = main.sheet[pnt.curv,],
         f.stressor.df = stressor.list[[stressors[j]]],
         f.mean.resp.list = mean.resp.list[[pnt.curv]],
-        n.sims = MC_sims
+        n.sims = MC_sims,
+        socioeconomic_inputs = socioeconomic_inputs
       )
 
       # assign system capacity for each stressor to array.
@@ -243,20 +274,20 @@ JoeModel_Run <- function(dose = NA,
   sc.df <-
     dplyr::rename(
       sc.df,
-      HUC = .data$Var1,
-      Stressor = .data$Var2,
-      simulation = .data$Var3,
-      sys.cap = .data$value
+      HUC = "Var1",
+      Stressor = "Var2",
+      simulation = "Var3",
+      sys.cap = "value"
     )
 
   # do same for dose values
   dose.df <-
     dplyr::rename(
       dose.df,
-      HUC = .data$Var1,
-      Stressor = .data$Var2,
-      simulation = .data$Var3,
-      dose = .data$value
+      HUC = "Var1",
+      Stressor = "Var2",
+      simulation = "Var3",
+      dose = "value"
     )
 
   # combine SC and dose dataframes (this df is used for output so make global)
@@ -325,11 +356,19 @@ JoeModel_Run <- function(dose = NA,
 
 
 
-
   # Build return object
   return_list <- list()
   return_list$ce.df <- ce.df
   return_list$sc.dose.df <- sc.dose.df
+
+
+  # Include socioeconomic inputs if they exist
+  if (!is.null(socioeconomic_inputs)) {
+    return_list$socioeconomic_inputs <- socioeconomic_inputs
+  }
+
+
+
 
   return(return_list)
 }

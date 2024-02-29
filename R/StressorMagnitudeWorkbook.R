@@ -25,6 +25,11 @@ StressorMagnitudeWorkbook <- function(filename = NA, scenario_worksheet = NA) {
   # Round values to two decimal places
   data$Mean <- round(data$Mean, 2)
 
+  # Allow ID column to by any name
+  if(!("HUC_ID" %in% colnames(data))) {
+    data$HUC_ID <- as.matrix(data[, 1])[, 1]
+  }
+
   # Ensure that there are no duplicates
   dups <- paste0(data$HUC_ID, data$Stressor)
 

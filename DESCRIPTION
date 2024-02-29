@@ -5,7 +5,7 @@ Version: 0.1.0
 Date: 2023-11-10
 Author: Matthew Bayly, Kyle Wilson, Andrew Paul, Jordan Rosenfeld, and others 
 Maintainer: Matthew Bayly <mbayly@essa.com>
-Description: Cumulative Effects Model for Prioritizing Recovery Actions (CEMPRA)
+Description: Cumulative Effects Model for Prioritizing Recovery Actions.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
