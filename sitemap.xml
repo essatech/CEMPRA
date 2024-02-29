@@ -7,9 +7,6 @@
     <loc>https://essatech.github.io/CEMPRA/LICENSE-text.html</loc>
   </url>
   <url>
-    <loc>https://essatech.github.io/CEMPRA/LICENSE.html</loc>
-  </url>
-  <url>
     <loc>https://essatech.github.io/CEMPRA/articles/a01-joe-model.html</loc>
   </url>
   <url>
@@ -53,6 +50,12 @@
   </url>
   <url>
     <loc>https://essatech.github.io/CEMPRA/reference/Projection_DD.html</loc>
+  </url>
+  <url>
+    <loc>https://essatech.github.io/CEMPRA/reference/SocioEconomicRun.html</loc>
+  </url>
+  <url>
+    <loc>https://essatech.github.io/CEMPRA/reference/SocioEconomicWorkbook.html</loc>
   </url>
   <url>
     <loc>https://essatech.github.io/CEMPRA/reference/StressorMagnitudeWorkbook.html</loc>
