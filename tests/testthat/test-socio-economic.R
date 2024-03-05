@@ -65,7 +65,7 @@ test_that("Basic Socio Economic", {
   names(socioeconomic_inputs)
   socioeconomic_inputs$`Management Actions`$`SD of Cost per Unit` <- 0
   socioeconomic_inputs$`Location Implementation`$`SD Number of Units` <- 0
-
+  dose$SD <- 0
 
   jmr_se <- JoeModel_Run(dose = dose, sr_wb_dat = sr_wb_dat,
                          MC_sims = nsims,
@@ -133,6 +133,45 @@ test_that("Basic Socio Economic", {
   check1 <- df$CE[df$HUC == "F"]
   check2 <- df2$sys.cap[df2$Stressor == "August Stream Temperature" & df2$HUC == "F"]
   expect_true(round(check1, 2) == round(check2, 2))
+
+
+
+  # ----------------------------------------------------------
+  # Test a second example developed by Alex
+  # ----------------------------------------------------------
+
+  filename_rm <- system.file("extdata", "socio_economic/example_2/ex2_sm.xlsx", package = "CEMPRA")
+  filename_sr <- system.file("extdata", "socio_economic/example_2/ex2_sr.xlsx", package = "CEMPRA")
+  dose <- StressorMagnitudeWorkbook(filename = filename_rm)
+  sr_wb_dat <- StressorResponseWorkbook(filename = filename_sr)
+
+  # Run the Basic Joe Model without SE Inputs
+  nsims <- 10
+  jmr <- JoeModel_Run(dose = dose, sr_wb_dat = sr_wb_dat, MC_sims = nsims)
+
+  check <- mean(jmr$ce.df$CE)
+  expect_true(check > 0)
+
+  # Load custom SE data
+  filename_se <- system.file("extdata", "socio_economic/example_2/ex2_se.xlsx", package = "CEMPRA")
+  socioeconomic_inputs <- SocioEconomicWorkbook(filename = filename_se)
+
+  # Loads ok
+  expect_true(socioeconomic_inputs$import_pass)
+
+  # Add data summary tables
+  socioeconomic_inputs <- SocioEconomicRun(socioeconomic_inputs = socioeconomic_inputs)
+
+  # Then run the Joe model with the new SE workbook
+  dose$SD <- 0
+  socioeconomic_inputs$`Location Implementation`$`SD Number of Units` <- 0
+
+  jmr_se <- JoeModel_Run(dose = dose, sr_wb_dat = sr_wb_dat,
+                         MC_sims = nsims,
+                         socioeconomic_inputs = socioeconomic_inputs)
+
+  check2 <- mean(jmr_se$ce.df$CE)
+  expect_true(check2 >= check)
 
 
 

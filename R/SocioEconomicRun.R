@@ -19,7 +19,6 @@
 #'
 #' @export
 SocioEconomicRun <- function(socioeconomic_inputs = NA) {
-
   #--------------------------------------------------
   # Merge all columns into a new implementation
   # table to simplify calculations
@@ -29,6 +28,7 @@ SocioEconomicRun <- function(socioeconomic_inputs = NA) {
   # so easy to do here...
 
   imp <- socioeconomic_inputs$`Location Implementation`
+
   colnames(imp) <- c(
     "id",
     "loc_name",
@@ -97,6 +97,7 @@ SocioEconomicRun <- function(socioeconomic_inputs = NA) {
   # ---------------------------------------------------
   # Perform action cost calculations for this batch iteration
   # ---------------------------------------------------
+
   means_vec <- imp_2$cost_units
   sds_vec <- imp_2$sd_unit_cost
   low_vec <- imp_2$low_unit_cost
@@ -225,9 +226,20 @@ SocioEconomicRun <- function(socioeconomic_inputs = NA) {
 
 
   # -------------------------------------------
+  # Modify local restoration density by
+  # location effect multiplier (effect_multiplier)
+  # -------------------------------------------
+
+  imp_4$effect_multiplier <- ifelse(is.na(imp_4$effect_multiplier), 1, imp_4$effect_multiplier)
+  imp_4$rest_density <- imp_4$rest_density * imp_4$effect_multiplier
+
+
+  # -------------------------------------------
   # Export attribute - restoration densities
   rest_density <- imp_4
   # -------------------------------------------
+
+
 
 
   # -------------------------------------------
@@ -245,7 +257,7 @@ SocioEconomicRun <- function(socioeconomic_inputs = NA) {
 
   for (i in 1:length(sr_functions)) {
     sr_id <- sr_functions[i]
-    sr_curve <- sr[sr$sr_curve_id == sr_id,]
+    sr_curve <- sr[sr$sr_curve_id == sr_id, ]
     sr_dat <- socioeconomic_inputs$sr_curvs[[sr_id]]
 
 
@@ -331,13 +343,6 @@ SocioEconomicRun <- function(socioeconomic_inputs = NA) {
 
 
   return(socioeconomic_inputs)
-
-
-
-
-
-
-
 
 
 }

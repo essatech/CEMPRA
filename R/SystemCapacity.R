@@ -110,7 +110,17 @@ SystemCapacity <- function(f.dose.df,
   # Apply socioeconomic modifiers to stressors
   # --------------------------------------------
   if (!(is.null(socioeconomic_inputs))) {
+
     rdcts <- socioeconomic_inputs$stressor_reductions
+
+    if(!("ID" %in% colnames(f.dose.df))) {
+      if("HUC_ID" %in% colnames(f.dose.df)) {
+        f.dose.df$ID <- f.dose.df$HUC_ID
+      } else {
+        stop("Stressor magnitude (dose) file needs column for HUC_ID or ID...")
+      }
+    }
+
     rdcts <- rdcts[rdcts$linked_stressor == f.main.df$Stressors &
                      rdcts$id == f.dose.df$ID, ]
     # summarize if more than one restoration action targeting stressor
