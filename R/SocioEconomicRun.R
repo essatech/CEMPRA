@@ -5,6 +5,7 @@
 #' @details Internal function run within the Joe Model to perform socioeconomic calculations.
 #'
 #' @param socioeconomic_inputs list object of socioeconomic inputs returned from SocioEconomicWorkbook().
+#' @param deterministic Boolean. Defaults to FALSE. If TRUE model will run without stochasticity.
 #'
 #' @returns A list object with cost and area summary calculations included
 #'
@@ -18,7 +19,8 @@
 #' }
 #'
 #' @export
-SocioEconomicRun <- function(socioeconomic_inputs = NA) {
+SocioEconomicRun <- function(socioeconomic_inputs = NA, deterministic = FALSE) {
+
   #--------------------------------------------------
   # Merge all columns into a new implementation
   # table to simplify calculations
@@ -65,6 +67,13 @@ SocioEconomicRun <- function(socioeconomic_inputs = NA) {
           by.x = "action",
           by.y = "action",
           all.x = TRUE)
+
+
+  # Turn off SD values if running in deterministic mode
+  if(deterministic) {
+    imp_2$sd_units <- 0
+    imp_2$sd_unit_cost <- 0
+  }
 
   # --------------------------------
   # Mean cost calculations
@@ -256,9 +265,15 @@ SocioEconomicRun <- function(socioeconomic_inputs = NA) {
   imp_4$stressor_reductions <- NA
 
   for (i in 1:length(sr_functions)) {
+
     sr_id <- sr_functions[i]
     sr_curve <- sr[sr$sr_curve_id == sr_id, ]
     sr_dat <- socioeconomic_inputs$sr_curvs[[sr_id]]
+
+    if(deterministic) {
+      # Trun off SD if running with no stochastcitiy
+      sr_dat$SD <- 0
+    }
 
 
     # Get the actual levels of restoration action

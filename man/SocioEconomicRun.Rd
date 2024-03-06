@@ -4,10 +4,12 @@
 \alias{SocioEconomicRun}
 \title{Run SocioEconomic Cost Calculations}
 \usage{
-SocioEconomicRun(socioeconomic_inputs = NA)
+SocioEconomicRun(socioeconomic_inputs = NA, deterministic = FALSE)
 }
 \arguments{
 \item{socioeconomic_inputs}{list object of socioeconomic inputs returned from SocioEconomicWorkbook().}
+
+\item{deterministic}{Boolean. Defaults to FALSE. If TRUE model will run without stochasticity.}
 }
 \value{
 A list object with cost and area summary calculations included
