@@ -103,6 +103,19 @@ SocioEconomicRun <- function(socioeconomic_inputs = NA, deterministic = FALSE) {
     imp_2$cost_units
   )
 
+  # Apply the location-specific cost-multiplier
+  imp_2$cost_multiplier <- ifelse(
+    is.na(imp_2$cost_multiplier),
+    1,
+    imp_2$cost_multiplier
+  )
+
+  imp_2$cost_units <- ifelse(
+    imp_2$cost_multiplier != 1,
+    imp_2$cost_multiplier * imp_2$cost_units,
+    imp_2$cost_units
+  )
+
   # ---------------------------------------------------
   # Perform action cost calculations for this batch iteration
   # ---------------------------------------------------
@@ -153,6 +166,11 @@ SocioEconomicRun <- function(socioeconomic_inputs = NA, deterministic = FALSE) {
     )
 
   imp_2$unit_n_samples <- unit_samples
+
+  if(deterministic) {
+    # do not sample units in deterministic mode
+    imp_2$unit_n_samples <- imp_2$n_units
+  }
 
 
   # Multiply for program cost
@@ -331,6 +349,10 @@ SocioEconomicRun <- function(socioeconomic_inputs = NA, deterministic = FALSE) {
         up_lim = m_high
       )
     })
+
+    if(deterministic) {
+      sr_sample <- m_mean
+    }
 
     # Assign stressor reductions to parent dataframe
     imp_4$stressor_reductions <-

@@ -88,8 +88,15 @@ test_that("Basic Socio Economic", {
   dose <- StressorMagnitudeWorkbook(filename = filename_rm)
   sr_wb_dat <- StressorResponseWorkbook(filename = filename_sr)
 
+
+
   filename_se <- system.file("extdata", "socio_economic/no_stochast/socio_economic_input.xlsx", package = "CEMPRA")
   socioeconomic_inputs <- SocioEconomicWorkbook(filename = filename_se)
+
+
+  expect_true(socioeconomic_inputs$error_state == "Ready to go!")
+  expect_true(socioeconomic_inputs$import_pass == TRUE)
+
 
   socioeconomic_inputs$`Management Actions`$`SD of Cost per Unit` <- 0
   socioeconomic_inputs$`Location Implementation`$`SD Number of Units` <- 0
@@ -157,6 +164,7 @@ test_that("Basic Socio Economic", {
   socioeconomic_inputs <- SocioEconomicWorkbook(filename = filename_se)
 
   # Loads ok
+  expect_true(socioeconomic_inputs$error_state == "Ready to go!")
   expect_true(socioeconomic_inputs$import_pass)
 
   # Add data summary tables

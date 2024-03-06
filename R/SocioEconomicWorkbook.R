@@ -241,6 +241,26 @@ SocioEconomicWorkbook <- function(filename = NA) {
     return(ret_obj)
   }
 
+  # Determine if lower limits are assigned correctly...
+  if(any(dat$`Mean Number of Units Restored` < dat$`Lower Limit for Number of Units`))
+    {
+    ret_obj$error_state <-
+      paste0(
+        "Lower limits in Location Implementation workbook must be less than mean values..."
+      )
+    return(ret_obj)
+  }
+
+  if(any(dat$`Mean Number of Units Restored` > dat$`Upper Limit for Number of Units`))
+  {
+    ret_obj$error_state <-
+      paste0(
+        "Upper limits in Location Implementation workbook must be greater than mean values..."
+      )
+    return(ret_obj)
+  }
+
+
 
   # Assign data frame to list object
   ret_obj$`Location Implementation` <- dat
@@ -376,6 +396,7 @@ SocioEconomicWorkbook <- function(filename = NA) {
   sr_curvs <- list()
 
   for (i in 1:length(stressor_reduction_functions)) {
+
     this_func <- stressor_reduction_functions[i]
 
     if (!(this_func %in% sheet_names)) {
@@ -415,6 +436,21 @@ SocioEconomicWorkbook <- function(filename = NA) {
     dat$low.limit <- as.numeric(dat$low.limit)
     dat$up.limit <- as.numeric(dat$up.limit)
     dat$SD <- ifelse(is.na(dat$SD), 0, dat$SD)
+
+    # Check for issue with lower limits
+    if(any(dat$effect < dat$low.limit)) {
+      ret_obj$error_state <-
+        paste0(this_func, " has mean effect values less than lower limits")
+      return(ret_obj)
+    }
+
+    # Check for issue with upper limits
+    if(any(dat$effect > dat$up.limit)) {
+      ret_obj$error_state <-
+        paste0(this_func, " has mean effect values greater than upper limits")
+      return(ret_obj)
+    }
+
 
     sr_curvs[[this_func]] <- dat
 
