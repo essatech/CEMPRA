@@ -174,7 +174,7 @@ SocioEconomicRun <- function(socioeconomic_inputs = NA, deterministic = FALSE) {
 
 
   # Multiply for program cost
-  total_costs <- cost_samples * unit_samples
+  total_costs <- imp_2$unit_cost_samples * imp_2$unit_n_samples
   total_costs <- round(total_costs, 2)
 
   imp_2$total_cost <- round(total_costs, 2)
@@ -296,6 +296,7 @@ SocioEconomicRun <- function(socioeconomic_inputs = NA, deterministic = FALSE) {
 
     # Get the actual levels of restoration action
     # Action in terms of densities
+
     m_action <- imp_4$rest_density
     m_action <- ifelse(imp_4$sr_curve_id == sr_id, m_action, NA)
 
