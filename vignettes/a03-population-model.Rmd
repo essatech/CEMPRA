@@ -117,7 +117,7 @@ plot(baseline$lambdas, type = 'l', ylab = "lambda", xlab = "year")
 
 ## Population Projections with CE Stressors
 
-Then re-run the population model projections, but this time add on environmental stressors. Note that in this simple example two imaginary stressors are added `CE_df1` and `CE_df2` with fake data. These stressors target fry capacity and juvenile survival, respectively. The first stressor (`My Stressor1`) reduces the fry carrying capacity by 18% (0.82) and the second stressor decreases the fry survival by 5% (0.95).
+Then re-run the population model projections, but this time add on environmental stressors. Note that in this simple example two imaginary stressors are added `CE_df1` and `CE_df2` with fake data. These stressors target fry capacity and juvenile survival, respectively. The first stressor (`My Stressor1`) reduces the fry carrying capacity by 18% (0.82) and the second stressor decreases the fry survival by 20% (0.80).
 
 ```{r m4, fig.width = 7}
 
@@ -134,7 +134,7 @@ CE_df1 <- data.frame(HUC = 123,
 CE_df2 <- data.frame(HUC = 123,
                     Stressor = "My Stressor2",
                     dose = 123,
-                    sys.cap = 0.95,
+                    sys.cap = 0.80,
                     life_stage = "all_juv",
                     parameter = "survival",
                     Stressor_cat = "My Stressor2")
@@ -142,7 +142,7 @@ CE_df2 <- data.frame(HUC = 123,
 CE_df <- rbind(CE_df1, CE_df2)
 ```
 
-Rerun the population model. Note the plots below the black line is the baseline and the red line is the population projection run with stressors included. In each example the population is supressed when the stressors are included.
+Rerun the population model. Note the plots below the red line is the baseline and the black line is the population projection run with stressors included. In each example the population is suppressed when the stressors are included.
 
 ```{r m4b, fig.width = 7}
 ce_pop <- Projection_DD(M.mx = life_stages_symbolic,
@@ -157,12 +157,13 @@ ce_pop <- Projection_DD(M.mx = life_stages_symbolic,
 
 
 # Time series of the population with CE
-plot(ce_pop$pop, type = 'l', ylim = c(0, 200))
-points(baseline$pop, type = 'l', col = "red")
+plot(ce_pop$pop, type = 'l', ylim = c(0, 200), col = "red")
+points(baseline$pop, type = 'l', col = "black")
+legend("topright", legend = c("With CE", "Baseline"), col = c("red", "black"), lwd = 2)
 
 # Time series of lambda values
-plot(ce_pop$lambdas, type = 'l')
-points(baseline$lambdas, type = 'l', col = "red")
+plot(ce_pop$lambdas, type = 'l', col = "red")
+points(baseline$lambdas, type = 'l', col = "black")
 
 # Ratio Relative system capacity
 baseline_sys_cap <- stats::median(baseline$pop$N[50:100])

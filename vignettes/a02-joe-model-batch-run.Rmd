@@ -118,8 +118,6 @@ theme_bw()
 ```
 
 
-
-
 # Plot Results By Scenario
 
 In the second example we show how all watersheds can be plotted for an individual scenario. The watersheds are filtered here for convenience but additional styling and customization is necessary for your application.

@@ -19,39 +19,37 @@ library(kableExtra)
 
 # Overview
 
-The following tutorial provides an overview of running the Joe Model offline from within R. Users following this tutorial should have R, RStudio and the R package `devtools` installed on their machine.
+The following tutorial provides an overview of running the Joe Model from the CEMPRA R package. Users following this tutorial should have R, RStudio and the R package `devtools` installed on their machine.
 
 # Installation
 
-At this time the Joe Model R package is hosted on GitHub and can be installed using devtools. Hopefully in the near future the near future the package will be available on R-CRAN for standard installation and loading.
+At this time the CEMPRA R package is hosted on GitHub and can be installed using devtools. In the near future the CEMPRA package will be available on R-CRAN for standard installation and loading.
 
 ```{r install, message=FALSE, warning=FALSE}
 library(devtools)
+# Uncomment and run the following line to install the CEMPRA package
 # install_github("essatech/CEMPRA")
 library(CEMPRA)
 ```
 
 # Import Data
-There are two input datasets needed to run the Joe Model
-The Joe Model requires two key datasets, a stressor-response workbook and a stressor magnitude workbook. The stressor-response workbook... and the stressor magnitude workbook...
+The Joe Model requires two key datasets, a stressor-response workbook and a stressor magnitude workbook. We will import these datasets using the `StressorResponseWorkbook` and `StressorMagnitudeWorkbook` functions. Change `filename_sr` and  `filename_rm` to the location of your stressor-response and stressor-magnitude workbooks on your own computer. We are loading canned data from the CEMPRA package for this tutorial.
 
 ## Stressor Response Workbook
 The stressor-response Excel workbook must follow a standardized format.
 The first worksheet should be titled ```Main```.
 
 ### Main Worksheet
-TODO placeholder text
 
 ```{r, format_demo1, echo = FALSE, message=FALSE, warning=FALSE}
   # Just show the output only
   filename_sr <- system.file("extdata", "stressor_response_fixed_ARTR.xlsx", package = "CEMPRA")
   srw <- StressorResponseWorkbook(filename = filename_sr)
   df <- data.frame(head(srw$main_sheet, 5))
-  df %>%
-  kbl(caption = "Table 1: 'Main' worksheet sample from stressor-response.xlsx workbook") %>%
-  kable_classic(full_width = F, html_font = "Cambria")
+  print(df)
 ```
-TODO describe the columns in the workbook
+
+Take a look at the `Main` worksheet.
 
 1. **Stressors** Name of the stressor...
 2. **Stressor_cat** Name of the stressor category (only relevant to population model)...
@@ -63,12 +61,11 @@ TODO describe the columns in the workbook
 8. **Parameters** Can be blank or NA (default), which implys the relationship is for system capacity or linked to a vital rate ```'survival'```, ```'capacity'```...
 
 
-### Stressor Dose-Response Worksheets
-TODO placeholder text
+### Stressor-Response Worksheets
 
 After the stressor response Excel workbook then must have individual worksheets for each of the stressors after the ```Main``` sheet. Please ensure that the spelling is identical between the ```Stressors``` column in the ```Main``` sheet and the work sheet name for each stressor.
 
-Each doese response curve is provided on a seperate worksheet. The example below shows the dose-response curve of water temperature (C) and the Adult system capacity.
+Each stressor-response curve is provided on a separate worksheet. The example below shows the stressor-response curve of water temperature (C) and the Adult system capacity.
 
 ```{r, format_demo2, echo = FALSE, message=FALSE, warning=FALSE}
   # Demo data frame
@@ -89,11 +86,9 @@ Each doese response curve is provided on a seperate worksheet. The example below
 ```
 
 
-TODO describe the columns in the workbook
-
 1. **Temperature** The first column should be the name of the stressor...
 2. **Mean System Capacity (%)** The next column is the mean system capacity (from 0 - 100)..
-3. **SD** The third column is the standard deviation for the mean system capacity. This is useful to represent uncertianty in the relationship. For example, a temperature of 12C will not always equate to a system capacity of exactly 90%...
+3. **SD** The third column is the standard deviation for the mean system capacity. This is useful to represent uncertainty in the relationship. For example, a temperature of 12C will not always equate to a system capacity of exactly 90%...
 4. **low.limit** Lower limits for the cumulative system capacity...
 5. **up.limit** Upper limits for the cumulative system capacity...
 
@@ -114,7 +109,7 @@ TODO describe the columns in the workbook
   }
 ```
 
-The figure above shows a stressor response curve. The raw values of the stressor are plotted on the x-axis and the mean system capacity is showen on the y-axis. For each stressor and each simulation values for the mean system capacity will be drawn from a normal distribution with a mean and standard deviation (error bars) bound by the lower and upper limits (grey shading).
+The figure above shows a stressor response curve. The raw values of the stressor are plotted on the x-axis and the mean system capacity is shown on the y-axis. For each stressor and each simulation values for the mean system capacity will be drawn from a normal distribution with a mean and standard deviation (error bars) bound by the lower and upper limits (grey shading).
 
 
 
@@ -128,7 +123,7 @@ The figure above shows a stressor response curve. The raw values of the stressor
 
 ## Stressor Magnitude Workbook
 
-Shows the actual values for each location of interest...
+Review the stressor magnitude levels for a given location.
 
 ```{r, sm_demo1, echo = FALSE, message=FALSE, warning=FALSE}
   # Just show the output only
@@ -144,15 +139,15 @@ Shows the actual values for each location of interest...
 
 Column names should be as follows:
 
-1. **HUC_ID** Unique (numeric) identifer for a location of interest. Formally from Hydrologial Unit Code (HUC) representing unique subbasins, but can be anything...
+1. **HUC_ID** Unique (numeric) identifier for a location of interest. Formally from Hydrologial Unit Code (HUC) representing unique sub basins, but can be anything...
 2. **NAME** Name (character) of a given location. Note that this column is used for display purposes only...
-3. **Stressor** Name of the stressor. Note that this mutch match the spelling used in the stressor response workbook...
-4. **Stressor_cat** Name of the Stressor ctegory. Note that this mutch match the spelling used in the stressor response workbook...
+3. **Stressor** Name of the stressor. Note that this must match the spelling used in the stressor response workbook...
+4. **Stressor_cat** Name of the stressor category. Note that this mutch match the spelling used in the stressor response workbook...
 5. **Mean** Mean value for the specific location...
 6. **SD** Standard deviation for the specific stressor for that location. The value of each stressor and combination will be resampled for each simulation...
-7. **Distribution** Resampling distribution either ```'lognormal'``` or ```'normal'```...
-7. **Low_Limit** Lower limits for the locaiton-speific stressor...
-8. **Up_Limit** Upper limits for the locaiton-speific stressor....
+7. **Distribution** Re-sampling distribution either ```'lognormal'``` or ```'normal'```...
+7. **Low_Limit** Lower limits for the location-specific stressor...
+8. **Up_Limit** Upper limits for the location-specific stressor....
 
 
 ```{r, import_sm, echo = TRUE, message = FALSE, warning = FALSE}
@@ -166,7 +161,7 @@ Column names should be as follows:
 
 # Cumulative System Capacity
 
-TODO placeholder text ... Run the cumulative system capacity for a single watershed
+Run the cumulative system capacity for a single watershed
 
 ```{r, csc_demo, echo = TRUE, message = FALSE, warning = FALSE}
 
@@ -213,7 +208,7 @@ hist(sys_cap, xlab = "Mean System Capacity (%)")
 
 
 # Joe Model
-TODO placeholder text
+
 What about all variables and all stressors - run the full Joe Model...
 
 ```{r, jmd, echo = TRUE, message = FALSE, warning = FALSE}
@@ -239,14 +234,5 @@ msc <- jmr$ce.df$CE * 100
 ```{r, msc_plot, echo = TRUE, message=FALSE, warning=FALSE, fig.width = 6, fig.height = 4, fig.cap="Mean System Capacity for all stressors and all watersheds across all simulations", fig.align = 'center'}
 hist(msc, xlab = "Mean System Capacity (%)", main = NULL)
 ```
-
-## Components
-TODO placeholder text
-
-### Cumulative Effects Dataframe
-TODO placeholder text
-
-### System Capacity Dose-Response Dataframe
-TODO placeholder text
 
 
