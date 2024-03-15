@@ -67,7 +67,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>3. Population Model Overview</h1>
             
-            <h4 data-toc-skip class="date">2024-03-06</h4>
+            <h4 data-toc-skip class="date">2024-03-15</h4>
       
       
       <div class="d-none name"><code>a03-population-model.Rmd</code></div>
@@ -259,7 +259,7 @@ stressors are added <code>CE_df1</code> and <code>CE_df2</code> with
 fake data. These stressors target fry capacity and juvenile survival,
 respectively. The first stressor (<code>My Stressor1</code>) reduces the
 fry carrying capacity by 18% (0.82) and the second stressor decreases
-the fry survival by 5% (0.95).</p>
+the fry survival by 20% (0.80).</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="co"># Very simple CE data frame of one watershed </span></span>
@@ -275,16 +275,16 @@ the fry survival by 5% (0.95).</p>
 <span><span class="va">CE_df2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>HUC <span class="op">=</span> <span class="fl">123</span>,</span>
 <span>                    Stressor <span class="op">=</span> <span class="st">"My Stressor2"</span>,</span>
 <span>                    dose <span class="op">=</span> <span class="fl">123</span>,</span>
-<span>                    sys.cap <span class="op">=</span> <span class="fl">0.95</span>,</span>
+<span>                    sys.cap <span class="op">=</span> <span class="fl">0.80</span>,</span>
 <span>                    life_stage <span class="op">=</span> <span class="st">"all_juv"</span>,</span>
 <span>                    parameter <span class="op">=</span> <span class="st">"survival"</span>,</span>
 <span>                    Stressor_cat <span class="op">=</span> <span class="st">"My Stressor2"</span><span class="op">)</span></span>
 <span><span class="co"># Stressors dataframe</span></span>
 <span><span class="va">CE_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">CE_df1</span>, <span class="va">CE_df2</span><span class="op">)</span></span></code></pre></div>
-<p>Rerun the population model. Note the plots below the black line is
-the baseline and the red line is the population projection run with
-stressors included. In each example the population is supressed when the
-stressors are included.</p>
+<p>Rerun the population model. Note the plots below the red line is the
+baseline and the black line is the population projection run with
+stressors included. In each example the population is suppressed when
+the stressors are included.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ce_pop</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Projection_DD.html">Projection_DD</a></span><span class="op">(</span>M.mx <span class="op">=</span> <span class="va">life_stages_symbolic</span>,</span>
 <span>                        D.mx <span class="op">=</span> <span class="va">density_stage_symbolic</span>,</span>
@@ -298,14 +298,15 @@ stressors are included.</p>
 <span></span>
 <span></span>
 <span><span class="co"># Time series of the population with CE</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">ce_pop</span><span class="op">$</span><span class="va">pop</span>, type <span class="op">=</span> <span class="st">'l'</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">200</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/points.html" class="external-link">points</a></span><span class="op">(</span><span class="va">baseline</span><span class="op">$</span><span class="va">pop</span>, type <span class="op">=</span> <span class="st">'l'</span>, col <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">ce_pop</span><span class="op">$</span><span class="va">pop</span>, type <span class="op">=</span> <span class="st">'l'</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">200</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/points.html" class="external-link">points</a></span><span class="op">(</span><span class="va">baseline</span><span class="op">$</span><span class="va">pop</span>, type <span class="op">=</span> <span class="st">'l'</span>, col <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"topright"</span>, legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"With CE"</span>, <span class="st">"Baseline"</span><span class="op">)</span>, col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"red"</span>, <span class="st">"black"</span><span class="op">)</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <p><img src="a03-population-model_files/figure-html/m4b-1.png" width="672"></p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="co"># Time series of lambda values</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">ce_pop</span><span class="op">$</span><span class="va">lambdas</span>, type <span class="op">=</span> <span class="st">'l'</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/points.html" class="external-link">points</a></span><span class="op">(</span><span class="va">baseline</span><span class="op">$</span><span class="va">lambdas</span>, type <span class="op">=</span> <span class="st">'l'</span>, col <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">ce_pop</span><span class="op">$</span><span class="va">lambdas</span>, type <span class="op">=</span> <span class="st">'l'</span>, col <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/points.html" class="external-link">points</a></span><span class="op">(</span><span class="va">baseline</span><span class="op">$</span><span class="va">lambdas</span>, type <span class="op">=</span> <span class="st">'l'</span>, col <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="a03-population-model_files/figure-html/m4b-2.png" width="672"></p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
@@ -313,7 +314,7 @@ stressors are included.</p>
 <span><span class="va">baseline_sys_cap</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">baseline</span><span class="op">$</span><span class="va">pop</span><span class="op">$</span><span class="va">N</span><span class="op">[</span><span class="fl">50</span><span class="op">:</span><span class="fl">100</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="va">ce_sys_cap</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">ce_pop</span><span class="op">$</span><span class="va">pop</span><span class="op">$</span><span class="va">N</span><span class="op">[</span><span class="fl">50</span><span class="op">:</span><span class="fl">100</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="va">ce_sys_cap</span> <span class="op">/</span> <span class="va">baseline_sys_cap</span></span>
-<span><span class="co">#&gt; [1] 0.6618029</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 0.2839102</span></span></code></pre></div>
 </div>
 
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

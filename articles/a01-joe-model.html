@@ -67,7 +67,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>1. Joe Model Overview</h1>
             
-            <h4 data-toc-skip class="date">2024-03-06</h4>
+            <h4 data-toc-skip class="date">2024-03-15</h4>
       
       
       <div class="d-none name"><code>a01-joe-model.Rmd</code></div>
@@ -79,29 +79,33 @@
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
 <p>The following tutorial provides an overview of running the Joe Model
-offline from within R. Users following this tutorial should have R,
+from the CEMPRA R package. Users following this tutorial should have R,
 RStudio and the R package <code>devtools</code> installed on their
 machine.</p>
 </div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>At this time the Joe Model R package is hosted on GitHub and can be
-installed using devtools. Hopefully in the near future the near future
-the package will be available on R-CRAN for standard installation and
-loading.</p>
+<p>At this time the CEMPRA R package is hosted on GitHub and can be
+installed using devtools. In the near future the CEMPRA package will be
+available on R-CRAN for standard installation and loading.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://devtools.r-lib.org/" class="external-link">devtools</a></span><span class="op">)</span></span>
+<span><span class="co"># Uncomment and run the following line to install the CEMPRA package</span></span>
 <span><span class="co"># install_github("essatech/CEMPRA")</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://essatech.github.io/CEMPRA/">CEMPRA</a></span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="import-data">Import Data<a class="anchor" aria-label="anchor" href="#import-data"></a>
 </h2>
-<p>There are two input datasets needed to run the Joe Model The Joe
-Model requires two key datasets, a stressor-response workbook and a
-stressor magnitude workbook. The stressor-response workbook… and the
-stressor magnitude workbook…</p>
+<p>The Joe Model requires two key datasets, a stressor-response workbook
+and a stressor magnitude workbook. We will import these datasets using
+the <code>StressorResponseWorkbook</code> and
+<code>StressorMagnitudeWorkbook</code> functions. Change
+<code>filename_sr</code> and <code>filename_rm</code> to the location of
+your stressor-response and stressor-magnitude workbooks on your own
+computer. We are loading canned data from the CEMPRA package for this
+tutorial.</p>
 <div class="section level3">
 <h3 id="stressor-response-workbook">Stressor Response Workbook<a class="anchor" aria-label="anchor" href="#stressor-response-workbook"></a>
 </h3>
@@ -110,207 +114,19 @@ format. The first worksheet should be titled <code>Main</code>.</p>
 <div class="section level4">
 <h4 id="main-worksheet">Main Worksheet<a class="anchor" aria-label="anchor" href="#main-worksheet"></a>
 </h4>
-<p>TODO placeholder text</p>
-<table class="table  lightable-classic" style="font-family: Cambria; width: auto !important; margin-left: auto; margin-right: auto;">
-<caption>
-Table 1: ‘Main’ worksheet sample from stressor-response.xlsx workbook
-</caption>
-<thead><tr>
-<th style="text-align:left;">
-Stressors
-</th>
-<th style="text-align:left;">
-Stressor_cat
-</th>
-<th style="text-align:left;">
-Interaction
-</th>
-<th style="text-align:left;">
-Linked
-</th>
-<th style="text-align:left;">
-Stress_Scale
-</th>
-<th style="text-align:left;">
-Function
-</th>
-<th style="text-align:left;">
-Life_stages
-</th>
-<th style="text-align:left;">
-Parameters
-</th>
-<th style="text-align:left;">
-Units
-</th>
-<th style="text-align:left;">
-Model
-</th>
-</tr></thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-Aug_flow
-</td>
-<td style="text-align:left;">
-Aug_flow
-</td>
-<td style="text-align:left;">
-Minimum
-</td>
-<td style="text-align:left;">
-A
-</td>
-<td style="text-align:left;">
-linear
-</td>
-<td style="text-align:left;">
-continuous
-</td>
-<td style="text-align:left;">
-adult
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:left;">
-Joe Model
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Barrier_dams
-</td>
-<td style="text-align:left;">
-Barrier_dams
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:left;">
-linear
-</td>
-<td style="text-align:left;">
-step
-</td>
-<td style="text-align:left;">
-adult
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:left;">
-Joe Model
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-BKTR
-</td>
-<td style="text-align:left;">
-BKTR
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:left;">
-linear
-</td>
-<td style="text-align:left;">
-continuous
-</td>
-<td style="text-align:left;">
-adult
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:left;">
-Joe Model
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Feb_flow
-</td>
-<td style="text-align:left;">
-Feb_flow
-</td>
-<td style="text-align:left;">
-Minimum
-</td>
-<td style="text-align:left;">
-A
-</td>
-<td style="text-align:left;">
-linear
-</td>
-<td style="text-align:left;">
-continuous
-</td>
-<td style="text-align:left;">
-adult
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:left;">
-Joe Model
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Foot_flow
-</td>
-<td style="text-align:left;">
-Foot_flow
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:left;">
-linear
-</td>
-<td style="text-align:left;">
-continuous
-</td>
-<td style="text-align:left;">
-adult
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:left;">
-NA
-</td>
-<td style="text-align:left;">
-Joe Model
-</td>
-</tr>
-</tbody>
-</table>
-<p>TODO describe the columns in the workbook</p>
+<pre><code><span><span class="co">#&gt;      Stressors Stressor_cat Interaction Linked Stress_Scale   Function</span></span>
+<span><span class="co">#&gt; 1     Aug_flow     Aug_flow     Minimum      A       linear continuous</span></span>
+<span><span class="co">#&gt; 2 Barrier_dams Barrier_dams          NA     NA       linear       step</span></span>
+<span><span class="co">#&gt; 3         BKTR         BKTR          NA     NA       linear continuous</span></span>
+<span><span class="co">#&gt; 4     Feb_flow     Feb_flow     Minimum      A       linear continuous</span></span>
+<span><span class="co">#&gt; 5    Foot_flow    Foot_flow          NA     NA       linear continuous</span></span>
+<span><span class="co">#&gt;   Life_stages Parameters Units     Model</span></span>
+<span><span class="co">#&gt; 1       adult       &lt;NA&gt;    NA Joe Model</span></span>
+<span><span class="co">#&gt; 2       adult       &lt;NA&gt;    NA Joe Model</span></span>
+<span><span class="co">#&gt; 3       adult       &lt;NA&gt;    NA Joe Model</span></span>
+<span><span class="co">#&gt; 4       adult       &lt;NA&gt;    NA Joe Model</span></span>
+<span><span class="co">#&gt; 5       adult       &lt;NA&gt;    NA Joe Model</span></span></code></pre>
+<p>Take a look at the <code>Main</code> worksheet.</p>
 <ol style="list-style-type: decimal">
 <li>
 <strong>Stressors</strong> Name of the stressor…</li>
@@ -339,17 +155,16 @@ implys the relationship is for system capacity or linked to a vital rate
 </ol>
 </div>
 <div class="section level4">
-<h4 id="stressor-dose-response-worksheets">Stressor Dose-Response Worksheets<a class="anchor" aria-label="anchor" href="#stressor-dose-response-worksheets"></a>
+<h4 id="stressor-response-worksheets">Stressor-Response Worksheets<a class="anchor" aria-label="anchor" href="#stressor-response-worksheets"></a>
 </h4>
-<p>TODO placeholder text</p>
 <p>After the stressor response Excel workbook then must have individual
 worksheets for each of the stressors after the <code>Main</code> sheet.
 Please ensure that the spelling is identical between the
 <code>Stressors</code> column in the <code>Main</code> sheet and the
 work sheet name for each stressor.</p>
-<p>Each doese response curve is provided on a seperate worksheet. The
-example below shows the dose-response curve of water temperature (C) and
-the Adult system capacity.</p>
+<p>Each stressor-response curve is provided on a separate worksheet. The
+example below shows the stressor-response curve of water temperature (C)
+and the Adult system capacity.</p>
 <table class="table  lightable-classic" style="font-family: Cambria; width: auto !important; margin-left: auto; margin-right: auto;">
 <caption>
 Table 2: Example ‘Temperature’ dose-response curve data for temperature
@@ -528,7 +343,6 @@ up.limit
 </tr>
 </tbody>
 </table>
-<p>TODO describe the columns in the workbook</p>
 <ol style="list-style-type: decimal">
 <li>
 <strong>Temperature</strong> The first column should be the name of
@@ -538,7 +352,7 @@ the stressor…</li>
 mean system capacity (from 0 - 100)..</li>
 <li>
 <strong>SD</strong> The third column is the standard deviation for
-the mean system capacity. This is useful to represent uncertianty in the
+the mean system capacity. This is useful to represent uncertainty in the
 relationship. For example, a temperature of 12C will not always equate
 to a system capacity of exactly 90%…</li>
 <li>
@@ -555,11 +369,11 @@ Example Stressor-Response Curve
 </div>
 <p>The figure above shows a stressor response curve. The raw values of
 the stressor are plotted on the x-axis and the mean system capacity is
-showen on the y-axis. For each stressor and each simulation values for
+shown on the y-axis. For each stressor and each simulation values for
 the mean system capacity will be drawn from a normal distribution with a
 mean and standard deviation (error bars) bound by the lower and upper
 limits (grey shading).</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="co"># Load default file from Joe Model Package</span></span>
 <span>  <span class="va">filename_sr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"stressor_response_fixed_ARTR.xlsx"</span>, package <span class="op">=</span> <span class="st">"CEMPRA"</span><span class="op">)</span></span>
 <span>  <span class="co"># Use the StressorResponseWorkbook() function from the CEMPRA package to format the data and check for errors and issues</span></span>
@@ -571,7 +385,7 @@ limits (grey shading).</p>
 <div class="section level3">
 <h3 id="stressor-magnitude-workbook">Stressor Magnitude Workbook<a class="anchor" aria-label="anchor" href="#stressor-magnitude-workbook"></a>
 </h3>
-<p>Shows the actual values for each location of interest…</p>
+<p>Review the stressor magnitude levels for a given location.</p>
 <table class="table  lightable-classic" style="font-family: Cambria; width: auto !important; margin-left: auto; margin-right: auto;">
 <caption>
 Table 3: Location data from stressor-magnitude.xlsx workbook
@@ -742,17 +556,17 @@ NA
 <p>Column names should be as follows:</p>
 <ol style="list-style-type: decimal">
 <li>
-<strong>HUC_ID</strong> Unique (numeric) identifer for a location of
-interest. Formally from Hydrologial Unit Code (HUC) representing unique
-subbasins, but can be anything…</li>
+<strong>HUC_ID</strong> Unique (numeric) identifier for a location
+of interest. Formally from Hydrologial Unit Code (HUC) representing
+unique sub basins, but can be anything…</li>
 <li>
 <strong>NAME</strong> Name (character) of a given location. Note
 that this column is used for display purposes only…</li>
 <li>
-<strong>Stressor</strong> Name of the stressor. Note that this mutch
+<strong>Stressor</strong> Name of the stressor. Note that this must
 match the spelling used in the stressor response workbook…</li>
 <li>
-<strong>Stressor_cat</strong> Name of the Stressor ctegory. Note
+<strong>Stressor_cat</strong> Name of the stressor category. Note
 that this mutch match the spelling used in the stressor response
 workbook…</li>
 <li>
@@ -762,16 +576,16 @@ workbook…</li>
 that location. The value of each stressor and combination will be
 resampled for each simulation…</li>
 <li>
-<strong>Distribution</strong> Resampling distribution either
+<strong>Distribution</strong> Re-sampling distribution either
 <code>'lognormal'</code> or <code>'normal'</code>…</li>
 <li>
-<strong>Low_Limit</strong> Lower limits for the locaiton-speific
+<strong>Low_Limit</strong> Lower limits for the location-specific
 stressor…</li>
 <li>
-<strong>Up_Limit</strong> Upper limits for the locaiton-speific
+<strong>Up_Limit</strong> Upper limits for the location-specific
 stressor….</li>
 </ol>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="co"># Load default file from Joe Model Package</span></span>
 <span>  <span class="va">filename_rm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"stressor_magnitude_unc_ARTR.xlsx"</span>, package <span class="op">=</span> <span class="st">"CEMPRA"</span><span class="op">)</span></span>
 <span>  <span class="co"># Use the StressorMagnitudeWorkbook() function from the CEMPRA package to format the data and check for errors and issues</span></span>
@@ -784,9 +598,8 @@ stressor….</li>
 <div class="section level2">
 <h2 id="cumulative-system-capacity">Cumulative System Capacity<a class="anchor" aria-label="anchor" href="#cumulative-system-capacity"></a>
 </h2>
-<p>TODO placeholder text … Run the cumulative system capacity for a
-single watershed</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<p>Run the cumulative system capacity for a single watershed</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="co"># Stressor Response Workbook object = sr_wb_dat</span></span>
 <span></span>
@@ -821,7 +634,7 @@ single watershed</p>
 <span></span>
 <span><span class="co"># Look at system capacity for one variable and one stressor</span></span>
 <span><span class="va">sys_cap</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">test_sc</span><span class="op">$</span><span class="va">sys.cap</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">sys_cap</span>, xlab <span class="op">=</span> <span class="st">"Mean System Capacity (%)"</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
 <img src="a01-joe-model_files/figure-html/tmsc_plot-1.png" alt="Mean System Capacity for temperature for a hypothetical watershed" width="576"><p class="caption">
@@ -832,9 +645,9 @@ Mean System Capacity for temperature for a hypothetical watershed
 <div class="section level2">
 <h2 id="joe-model">Joe Model<a class="anchor" aria-label="anchor" href="#joe-model"></a>
 </h2>
-<p>TODO placeholder text What about all variables and all stressors -
-run the full Joe Model…</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<p>What about all variables and all stressors - run the full Joe
+Model…</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Import of stressor response and magnitude workbook</span></span>
 <span><span class="va">filename_rm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"stressor_magnitude_unc_ARTR.xlsx"</span>, package <span class="op">=</span> <span class="st">"CEMPRA"</span><span class="op">)</span></span>
 <span><span class="va">filename_sr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"stressor_response_fixed_ARTR.xlsx"</span>, package <span class="op">=</span> <span class="st">"CEMPRA"</span><span class="op">)</span></span>
@@ -853,28 +666,13 @@ run the full Joe Model…</p>
 <span><span class="co"># ce.df = Mean system capacity for each HUC_ID for each simulation</span></span>
 <span><span class="co"># sc.dose.df = Mean system capacity for each variable for each HUC_ID for each simulation</span></span>
 <span><span class="va">msc</span> <span class="op">&lt;-</span> <span class="va">jmr</span><span class="op">$</span><span class="va">ce.df</span><span class="op">$</span><span class="va">CE</span> <span class="op">*</span> <span class="fl">100</span></span></code></pre></div>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">msc</span>, xlab <span class="op">=</span> <span class="st">"Mean System Capacity (%)"</span>, main <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
 <img src="a01-joe-model_files/figure-html/msc_plot-1.png" alt="Mean System Capacity for all stressors and all watersheds across all simulations" width="576"><p class="caption">
 Mean System Capacity for all stressors and all watersheds across all
 simulations
 </p>
-</div>
-<div class="section level3">
-<h3 id="components">Components<a class="anchor" aria-label="anchor" href="#components"></a>
-</h3>
-<p>TODO placeholder text</p>
-<div class="section level4">
-<h4 id="cumulative-effects-dataframe">Cumulative Effects Dataframe<a class="anchor" aria-label="anchor" href="#cumulative-effects-dataframe"></a>
-</h4>
-<p>TODO placeholder text</p>
-</div>
-<div class="section level4">
-<h4 id="system-capacity-dose-response-dataframe">System Capacity Dose-Response Dataframe<a class="anchor" aria-label="anchor" href="#system-capacity-dose-response-dataframe"></a>
-</h4>
-<p>TODO placeholder text</p>
-</div>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
