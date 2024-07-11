@@ -4,17 +4,7 @@
 \alias{pop_model_ce_apply}
 \title{Population Model CE Application to Vital Rates}
 \usage{
-pop_model_ce_apply(
-  dat = NA,
-  CE_df = NA,
-  alevin_stage = NA,
-  all_juv = NA,
-  fry_stages = NA,
-  fry_parr_stages = NA,
-  parr_stages = NA,
-  subadult_stages = NA,
-  adult_stages = NA
-)
+pop_model_ce_apply(dat = NULL, CE_df = NULL)
 }
 \arguments{
 \item{dat}{Life history vital rates list object.}

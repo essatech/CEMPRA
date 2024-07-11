@@ -86,12 +86,6 @@ test_that("test-pop-model-density", {
 
   expect_true(all(round(tail(df4$N)) == 200))
 
-
-
-
-
-
-
   #-----------------------------------------------------------
   # Constrained DD
   # By stage-specific location habitat values and Hockey Stick

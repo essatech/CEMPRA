@@ -5,6 +5,20 @@ esub <- function(expr, sublist) {
 }
 
 
+#' proc utility function
+#' @keywords internal
+get_transition_positions <- function(matrix_size) {
+  # Create an empty vector to store the positions
+  positions <- c()
+  # Loop through the columns of the matrix
+  for (i in 1:(matrix_size - 1)) {
+    # Calculate the position for the stage-to-stage+1 transition
+    position <- (i - 1) * matrix_size + (i + 1)
+    # Append the position to the vector
+    positions <- c(positions, position)
+  }
+  return(positions)
+}
 
 #' proc utility function
 #' @keywords internal

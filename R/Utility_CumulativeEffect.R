@@ -81,15 +81,57 @@ E_est <- function(N, dat) {
 }
 
 
+#' E_est_anadromous
+#'
+#' @details  Egg count - number of egg produced by pop annually for anadromous
+#'
+#' @keywords internal
+E_est_anadromous <- function(N, dat, spanwing_years) {
+
+  # (u4 * events * eps4 * sE * s0 * sR)/int
+  E <- numeric(length(spanwing_years))
+
+  for (i in 1:length(spanwing_years)) {
+    x <- spanwing_years[i]
+    m_func <- paste0("(u", x, " * events * eps", x, " * sE * s0 * sR)/int")
+    # Update values in string
+    m_func <- paste0("(dat$u['u", x, "'] * dat$events * dat$eps['eps", x, "'] * dat$S['sE'] * dat$S['s0'] * dat$sR) / dat$int")
+
+    # Evaluate the expression in the context of the list
+    E[i] <- eval(parse(text = m_func))
+  }
+  E <- sum(E)
+  return(E)
+
+}
+
+
+
 #' s0_optim.f
 #'
-#' @details  Optimization fucntion - find YOY survival that gives a lambda
+#' @details  Optimization function - find YOY survival that gives a lambda
 #'
 #' @keywords internal
 s0_optim.f <- function(s0, mx, dat, target.lambda) {
   dat$S["s0"] <- s0
 
   pmx <- pmx_eval(mx, c(dat, dat$S, dat$nYrs, dat$mat))
+
+  lambda <- popbio::lambda(pmx)
+  (lambda - target.lambda)^2
+}
+
+
+#' s0_optim_anadromous.f
+#'
+#' @details  Optimization function - find YOY survival that gives a lambda
+#'
+#' @keywords internal
+s0_optim_anadromous.f <- function(s0, mx, dat, target.lambda) {
+
+  dat$S["s0"] <- s0
+
+  pmx <- pmx_eval(mx, c(dat, dat$S, dat$nYrs, dat$mat, dat$u, dat$smig, dat$eps))
 
   lambda <- popbio::lambda(pmx)
   (lambda - target.lambda)^2
@@ -183,24 +225,67 @@ init_pop <- function(mx, Nt, p.rep) {
 #' @description create vector of density dependence effects using compensation ratios
 #'
 #' @keywords internal
-d.vec.f <- function(df, Ks, N) {
+d.vec.f <- function(df, Ks, Nv) {
 
-  sN <- rep(NA, length(df$S))
+  is_anadromous <- df$anadromous
 
-  for (i in 1:length(sN))
-  {
-    sN[i] <-
-      eval(
-        dd_stage(),
-        list(
-          cr = as.numeric(df$cr[i]),
-          k = as.numeric(Ks[i]),
-          x = as.numeric(N[i])
+  if(df$anadromous) {
+    # for anadromous life histories
+    sN <- rep(NA, length(df$S))
+
+    # df$stage_names
+
+    for (i in 1:length(sN))
+    {
+      sN[i] <-
+        eval(
+          dd_stage(),
+          list(
+            cr = as.numeric(df$cr[i]),
+            k = as.numeric(Ks[i]),
+            x = as.numeric(Nv[i])
+          )
         )
-      )
+    }
+
+    names(sN) <- names(df$S)
+
+    # add on spawning stages
+    spawn_yr_names <- paste0("b", df$spanwing_years)
+    sB <- df$spanwing_years
+    # Since spawners (b) are a terminal stage class compensation
+    # ratios have no effect on the projection matrix
+    sB <- rep(1, length(sB))
+    names(sB) <- spawn_yr_names
+
+    sN <- c(sN, sB)
+
+
+  } else {
+
+    # for non-anadromous life histories
+    sN <- rep(NA, length(df$S))
+
+    for (i in 1:length(sN))
+    {
+      sN[i] <-
+        eval(
+          dd_stage(),
+          list(
+            cr = as.numeric(df$cr[i]),
+            k = as.numeric(Ks[i]),
+            x = as.numeric(Nv[i])
+          )
+        )
+    }
+
+    names(sN) <- names(df$S)
+
+
   }
 
-  names(sN) <- names(df$S)
+
+
   return(sN)
 }
 
@@ -260,9 +345,12 @@ s_rand <- function(mn, cv, rho) {
   # Correlation matrix
   corr <-
     cor.AR1(length(mn), rho) # AR1 structure
-  corr[1, 2:ncol(corr)] <-
-    corr[2:nrow(corr), 1] <-
-    0 # Make egg survival independnet
+
+  if(ncol(corr) > 1) {
+    corr[1, 2:ncol(corr)] <-
+      corr[2:nrow(corr), 1] <-
+      0 # Make egg survival independent
+  }
 
   # number of variables
   vr_num <- length(mn)
@@ -392,4 +480,30 @@ beta_stretch_val <- function(mn,
 harm_k <- function(dat, stressors, Nstage, Korig) {
   names(K_impacted) <- names(Korig)
   return(K_impacted)
+}
+
+
+
+#' bh_dd_stages_check
+#'
+#' @description Check that bh_dd_stages vector values are valid.
+#'
+#' @keywords internal
+bh_dd_stages_check_ok <- function(bh_dd_stages = NA) {
+  # All possible
+  sc <- tolower(bh_dd_stages)
+  ok1 <- paste0("hs_stage_pb_", seq(1:15))
+  ok2 <- paste0("bh_stage_pb_", seq(1:15))
+  ok3 <- paste0("hs_stage_b_", seq(1:15))
+  ok4 <- paste0("bh_stage_b_", seq(1:15))
+  ok5 <- paste0("hs_stage_", seq(1:15))
+  ok6 <- paste0("bh_stage_", seq(1:15))
+  ok7 <- c("dd_hs_0", "hs_stage_0", "hs_spawners", "bh_spawners", "bh_stage_0")
+  ok_all <- c(ok1, ok2, ok3, ok4, ok5, ok6, ok7)
+  check_diff <- setdiff(sc, ok_all)
+  if(length(check_diff) > 0) {
+    return(FALSE)
+  } else {
+    return(TRUE)
+  }
 }

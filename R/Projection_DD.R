@@ -16,8 +16,15 @@
 #' @param p.cat Probability of catastrophic event.
 #' @param CE_df Cumulative effect data frame. Data frame identifying cumulative effects stressors targets system capacity or population parameter, or both, and target life stages.
 #' @param K_adj Boolean. Should K_adj be run. Defaults to false.
-#' @param stage_k_override Vector of K values for fry (0), stage_1, stage_2 values etc. defaults to NULL. If set values will override adult K value for alternative DD mechanism.
+#' @param stage_k_override Vector of K values for egg fry (age-0), fry (age-0) to stage_1, stage_1 to stage_2, etc. Defaults to NULL for compensation ratios. If set, values will override adult K value for density dependence with Beverton-Holt. NA values should be used in stages with no constraints. For example, if a fry to stage_1 bottle neck was set to 3000, the resulting vector should look like this c(NA, 3000, NA):
+#' \itemize{
+#'   \item 1. Egg to fry (K), NA - no constraint
+#'   \item 2. Fry to stage_1 (K), constrained to 3000 fry entering stage_1
+#'   \item 3. stage_1 to stage_2 (K), NA - no constraint
+#' }
 #' @param bh_dd_stages Optional Character vector of life stages c("dd_hs_0", "bh_stage_1", "bh_stage_2", "bh_stage_3", ...) to apply classical Beverton-Holt density-dependence. To be used in place of compensation ratios if set. Use "dd_hs_0" for egg-to-fry k, "bh_stage_1" for fry to stage_1 k and "bh_stage_2" for stage_1 to stage_2 k etc. Densities are the capped value for the transition stage.
+#' @param anadromous Boolean. If true, the model will apply anadromous life history parameters. Defaults to false.
+#' @param alt_return Character. Alternative return objects for internal use.
 #' @importFrom rlang .data
 #'
 #' @returns A list object with projected years, population size, lambda, fecundity, survival, catastrophic events.
@@ -33,9 +40,17 @@ Projection_DD <- function(M.mx = NA,
                           CE_df = NULL,
                           K_adj = FALSE,
                           stage_k_override = NULL,
-                          bh_dd_stages = NULL) {
+                          bh_dd_stages = NULL,
+                          anadromous = FALSE,
+                          alt_return = NULL
+                          ) {
+
 
   life_stages_symbolic <- density_stage_symbolic <- NULL
+
+  if(is.null(alt_return)) {
+    alt_return <- ""
+  }
 
   # Define variables in function as null
   # stable.stage <- Nstage <- E_est <- NULL
@@ -43,19 +58,50 @@ Projection_DD <- function(M.mx = NA,
   # MJB set k to 500 if not defined in inputs
   if (is.na(K)) {
     K <- 500
+    K_adults_set <- FALSE
+  } else{
+    K_adults_set <- TRUE
+  }
+
+  # MJB: Did user forget to set anadromous?
+  if (("Nstage_B" %in% names(dat))  && !anadromous) {
+    print("Setting anadromous to TRUE in Projection_DD()...")
+    anadromous <- TRUE
+    if(!(dat$anadromous == anadromous)) {
+      stop("anadromous must be set to TRUE in dat if Nstage_B is set...")
+    }
   }
 
   # MJB: Should simple stage-specific K values be used instead of stable-stage
   # instead of compensation ratios
   if (!(is.null(stage_k_override))) {
-    # Reset fry survivorship
-    if (length(stage_k_override) != (dat$Nstage + 1)) {
+    if ((length(stage_k_override) != (dat$Nstage + 1))) {
       stop(
         "length of stage_k_override must value for dd_hs_0, bh_stage_1, and be equal to Nstage + 1..."
       )
     }
+    # Reset fry survivorship to original
     dat$s0.1.det <- dat$Surv_annual[2]
     dat$S[2] <- dat$Surv_annual[2]
+  }
+
+  # Should total spawners be constrained
+  dat$stage_k_spawners <- NULL
+  if (!(is.null(bh_dd_stages))) {
+    # check stage names ok
+    if(!(bh_dd_stages_check_ok(bh_dd_stages))) {
+      print(bh_dd_stages)
+      stop("bh_dd_stages not set correctly...")
+    }
+    if (anadromous) {
+      if(any(c("hs_spawners", "dd_hs_spawners", "bh_spawners") %in% bh_dd_stages)) {
+        # Set total spawner adult capacity to K
+        dat$stage_k_spawners <- K
+        if(is.null(stage_k_override)) {
+          stop("stage_k_override should be set...")
+        }
+      }
+    }
   }
 
 
@@ -66,7 +112,8 @@ Projection_DD <- function(M.mx = NA,
   Ka <- K * dat$K.adj
 
 
-  # Make CC Adjustments run with K_adj (optional) but slower
+  # Make CC Adjustments run with K_adj (optional) but slower processing
+  # Only relevant if running with compensation ratios
   if (K_adj) {
     kadj <- pop_model_K_adj(
       replicates = 100,
@@ -94,8 +141,20 @@ Projection_DD <- function(M.mx = NA,
     H <- H.mx
   }
 
+
   # Catastrophes
-  if(any(is.na(dat$gen.time))) { message("NA value in gen.time (review matrix)...") }
+  # define which years will have catastrophic events
+  if (any(is.na(dat$gen.time))) {
+    message("NA value in gen.time (review matrix)...")
+  }
+
+  if(is.null(p.cat)) {
+    p.cat <- 0
+  }
+  if(is.na(p.cat)) {
+    p.cat <- 0
+  }
+
   dat$gen.time <- ifelse(is.na(dat$gen.time), 1, dat$gen.time)
   Catastrophe <- sample(
     c(1, 0),
@@ -104,7 +163,8 @@ Projection_DD <- function(M.mx = NA,
     prob = c(p.cat / dat$gen.time, 1 - p.cat / dat$gen.time)
   )
 
-  # effect of catastrophe on pop size (percent reduction) - scaled Beta dist'n fit from Reed et al. (2003)
+  # effect of catastrophe on pop size (percent reduction)
+  # scaled Beta dist'n fit from Reed et al. (2003)
   # Biological Conservation 113 (2003) 23–34
   e.cat <- sapply(Catastrophe, function(x) {
     ifelse(x == 0,
@@ -117,40 +177,107 @@ Projection_DD <- function(M.mx = NA,
   # Initialize parameters
   # ----------------------------------
 
-  # egg carrying capacity
+  # ..........................................
+  # Create the deterministic projection matrix
 
-  # Deterministic projection matrix
-  pmx.det <- pmx_eval(M.mx, c(dat, dat$S, dat$nYrs, dat$mat))
+  if(anadromous) {
+    # For anadromous runs
+    pmx.det <- pmx_eval(M.mx, c(dat, dat$S, dat$nYrs, dat$mat, dat$u, dat$smig, dat$eps))
+    SS <-
+      popbio::stable.stage(pmx_eval(M.mx, c(dat, dat$S, dat$nYrs, dat$mat, dat$u, dat$smig, dat$eps)))
+  } else {
+    # For non-anadromous populations
+    pmx.det <- pmx_eval(M.mx, c(dat, dat$S, dat$nYrs, dat$mat))
+    SS <-
+      popbio::stable.stage(pmx_eval(M.mx, c(dat, dat$S, dat$nYrs, dat$mat)))
+  } # end of deterministic projection matrix
 
-  SS <-
-    popbio::stable.stage(pmx_eval(M.mx, c(dat, dat$S, dat$nYrs, dat$mat)))
+
+  # ..........................................
+  # Define initial K of adults
+  # ..........................................
+
+  # Ka (e.g., 5000) will be split across adult stages that are mature
+  mat_stage <- dat$mat[dat$mat > 0]
 
   # evaluate whether we are quantifying the initial carrying capacities correctly
-  k_stage <- SS / SS[dat$Nstage] * Ka
+  if(anadromous) {
+    # For anadromous use stage names to reference adult spawners
+    mat_stage_n <- as.numeric(gsub("mat", "", names(mat_stage)))
+    mat_stage_index <- match(paste0("stage_B_", mat_stage_n), dat$stage_names)
+    total_adults <- sum(SS[mat_stage_index])
+    k_stage <- (SS / total_adults) * Ka
+
+  } else {
+    # For non-anadromous simple reference index from matrity
+    mat_stage_n <- as.numeric(gsub("mat", "", names(mat_stage)))
+    total_adults <- sum(SS[mat_stage_n])
+    k_stage <- (SS / total_adults) * Ka
+  }
+
+  # k_stage <- SS / (SS[dat$Nstage] * Ka)
+  # older code considered only one adult class
 
   # MJB added line - Nstage was floating in global memory from KW code
   Nstage <- dat$Nstage
 
-  names(k_stage) <- paste("K", 1:Nstage, sep = "")
-  dat$K <- k_stage
-  dat$Ke <- E_est(N = dat$K[-1], dat = c(dat, dat$mat, dat$S))
-  dat$K0 <- dat$Ke * dat$S["sE"]
+  if(anadromous) {
+
+    # For anadromous populations assign stage names based on spawning and
+    # non-spawning classes
+    names(k_stage) <- dat$stage_names
+    dat$K <- k_stage
+    # Back-calculate from stage 1
+    # MJB: At stable stage need to cal from stage 1
+    dat$Ke <- dat$K[1] / (dat$S["sE"] * dat$S["s0"])
+    dat$K0 <- dat$K[1] / (dat$S["s0"])
+    names(dat$K0) <- "K0"
+    names(dat$Ke) <- "Ke"
+
+    #  Confirm bi-directional calculations line up (pre-birth pulse)
+    #  Calculate N_eggs K from adult spawner K
+    #     sum(N_B_adults * events * eps * SR * u / int)
+    #     sum(5000 * 1 * 4000 * 0.5 * 0.95 / 1) # 9,500,000
+    #  # Calculate N_eggs K from stage_1 count
+    #     Number Stage 1 / (sE * s0)
+    #     dat$K[1] / (dat$S["sE"] * dat$S["s0"])
+    #     417710.9 / 0.04396957 # 9,500,000
+
+  } else {
+
+    # For non-anadromous populations simply assign stage names
+    names(k_stage) <- paste("K", 1:Nstage, sep = "")
+    dat$K <- k_stage
+    # MJB: dat$K[-1] -1 index is to line up with missing mat1 designation
+    dat$Ke <- E_est(N = dat$K[-1], dat = c(dat, dat$mat, dat$S))
+    dat$K0 <- dat$Ke * dat$S["sE"]
+
+  }
 
 
   # ------------------------------------------------------
   # Override SS stage-specific carrying capacity K-values
-  # with custom values
+  # with custom values. Usually from BH functions
   # ------------------------------------------------------
 
-  # MJB: Should simple stage-specific K values be used instead of stable-stage
+  # Should simple stage-specific K values be used instead of stable-stage
   # instead of compensation ratios
   if (!(is.null(stage_k_override))) {
 
+    # Determine if stage K calculations should be name or index-based.
+    if(is.null(names(stage_k_override))) {
+      # Assign names based on index. Assume position 1 is fry (age-0)
+      names(stage_k_override) <- c("K0", paste("K", 1:dat$Nstage, sep = ""))
+    } # or use names provided
+
+    dat$stage_k_override <- stage_k_override
+
+    # Running with stage-specific K values supplied for location
     # egg to fry capacity
     dat$K0 <-
-      ifelse(is.na(stage_k_override[1]), dat$K0, stage_k_override[1])
+      ifelse(is.na(stage_k_override["K0"]), dat$K0, stage_k_override[1])
 
-    # older stages - update adults
+    # For older stages - update adult vector
     k_stage_mod <- stage_k_override[2:(Nstage + 1)]
     k_stage <- ifelse(is.na(k_stage_mod), k_stage, k_stage_mod)
     names(k_stage) <- paste("K", 1:Nstage, sep = "")
@@ -161,27 +288,19 @@ Projection_DD <- function(M.mx = NA,
     Ka <- ifelse(is.na(last_stage), Ka, last_stage)
     K <- ifelse(is.na(last_stage), K, last_stage)
 
-  }
+    if(alt_return == "check_k_stage") {
+      return(list(dat, k_stage, Ka, K))
+    }
+
+  } # or run with default K values from compensation ratios
+
 
 
   # ----------------------------------
-  # Apply CE stressors
+  # Apply CE stressors to vital rates
   # ----------------------------------
 
   # Apply the harm matrix to K or S (if needed)
-
-  # Define nicknames for stages
-  alevin_stage <- 2
-  all_juv <- 3:5
-  fry_stages <- 3
-  fry_parr_stages <- 3:4
-  # 3 is used as eggs, yoy, and age-0 are not ever mature
-  parr_stages <- 4
-  # 3 is used as eggs, yoy, and age-0 are not ever mature
-  juv_stages <- 1:3 #1:(3 + max(which(dat$mat == 0)))
-  adult_stages <- (3 + max(which(dat$mat > 0)))
-  subadult_stages <- adult_stages - 1
-
 
   # Note from Matt: Kyle has mentioned that a future improvement to the code
   # will be to fix this massive ifelse chain to make the framework more
@@ -192,25 +311,21 @@ Projection_DD <- function(M.mx = NA,
   if (!(is.null(CE_df))) {
     dat <- pop_model_ce_apply(
       CE_df = CE_df,
-      dat = dat,
-      alevin_stage = alevin_stage,
-      all_juv = all_juv,
-      fry_stages = fry_stages,
-      fry_parr_stages = fry_parr_stages,
-      parr_stages = parr_stages,
-      subadult_stages = subadult_stages,
-      adult_stages = adult_stages
+      dat = dat
     )
   }
 
-
-  # YOY carrying capacity
+  # --------------------------------------------
+  # Setup stochastic transition probabilities
+  # --------------------------------------------
 
   # Fecundity
   ft <- lapply(1:(Nyears + 1), function(x) {
     f_temp <- f_rand(dat$eps, dat$eps_sd, rho = dat$egg_rho)
     f_temp <- ifelse(is.na(f_temp), dat$eps, f_temp)
-    names(f_temp) <- "eps"
+    if(!(anadromous)) {
+      names(f_temp) <- "eps"
+    }
     return(f_temp)
   })
 
@@ -223,13 +338,43 @@ Projection_DD <- function(M.mx = NA,
     })
   })
 
+  # Pre-spawn mortality vector (ut)
+  if(anadromous) {
+    ut <- lapply(1:(Nyears + 1), function(x) {
+      ut_temp <- s_rand(dat$u, dat$M.cv, rho = dat$M.rho)
+      ut_temp <- ifelse(is.na(ut_temp), 0, ut_temp)
+      ut_temp
+    })
+    smigt <- lapply(1:(Nyears + 1), function(x) {
+      smigt_temp <- s_rand(dat$smig, dat$M.cv, rho = dat$M.rho)
+      smigt_temp <- ifelse(is.na(smigt_temp), 0, smigt_temp)
+      smigt_temp
+    })
+  }
+
   new_dat <- dat
   new_dat[["eps"]] <- NULL
 
   # Population matrix
-  M.list <- lapply(1:(Nyears + 1), function(x) {
-    pmx_eval(M.mx, c(new_dat, st[[x]], ft[[x]], new_dat$nYrs, new_dat$mat))
-  })
+  if(anadromous) {
+    # Anadrmous matrices
+    M.list <- lapply(1:(Nyears + 1), function(x) {
+      pmx_eval(M.mx, c(new_dat, st[[x]], ft[[x]], ut[[x]], smigt[[x]], new_dat$nYrs, new_dat$mat))
+    })
+  } else {
+    # Non-anadrmous matrices
+    M.list <- lapply(1:(Nyears + 1), function(x) {
+      pmx_eval(M.mx, c(new_dat, st[[x]], ft[[x]], new_dat$nYrs, new_dat$mat))
+    })
+  }
+
+
+  # Optional QA Check: Look at distribution of lambda value across projection matrices
+  # Should be close to 1.0 if using compensation ratios to control DD
+  # or should be close to lambda from static matrix if using stage-specific K values
+  if(alt_return == "qa_matrices") {
+    return(M.list)
+  }
 
   # Initial population structure
   N <- sum(new_dat$K) * popbio::stable.stage(M.list[[1]])
@@ -245,10 +390,21 @@ Projection_DD <- function(M.mx = NA,
   }
 
   # number of Egg produced
-  Na <- Nb_est(N[-1], new_dat$mat)
-  E <-
-    E_est(N = N[-1],
-          dat = c(new_dat, ft[[1]], st[[1]], new_dat$nYrs, new_dat$mat))
+  if(anadromous) {
+    # assume max 1 year per stage pre-birth census
+    stage_1s <- N[1]
+    N_fry <- stage_1s / st[[1]]["s0"]
+    E <- N_fry / st[[1]]["sE"]
+    names(E) <- NULL
+    # Vector of spawners is directly B classes
+    Na <- sum(N[grepl("_B_", dat$stage_names)])
+  } else {
+    Na <- Nb_est(N[-1], new_dat$mat)
+    E <-
+      E_est(N = N[-1],
+            dat = c(new_dat, ft[[1]], st[[1]], new_dat$nYrs, new_dat$mat))
+  }
+
 
   # initialize output vectors
   Nvec <- rep(NA, Nyears + 1)
@@ -262,8 +418,12 @@ Projection_DD <- function(M.mx = NA,
   # population growth rate
   lambdas <- rep(NA, Nyears)
 
-  # loop through years
+  # ======================================
+  # loop through (t) years
   for (t in 1:Nyears) {
+
+    # Store previous abundance vector for BH equations
+    N_prev <- N
 
     # Density-Dependent Survival
     if (is.null(D.mx) == FALSE) {
@@ -272,14 +432,15 @@ Projection_DD <- function(M.mx = NA,
       d.vec <-
         d.vec.f(
           df = new_dat,
-          N = c(E, E * st[[t + 1]]["sE"], N),
+          Nv = c(E, E * st[[t + 1]]["sE"], N),
           Ks = c(new_dat$Ke, new_dat$K0, new_dat$K)
         )
 
       # check if any survival rates > 1
-      s.test <- d.vec * st[[t + 1]] # survival rate after DD effects
+      # survival rate after DD effects
+      s.test <- d.vec[1:length(st[[t + 1]])] * st[[t + 1]]
 
-      # MJB added: to deal with frequent NA issue here...
+      # added: to deal with frequent NA issue here...
       s.test <- ifelse(is.na(s.test), 0, s.test)
 
       if (any(s.test > 1)) {
@@ -296,10 +457,6 @@ Projection_DD <- function(M.mx = NA,
       D <- ifelse(is.na(D), 1, D)
     }
 
-    # Store previous abundance vector for BH equations
-    N_prev <- N
-
-
     # Population Projection matrix
     A <- M.list[[t + 1]] * D * H[[t]]
 
@@ -307,9 +464,12 @@ Projection_DD <- function(M.mx = NA,
     # popbio::lambda(A)
 
     # project the population 1 year ahead.
+    # or apply catastrophe
     if (Catastrophe[t] == 1) {
+      # Apply catastrophe
       N <- N * (1 - e.cat[t])
     } else {
+      # Project ahead
       N <- as.vector(A %*% N)
     }
 
@@ -321,10 +481,9 @@ Projection_DD <- function(M.mx = NA,
     }
 
 
-    # MJB (new): Allow for stage-specific DD effects
-    # using Beverton-Holt functions
+    # Allow for stage-specific DD effects
+    # Constrain using Beverton-Holt functions
     if (is.null(bh_dd_stages) == FALSE) {
-      # MJB Sept 27 2023 - allow extinction
       if(!(all(is.na(N)))) {
         N <- dd.N.bh(
           dat = dat,
@@ -334,20 +493,32 @@ Projection_DD <- function(M.mx = NA,
           N_prev = N_prev,
           bh_dd_stages = bh_dd_stages
         )
+        # (MJB Sept 27 2023 - update to allow for extinction)
       }
     }
 
 
 
-    # Number of adults
-    Na <- Nb_est(N[-1], new_dat$mat)
+    if (anadromous) {
+      # For anadromous populations
+      # Number of adult spawners
+      Na <- sum(N[grepl("_B_", dat$stage_names)])
+      # Number of non-spawner stages
+      Nj <- sum(N[grepl("_Pb_", dat$stage_names)])
+      # Number of eggs
+      E <- N[1] / (st[[t + 1]]["sE"] * st[[t + 1]]["s0"])
+    } else {
+      # For non-anadromous populations
+      # Number of adults
+      Na <- Nb_est(N[-1], new_dat$mat)
+      # Number of Juveniles
+      Nj <- sum(N * c(1, 1 - new_dat$mat))
+      # number of Egg produced
+      E <-
+        E_est(N = N[-1], c(new_dat, st[[t + 1]], ft[[t + 1]], new_dat$mat))
+    }
 
-    # Number of Juveniles
-    Nj <- sum(N * c(1, 1 - new_dat$mat))
 
-    # number of Egg produced
-    E <-
-      E_est(N = N[-1], c(new_dat, st[[t + 1]], ft[[t + 1]], new_dat$mat))
 
     # Number of mature fish in pop
     Nvec[t + 1] <- Na
@@ -355,7 +526,9 @@ Projection_DD <- function(M.mx = NA,
 
     # pop growth rate
     lambdas[t] <- Nvec[t + 1] / Nvec[t]
-  }
+
+  } # end of loop through (t) years...
+  # ======================================
 
   # Build return object from function
   ret_obj <- list(

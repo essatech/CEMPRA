@@ -15,7 +15,9 @@ Projection_DD(
   CE_df = NULL,
   K_adj = FALSE,
   stage_k_override = NULL,
-  bh_dd_stages = NULL
+  bh_dd_stages = NULL,
+  anadromous = FALSE,
+  alt_return = NULL
 )
 }
 \arguments{
@@ -37,9 +39,18 @@ Projection_DD(
 
 \item{K_adj}{Boolean. Should K_adj be run. Defaults to false.}
 
-\item{stage_k_override}{Vector of K values for fry (0), stage_1, stage_2 values etc. defaults to NULL. If set values will override adult K value for alternative DD mechanism.}
+\item{stage_k_override}{Vector of K values for egg fry (age-0), fry (age-0) to stage_1, stage_1 to stage_2, etc. Defaults to NULL for compensation ratios. If set, values will override adult K value for density dependence with Beverton-Holt. NA values should be used in stages with no constraints. For example, if a fry to stage_1 bottle neck was set to 3000, the resulting vector should look like this c(NA, 3000, NA):
+\itemize{
+\item 1. Egg to fry (K), NA - no constraint
+\item 2. Fry to stage_1 (K), constrained to 3000 fry entering stage_1
+\item 3. stage_1 to stage_2 (K), NA - no constraint
+}}
 
 \item{bh_dd_stages}{Optional Character vector of life stages c("dd_hs_0", "bh_stage_1", "bh_stage_2", "bh_stage_3", ...) to apply classical Beverton-Holt density-dependence. To be used in place of compensation ratios if set. Use "dd_hs_0" for egg-to-fry k, "bh_stage_1" for fry to stage_1 k and "bh_stage_2" for stage_1 to stage_2 k etc. Densities are the capped value for the transition stage.}
+
+\item{anadromous}{Boolean. If true, the model will apply anadromous life history parameters. Defaults to false.}
+
+\item{alt_return}{Character. Alternative return objects for internal use.}
 }
 \value{
 A list object with projected years, population size, lambda, fecundity, survival, catastrophic events.

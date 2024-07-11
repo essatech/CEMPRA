@@ -36,6 +36,7 @@ list.files('./inst/extdata/matrix_test/')
 
 
 
+
 # citation("CEMPRA")
 
 
@@ -127,7 +128,11 @@ pkgdown::build_site()
 pkgdown::build_site(new_process = FALSE)
 
 
-#
+# Steps to build pages.
+# 1. build pages...
+# 2. push to github...
+# 3. go to settings and set the github pages to the docs folder...
+# Main branch and launching from the docs folder...
 
 
 

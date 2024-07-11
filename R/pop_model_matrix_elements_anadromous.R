@@ -1,10 +1,10 @@
-#'Population Model Matrix Elements
+#'Population Model Matrix Elements for Anadromous Fish
 #'
-#' @description Build population model matrix elements.
+#' @description Build population model matrix elements for anadromous fish.
 #'
-#' @details This is an intermediate setup function to run the population model. However, some of outputs are useful on their own, especially for eigen analyses. pop_model_matrix_elements() is run after pop_model_setup() or pop_model_setup_anadromous(), but pop_model_matrix_elements() must be run before Projection_DD(). Key outputs to explore include a density independent projection matrix, life histories, and a symbolic representation of the matrix math for density dependent and density independent components.
+#' @details This is an intermediate setup function to run the population model. However, some of outputs are useful on their own, especially for eigen analyses. pop_model_matrix_elements() is run after pop_model_setup() or pop_model_setup_anadromous(), but pop_model_matrix_elements() must be run before Projection_DD(). Key outputs to explore include a density independent projection matrix, life histories, and a symbolic representation of the matrix math for density dependent and density independent components. population_model_setup() should be run with pop_model_matrix_elements() for non-anadromous species. population_model_setup_anadromous() should be run with pop_model_matrix_elements_anadromous() for anadromous species.
 #'
-#' @param pop_mod_setup List. Object returned from population_model_setup().
+#' @param pop_mod_setup List. Object returned from population_model_setup_anadromous(). Use pop_model_matrix_elements() for objects returned from population_model_setup().
 #'
 #' @returns a list object of symbolic objects.
 #'
@@ -33,14 +33,7 @@
 #'
 #' @export
 #'
-pop_model_matrix_elements <- function(pop_mod_setup = NA) {
-
-  # Detrmine if we should use pop_model_matrix_elements_anadromous()
-  # instead of pop_model_matrix_elements()
-  if(pop_mod_setup$anadromous) {
-    ret_obj <- pop_model_matrix_elements_anadromous(pop_mod_setup)
-    return(ret_obj)
-  }
+pop_model_matrix_elements_anadromous <- function(pop_mod_setup = NA) {
 
 
   life_histories <- pop_mod_setup$life_histories
@@ -48,8 +41,6 @@ pop_model_matrix_elements <- function(pop_mod_setup = NA) {
   life_pars <- pop_mod_setup$life_pars
   Nstage <- pop_mod_setup$Nstage
   density_stage_symbolic <- pop_mod_setup$density_stage_symbolic
-
-
 
 
   Nyears <- 10 * sum(life_histories$nYrs)
@@ -62,9 +53,16 @@ pop_model_matrix_elements <- function(pop_mod_setup = NA) {
         life_histories,
         life_histories$S,
         life_histories$nYrs,
-        life_histories$mat
+        life_histories$mat,
+        life_histories$eps,
+        life_histories$u,
+        life_histories$smig
       )
     )
+
+  if(!(all(pop_mod_setup$projection_matrix == pmx.det))) {
+    stop("Projection matrix generated from pmx.det does not match projection matrix from pop_mod_setup...")
+  }
 
   # Initialize populations and find carrying capacity for each life stage
   # Carrying capacity is defined at the adult stage and
@@ -77,13 +75,13 @@ pop_model_matrix_elements <- function(pop_mod_setup = NA) {
   gets0 <- tryCatch(
     {
       stats::optimize(
-          s0_optim.f,
-          interval = c(0, 1),
-          tol = 1e-16,
-          mx = life_stages_symbolic,
-          dat = life_histories,
-          target.lambda = 1
-        )$minimum
+        s0_optim_anadromous.f,
+        interval = c(0, 1),
+        tol = 1e-16,
+        mx = life_stages_symbolic,
+        dat = life_histories,
+        target.lambda = 1
+      )$minimum
     },
     error=function(cond) {
       life_histories$S["s0"]
@@ -109,6 +107,7 @@ pop_model_matrix_elements <- function(pop_mod_setup = NA) {
 
   # MJB override: If adult k is NA or NULL then keep s0.1.det
   # at original fry survivorship
+
   adult_k <- life_pars$Value[life_pars$Name == "k"]
 
   if(length(adult_k) == 0) {
@@ -140,18 +139,21 @@ pop_model_matrix_elements <- function(pop_mod_setup = NA) {
           life_histories,
           life_histories$S,
           life_histories$nYrs,
-          life_histories$mat
+          life_histories$mat,
+          life_histories$u,
+          life_histories$smig,
+          life_histories$eps
         )
       )
   }
 
 
+
   if (!(all(pop_mod_setup$projection_matrix == M.1.pmx))) {
     print(
-      "Running with S0 adjusted to s0.1.det..."
+      "Anadromous: S0 adjusted to s0.1.det..."
     )
   }
-
 
   # Replace any missing NA values with 1
   M.1.pmx <- ifelse(is.na(M.1.pmx), 1, M.1.pmx)
@@ -176,12 +178,19 @@ pop_model_matrix_elements <- function(pop_mod_setup = NA) {
   life_histories$M.rho <- life_pars["M.rho", "Value"]
   names(life_histories$M.rho) <- "M.rho"
 
-  life_histories$cr <- life_pars[grep("cr", life_pars$Name), "Value"]
-  names(life_histories$cr) <- paste("cr", c("E", 0:Nstage), sep = "")
+
+  # add custom vector of compensation ratios.
+  # set to 1 if AN
+
+  cr_vec <- c("cr_E", "cr_0", paste0("cr_", seq(1, pop_mod_setup$life_histories$Nstage_Pb)))
+  life_histories$cr <- life_pars[cr_vec, "Value"]
+  names(life_histories$cr) <- cr_vec
 
 
-  life_histories$anadromous <- FALSE
+  # Add spawning years for reference
+  life_histories$spanwing_years <- pop_mod_setup$spanwing_years
 
+  life_histories$anadromous <- TRUE
 
   #--------------------------------------------
   # Build return object
@@ -194,7 +203,10 @@ pop_model_matrix_elements <- function(pop_mod_setup = NA) {
   ret_obj$life_histories <- life_histories
   ret_obj$life_stages_symbolic <- life_stages_symbolic
   ret_obj$density_stage_symbolic <- density_stage_symbolic
-  ret_obj$anadrmous <- FALSE
+  ret_obj$anadrmous <- TRUE
+
+
+  pop_mod_setup
 
 
   return(ret_obj)

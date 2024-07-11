@@ -16,7 +16,7 @@ a list object of symbolic objects.
 Build population model matrix elements.
 }
 \details{
-This is an intermediate setup function to run the population, but some of its outputs are useful on their own, especially for eigen analyses. pop_model_matrix_elements() is run after pop_model_setup() but must be run before Projection_DD(). Key outputs to explore include a density independent projection matrix, life histories and a symbolic representation of the matrix math for density dependent and density independent components.
+This is an intermediate setup function to run the population model. However, some of outputs are useful on their own, especially for eigen analyses. pop_model_matrix_elements() is run after pop_model_setup() or pop_model_setup_anadromous(), but pop_model_matrix_elements() must be run before Projection_DD(). Key outputs to explore include a density independent projection matrix, life histories, and a symbolic representation of the matrix math for density dependent and density independent components.
 }
 \examples{
 \dontrun{

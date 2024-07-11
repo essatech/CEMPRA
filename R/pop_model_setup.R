@@ -36,6 +36,36 @@ pop_model_setup <- function(life_cycles = NA) {
   # Load the species life cycles traits
   # must have N number of survival, years, and compensation ratios
 
+  #------------------------------------------------------------
+  # Determine if anadromous transformations need to be applied
+  #------------------------------------------------------------
+  if(!("anadromous" %in% life_cycles$Name)) {
+    # if anadromous is not specifed assume false
+    anadromous <- FALSE
+  } else {
+    anadromous <- life_cycles$Value[life_cycles$Name == "anadromous"]
+    if(anadromous == "TRUE") {
+      anadromous <- TRUE
+    } else {
+      if(isTRUE(anadromous)) {
+        anadromous <- TRUE # if someone typed "No"
+      } else {
+        anadromous <- FALSE
+      }
+    }
+  }
+
+  # Re-strcuture for anadromous model
+  if(anadromous) {
+    # Call pop_model_setup_anadromous() and exit this function
+    life_cycles$Value[life_cycles$Name == "anadromous"] <- TRUE
+    ret_obj <- pop_model_setup_anadromous(life_cycles = life_cycles)
+    return(ret_obj)
+  }
+
+
+
+
   # Rename to match reference code
   life_pars <- life_cycles
   row.names(life_pars) <- life_pars$Name
@@ -313,7 +343,11 @@ pop_model_setup <- function(life_cycles = NA) {
   ret_obj <- list()
 
   # Transition Matrix
+  ret_obj$anadromous <- FALSE
+
   ret_obj$projection_matrix <- life_cycle
+  ret_obj$projection_matrix_symbol <- life_stages_symbols
+  ret_obj$projection_matrix_txt <- life_stages_symbols
 
   # Life Histories
   ret_obj$life_histories <- life_histories
@@ -322,6 +356,7 @@ pop_model_setup <- function(life_cycles = NA) {
   ret_obj$Nstage <- Nstage
   ret_obj$density_stage_symbolic <- density_stage_symbolic
   ret_obj$possible_error_state <- possible_error_state
+  ret_obj$spanwing_years <- NULL
 
 
   return(ret_obj)

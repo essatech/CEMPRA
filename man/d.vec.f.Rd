@@ -4,7 +4,7 @@
 \alias{d.vec.f}
 \title{d.vec.f}
 \usage{
-d.vec.f(df, Ks, N)
+d.vec.f(df, Ks, Nv)
 }
 \description{
 create vector of density dependence effects using compensation ratios

@@ -18,6 +18,9 @@ test_that("test-pop-model-bh_dd", {
   dat_tmp$K <- c(NA, NA, NA, NA)
   bh_dd_stages <- c("dd_hs_0")
 
+  st_tmp[[2]] <- st_tmp[[1]]
+  dat_tmp$anadromous <- FALSE
+
   res <-
     dd.N.bh(
       dat = dat_tmp,
@@ -33,8 +36,8 @@ test_that("test-pop-model-bh_dd", {
 
   # 2. Assume egg and fry surv are 100% - we should see hockey stick type DD
   st_tmp2 <- st_tmp
-  st_tmp2[[1]][[1]] <- 1
-  st_tmp2[[1]][[2]] <- 1
+  st_tmp2[[2]][[1]] <- 1
+  st_tmp2[[2]][[2]] <- 1
   res2 <-
     dd.N.bh(
       dat = dat_tmp,
@@ -123,6 +126,9 @@ test_that("test-pop-model-bh_dd", {
   dat_tmp$K0 <- NA
   dat_tmp$K <- c(NA, 100, NA, NA)
   bh_dd_stages <- c("bh_stage_2")
+
+  st_tmp2[[3]] <- st_tmp2[[2]]
+  dat_tmp$anadromous <- FALSE
 
   res6 <-
     dd.N.bh(

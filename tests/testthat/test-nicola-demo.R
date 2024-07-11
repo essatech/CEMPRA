@@ -39,4 +39,6 @@ test_that("Test the Nicola Demo", {
 
   expect_true(check2 == check1)
 
+
+
 })
