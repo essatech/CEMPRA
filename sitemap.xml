@@ -1,162 +1,62 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/404.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/LICENSE-text.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/articles/a01-joe-model.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/articles/a02-joe-model-batch-run.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/articles/a03-population-model.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/articles/a04-population-model-batch-run.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/articles/a05-bc-cef.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/authors.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/index.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/E_est.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/JoeModel_Run.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/JoeModel_Run_Batch.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/K_adj_old.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/Nb_est.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/PopulationModel_Run.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/Projection_DD.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/SocioEconomicRun.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/SocioEconomicWorkbook.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/StressorMagnitudeWorkbook.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/StressorResponseWorkbook.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/SystemCapacity.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/beta_param.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/beta_stretch_val.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/bh_stage_f.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/ce.func.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/cor.AR1.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/cor.CompSym.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/d.vec.f.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/dd.N.bh.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/dd_calc.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/dd_stage.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/esub.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/f_rand.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/harm_k.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/init_pop.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/interaction_matrix_load.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/interaction_matrix_sys_cap.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/mean_Response.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/mn.sd.huc.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/pmx_eval.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/pop_model_K_adj.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/pop_model_ce_apply.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/pop_model_matrix_elements.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/pop_model_setup.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/proc.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/rbeta2.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/rtnorm_TruncatedDistributions.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/s0_optim.f.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/s_rand.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/stage_probs.html</loc>
-  </url>
-  <url>
-    <loc>https://essatech.github.io/CEMPRA/reference/tbeta_rnd.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://essatech.github.io/CEMPRA/404.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/LICENSE-text.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/articles/a01-joe-model.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/articles/a02-joe-model-batch-run.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/articles/a03-population-model.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/articles/a04-population-model-batch-run.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/articles/a05-bc-cef.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/articles/index.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/authors.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/index.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/E_est.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/E_est_anadromous.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/JoeModel_Run.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/JoeModel_Run_Batch.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/K_adj_old.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/Nb_est.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/PopulationModel_Run.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/Projection_DD.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/SocioEconomicRun.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/SocioEconomicWorkbook.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/StressorMagnitudeWorkbook.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/StressorResponseWorkbook.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/SystemCapacity.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/beta_param.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/beta_stretch_val.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/bh_dd_stages_check_ok.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/bh_stage_f.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/ce.func.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/cor.AR1.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/cor.CompSym.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/d.vec.f.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/dd.N.bh.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/dd_calc.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/dd_stage.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/esub.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/f_rand.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/get_transition_positions.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/harm_k.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/index.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/init_pop.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/interaction_matrix_load.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/interaction_matrix_sys_cap.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/mean_Response.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/mn.sd.huc.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/pmx_eval.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/pop_model_K_adj.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/pop_model_ce_apply.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/pop_model_matrix_elements.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/pop_model_matrix_elements_anadromous.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/pop_model_setup.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/pop_model_setup_anadromous.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/proc.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/rbeta2.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/rtnorm_TruncatedDistributions.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/s0_optim.f.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/s0_optim_anadromous.f.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/s_rand.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/stage_probs.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/tbeta_rnd.html</loc></url>
 </urlset>
+
