@@ -1,5 +1,5 @@
 pandoc: 3.1.11
-pkgdown: 2.1.0
+pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
   a01-joe-model: a01-joe-model.html
@@ -7,7 +7,7 @@ articles:
   a03-population-model: a03-population-model.html
   a04-population-model-batch-run: a04-population-model-batch-run.html
   a05-bc-cef: a05-bc-cef.html
-last_built: 2024-07-11T22:12Z
+last_built: 2024-09-19T22:31Z
 urls:
   reference: https://essatech.github.io/CEMPRA/reference
   article: https://essatech.github.io/CEMPRA/articles
