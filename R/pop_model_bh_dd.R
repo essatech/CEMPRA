@@ -334,8 +334,14 @@ dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages
 
 
   # N_adj <- ifelse(N_adj > N, N, N_adj)
-
-  if(any(is.na(N_adj))) { stop("NA values in dd.N.bh") }
+  if (any(is.na(N_adj))) {
+    # K might be zero for stage...
+    N_adj <- ifelse(is.na(N_adj), k_stage, N_adj)
+    # if still NA then likley an erorr
+    if (any(is.na(N_adj))) {
+      stop("NA values in dd.N.bh")
+    }
+  }
 
   return(N_adj)
 

@@ -79,6 +79,8 @@ StressorResponseWorkbook <- function(filename = NA) {
     dat <- dat[, c(1:5)] # Exclude other extraneous columns to right (if any)
     # Make sure columns in the correct order
     colnames(dat)[1] <- "value"
+    colnames(dat)[2] <- "Mean System Capacity (%)"
+
     if (any(colnames(dat) != c("value", "Mean System Capacity (%)", "SD", "low.limit", "up.limit"))) {
       return("Column names in stressor response workbook out of order")
     }

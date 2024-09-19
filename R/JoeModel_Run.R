@@ -196,8 +196,13 @@ JoeModel_Run <- function(dose = NA,
     for (j in 1:length(stressors)) {
 
       # find combination of HUC and stressor in the dose table
-      pnt.dose <- intersect(grep(hucs[i], dose$HUC_ID),
-                            grep(stressors[j], dose$Stressor))
+
+      # MJB fix Sept 19th 2024 - older AEP code users grep.
+      # This is problematic since some stressors may share the same prefix
+      # For example, HUC 4, 44, 14, 140 all have '4'
+      # pnt.dose <- intersect(grep(hucs[i], dose$HUC_ID),
+      #                       grep(stressors[j], dose$Stressor))
+      pnt.dose <- which(dose$HUC_ID == hucs[i] & dose$Stressor == stressors[j])
 
       # MJB fix (Nov 12, 2023) - older AEP code uses grep(...)
       # - older AEP code uses grep(...)
@@ -216,7 +221,8 @@ JoeModel_Run <- function(dose = NA,
       }
 
       # find stressor in main.sheet for relationship
-      pnt.curv <- grep(stressors[j], main.sheet$Stressors)
+      # pnt.curv <- grep(stressors[j], main.sheet$Stressors)
+      pnt.curv <- which(main.sheet$Stressors == stressors[j])
 
       # MJB fix (Nov 12, 2023) - older AEP code uses grep(...)
       # which is problematic - some stressors may share same prefix

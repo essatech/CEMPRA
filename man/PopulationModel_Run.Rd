@@ -45,11 +45,11 @@ applicable to the population model.}
 Runs the population model
 }
 \details{
-Runs the integrated population model within
+Runs the population model within
 the Joe Model stress-response framework. The population model is
-run for a single subwatershed unit (HUC_ID). Inputs for the
-PopulationModel_Run include the stressor-response and stressor magnitude
-workbooks as well as the life cycle parameters table.
+run independently for each single sub-watershed unit (HUC_ID). Inputs for
+\code{PopulationModel_Run} include the stressor-response and stressor magnitude
+workbooks as well as the life cycle parameters object.
 }
 \examples{
 \dontrun{

@@ -20,9 +20,10 @@ devtools::check() # Operating system test
 
 remove.packages("CEMPRA")
 # install.packages(getwd(), repos = NULL, type = "source")
-devtools::install_github("essatech/CEMPRA")
+# devtools::install_github("essatech/CEMPRA")
+# library(CEMPRA)
 
-# Installing unfinsihed package to computer...
+# Installing unfinished package to computer...
 # remove.packages("JoeModelCE")
 # install.packages(getwd(), repos = NULL, type = "source")
 # devtools::install_github("essatech/JoeModelCE")

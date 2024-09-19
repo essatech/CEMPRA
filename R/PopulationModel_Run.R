@@ -2,11 +2,11 @@
 #'
 #' @description Runs the population model
 #'
-#' @details Runs the integrated population model within
+#' @details Runs the population model within
 #'  the Joe Model stress-response framework. The population model is
-#'  run for a single subwatershed unit (HUC_ID). Inputs for the
-#'  PopulationModel_Run include the stressor-response and stressor magnitude
-#'  workbooks as well as the life cycle parameters table.
+#'  run independently for each single sub-watershed unit (HUC_ID). Inputs for
+#'  `PopulationModel_Run` include the stressor-response and stressor magnitude
+#'  workbooks as well as the life cycle parameters object.
 #'
 #' @param dose dataframe. Stressor magnitude dataset
 #'  imported from StressorMagnitudeWorkbook().

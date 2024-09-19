@@ -61,16 +61,16 @@ test_that("test-pop-model-nicola-2", {
 
   stage_k_override <- rep(NA, dat$Nstage + 1)
   names(stage_k_override) <- c("K0", dat$stage_names)
-  stage_k_override["K0"] <- 250000
-  # stage_k_override["K0"] <- 500000
-  stage_k_override["stage_Pb_1"] <- 12000
+  stage_k_override["K0"] <- 130975 # 250000
+  stage_k_override["stage_Pb_1"] <- 10478 # 12000
+  n_spawners <- 831
 
   baseline <-
     Projection_DD(
       M.mx = M.mx,
       D.mx = D.mx,
       dat = dat,
-      K = 1000,
+      K = n_spawners,
       #bh_dd_stages = c("bh_stage_0", "hs_spawners", "bh_stage_1"),
       bh_dd_stages = c("bh_stage_0", "bh_stage_1", "bh_spawners"),
       stage_k_override = stage_k_override,
@@ -109,16 +109,17 @@ test_that("test-pop-model-nicola-2", {
 
   stage_k_override <- rep(NA, dat$Nstage + 1)
   names(stage_k_override) <- c("K0", dat$stage_names)
-  stage_k_override["K0"] <- 500000 # 600000
+  stage_k_override["K0"] <- 634039 # 500000 # 600000
   # stage_k_override["K0"] <- 500000
-  stage_k_override["stage_Pb_1"] <- 50000 # 63403
+  stage_k_override["stage_Pb_1"] <- 50723 # 50000 # 63403
+  n_spawners <- 1351
 
   baseline <-
     Projection_DD(
       M.mx = M.mx,
       D.mx = D.mx,
       dat = dat,
-      K = 2000, # 2000
+      K = n_spawners, # 2000
       #bh_dd_stages = c("bh_stage_0", "hs_spawners", "bh_stage_1"),
       bh_dd_stages = c("bh_stage_0", "bh_stage_1", "bh_spawners"),
       stage_k_override = stage_k_override,
@@ -172,17 +173,18 @@ test_that("test-pop-model-nicola-2", {
   a_riffle_sum <- sum(a_riffle)
   total_redds <- a_riffle_sum/14.1 # 14.1m2/redd
   10000/total_redds
-  total_redds <- 18000
+  total_redds <- 19369
+
 
   # Stream habitat parr 0.0 per m2
 
   stage_k_override <- rep(NA, dat$Nstage + 1)
   names(stage_k_override) <- c("K0", dat$stage_names)
 
-  stage_k_override["K0"] <- a_sum * 0.5 # 0.25
+  stage_k_override["K0"] <- 853102
 
   # stage_k_override["K0"] <- 500000
-  stage_k_override["stage_Pb_1"] <- a_sum * 0.05 # 0.05
+  stage_k_override["stage_Pb_1"] <- 170610
 
   baseline <-
     Projection_DD(
@@ -190,6 +192,7 @@ test_that("test-pop-model-nicola-2", {
       D.mx = D.mx,
       dat = dat,
       K = total_redds, # 37820
+      # bh_dd_stages = c("bh_spawners", "bh_stage_0", "bh_stage_1"),
       bh_dd_stages = c("bh_spawners", "bh_stage_0", "bh_stage_1"),
       stage_k_override = stage_k_override,
       Nyears = 500,
@@ -300,4 +303,51 @@ test_that("test-pop-model-nicola-2", {
 
 
 
+
+  # Return Zero and make sure works
+  # 0 spawners
+  ce <-
+    Projection_DD(
+      M.mx = M.mx,
+      D.mx = D.mx,
+      CE_df = data.frame(sys.cap = 0.5, life_stage = "stage_1", parameter = "capacity"),
+      dat = dat,
+      K = 0, # 37820
+      bh_dd_stages = c("bh_spawners", "bh_stage_0", "bh_stage_1"),
+      stage_k_override = stage_k_override,
+      Nyears = 500,
+      anadromous = pop_mod_setup$anadromous
+    )
+
+
+  # zet sys cap to zero
+  ce <-
+    Projection_DD(
+      M.mx = M.mx,
+      D.mx = D.mx,
+      CE_df = data.frame(sys.cap = 0, life_stage = "bh_spawners", parameter = "capacity"),
+      dat = dat,
+      K = 99999999999, # 37820
+      bh_dd_stages = c("bh_spawners", "bh_stage_0", "bh_stage_1"),
+      stage_k_override = stage_k_override,
+      Nyears = 500,
+      anadromous = pop_mod_setup$anadromous
+    )
+
+  ce <-
+    Projection_DD(
+      M.mx = M.mx,
+      D.mx = D.mx,
+      CE_df = data.frame(sys.cap = 0, life_stage = "bh_spawners", parameter = "survival"),
+      dat = dat,
+      K = 99999999999, # 37820
+      bh_dd_stages = c("bh_spawners", "bh_stage_0", "bh_stage_1"),
+      stage_k_override = stage_k_override,
+      Nyears = 500,
+      anadromous = pop_mod_setup$anadromous
+    )
+
+
+
 })
+
