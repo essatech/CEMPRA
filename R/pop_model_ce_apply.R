@@ -4,13 +4,6 @@
 #'
 #' @param dat Life history vital rates list object.
 #' @param CE_df Cumulative effects data frame.
-#' @param alevin_stage Alevin stage name.
-#' @param all_juv All juvenile stage names.
-#' @param fry_stages Fry stage names.
-#' @param fry_parr_stages Fry and parr stage names.
-#' @param parr_stages Parr stage names.
-#' @param subadult_stages Subadult stage names.
-#' @param adult_stages Adult stage names.
 #'
 #' @returns a modified dat vital rates object after applying CE effects.
 #'

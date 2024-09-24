@@ -22,13 +22,8 @@ remove.packages("CEMPRA")
 # install.packages(getwd(), repos = NULL, type = "source")
 # devtools::install_github("essatech/CEMPRA")
 # library(CEMPRA)
-
 # Installing unfinished package to computer...
-# remove.packages("JoeModelCE")
-# install.packages(getwd(), repos = NULL, type = "source")
-# devtools::install_github("essatech/JoeModelCE")
-# library(JoeModelCE)
-# ?SystemCapacity
+
 
 list.files('./inst/extdata/matrix_test/')
 

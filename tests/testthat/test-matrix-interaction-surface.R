@@ -142,7 +142,16 @@ test_that("Matrix Interaction", {
   # --------------------------------------------------------
   # Run the Joe model with only matrix interaction surfaces
   # --------------------------------------------------------
-  # Run the Joe Model
+  # Run the Joe Mod
+
+  filename_rm <- system.file("extdata", "./matrix_test/stressor_magnitude_matrix.xlsx", package = "CEMPRA")
+  filename_sr <- system.file("extdata", "./matrix_test/stressor_response_matrix_AB.xlsx", package = "CEMPRA")
+  dose <- StressorMagnitudeWorkbook(filename = filename_rm)
+  sr_wb_dat <- StressorResponseWorkbook(filename = filename_sr)
+
+  sr_wb_dat$main_sheet$Stressors
+  names(sr_wb_dat)
+
   jmr <- JoeModel_Run(dose = dose,
                       sr_wb_dat = sr_wb_dat,
                       stressors = c("MInt_AB"),

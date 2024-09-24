@@ -10,20 +10,6 @@ pop_model_ce_apply(dat = NULL, CE_df = NULL)
 \item{dat}{Life history vital rates list object.}
 
 \item{CE_df}{Cumulative effects data frame.}
-
-\item{alevin_stage}{Alevin stage name.}
-
-\item{all_juv}{All juvenile stage names.}
-
-\item{fry_stages}{Fry stage names.}
-
-\item{fry_parr_stages}{Fry and parr stage names.}
-
-\item{parr_stages}{Parr stage names.}
-
-\item{subadult_stages}{Subadult stage names.}
-
-\item{adult_stages}{Adult stage names.}
 }
 \value{
 a modified dat vital rates object after applying CE effects.

@@ -59,6 +59,7 @@ JoeModel_Run <- function(dose = NA,
   msheet <- sr_wb_dat$main_sheet
 
   if (adult_sys_cap) {
+
     # Allowable stressors
     allowable_stressors <-
       msheet$Stressors[which(msheet$Life_stages == 'adult')]
@@ -70,23 +71,77 @@ JoeModel_Run <- function(dose = NA,
       allowable_stressors <- intersect(allowable_stressors, stressors)
     }
 
-    if (length(allowable_stressors) == 0) {
-      stop("Must include more than one stressor applicable to adult system capacity")
+    # Special case for MInt_
+    matrix_int <- stressors[grepl("MInt_", stressors)]
+    if(length(matrix_int) > 0) {
+      allowable_stressors <- c(allowable_stressors, matrix_int)
+    } else {
+      if (length(allowable_stressors) == 0) {
+        stop("Must include more than one stressor applicable to adult system capacity")
+      }
     }
 
 
+    # Do not filter if we are only including matrix interactions
+    if(!(length(allowable_stressors) == 1 && (length(matrix_int) > 0))) {
+
+      # Filter the sr_wb_dat in the local scope to omit stressors
+      sr_wb_dat$main_sheet <-
+        sr_wb_dat$main_sheet[which(sr_wb_dat$main_sheet$Stressors %in% allowable_stressors),]
+      # Raw names
+      sr_wb_dat$stressor_names <-
+        sr_wb_dat$stressor_names[which(sr_wb_dat$stressor_names %in% allowable_stressors)]
+      # Pretty names
+      sr_wb_dat$pretty_names <-
+        sr_wb_dat$pretty_names[which(sr_wb_dat$stressor_names %in% allowable_stressors)]
+      # Dose-response data
+      sr_wb_dat$sr_dat <-
+        sr_wb_dat$sr_dat[which(names(sr_wb_dat$sr_dat) %in% allowable_stressors)]
+
+    }
+
+  } else {
+
+    # even if not running for adults only still filter the stressors
+
+    # Assume allowable stressors is all stressors at first
+    allowable_stressors <- msheet$Stressors
+
     # Filter the sr_wb_dat in the local scope to omit stressors
-    sr_wb_dat$main_sheet <-
-      sr_wb_dat$main_sheet[which(sr_wb_dat$main_sheet$Stressors %in% allowable_stressors),]
-    # Raw names
-    sr_wb_dat$stressor_names <-
-      sr_wb_dat$stressor_names[which(sr_wb_dat$stressor_names %in% allowable_stressors)]
-    # Pretty names
-    sr_wb_dat$pretty_names <-
-      sr_wb_dat$pretty_names[which(sr_wb_dat$stressor_names %in% allowable_stressors)]
-    # Dose-response data
-    sr_wb_dat$sr_dat <-
-      sr_wb_dat$sr_dat[which(names(sr_wb_dat$sr_dat) %in% allowable_stressors)]
+    if (all(is.na(stressors))) {
+      allowable_stressors <- allowable_stressors
+    } else {
+      allowable_stressors <- intersect(allowable_stressors, stressors)
+    }
+
+    # Special case for MInt_
+    matrix_int <- stressors[grepl("MInt_", stressors)]
+    if(length(matrix_int) > 0) {
+      allowable_stressors <- c(allowable_stressors, matrix_int)
+    } else {
+      if (length(allowable_stressors) == 0) {
+        stop("Must include more than one stressor applicable to adult system capacity")
+      }
+    }
+
+    # Do not filter if we are only including matrix interactions
+    if(!(length(allowable_stressors) == 1 && (length(matrix_int) > 0))) {
+
+      # Filter the sr_wb_dat in the local scope to omit stressors
+      sr_wb_dat$main_sheet <-
+        sr_wb_dat$main_sheet[which(sr_wb_dat$main_sheet$Stressors %in% allowable_stressors),]
+      # Raw names
+      sr_wb_dat$stressor_names <-
+        sr_wb_dat$stressor_names[which(sr_wb_dat$stressor_names %in% allowable_stressors)]
+      # Pretty names
+      sr_wb_dat$pretty_names <-
+        sr_wb_dat$pretty_names[which(sr_wb_dat$stressor_names %in% allowable_stressors)]
+      # Dose-response data
+      sr_wb_dat$sr_dat <-
+        sr_wb_dat$sr_dat[which(names(sr_wb_dat$sr_dat) %in% allowable_stressors)]
+
+    }
+
 
   }
 
