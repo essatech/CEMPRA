@@ -1,6 +1,6 @@
 #' Population Model Run
 #'
-#' @description Runs the population model
+#' @description Runs the population model with stressors and stressor-response relationships
 #'
 #' @details Runs the population model within
 #'  the Joe Model stress-response framework. The population model is
@@ -13,7 +13,7 @@
 #' @param sr_wb_dat list object. Stressor response workbook
 #' imported from StressorResponseWorkbook().
 #' @param life_cycle_params dataframe. Life cycle parameters.
-#' @param HUC_ID character. HUC_ID for the subwatershed unit.
+#' @param HUC_ID character. HUC_ID for the location unit. Can only be one HUC_ID (not an array).
 #' @param n_years numeric. Number of years to run the population.
 #' @param MC_sims numeric. set number of Monte
 #'  Carlo simulations for the Population Model.
@@ -63,6 +63,7 @@ PopulationModel_Run <- function(dose = NA,
         sr_wb_dat$main_sheet <- sr_wb_dat$main_sheet[which(sr_wb_dat$main_sheet$Stressors %in% stressors), ]
         sr_wb_dat$stressor_names <- sr_wb_dat$stressor_names[sr_wb_dat$stressor_names %in% stressors] # nolint
         sr_wb_dat$sr_dat <- sr_wb_dat$sr_dat[which(names(sr_wb_dat$sr_dat) %in% stressors)]
+
     }
 
     # Merge stressor_response main sheet data
@@ -142,14 +143,17 @@ PopulationModel_Run <- function(dose = NA,
     # Return cleaned object
     CE_df <- m_all
 
+    # head(CE_df)
+
 
     #------------------------------------------------------------------------
-    # Setup the population model to project the populaiton forward in time
+    # Setup the population model to project the population forward in time
 
     # Gather population model inputs
     # Setup objects for population model
     pop_mod_setup <-
         CEMPRA::pop_model_setup(life_cycles = life_cycle_params)
+
     # Build matrix elements for population model
     pop_mod_mat <-
         CEMPRA::pop_model_matrix_elements(pop_mod_setup = pop_mod_setup)
@@ -187,71 +191,14 @@ PopulationModel_Run <- function(dose = NA,
 
     #------------------------------------------------------------------------
     # (optional) habitat_dd_k - import the habitat capacity k values
-    stage_k_override <- NULL
-    bh_dd_stages <- NULL
 
-    # Filter for target watershed
-    if (is.null(habitat_dd_k) == FALSE) {
+    ret_obj <- build_k_for_proj_dd(habitat_dd_k = habitat_dd_k,
+                        HUC_ID = HUC_ID,
+                        life_histories = life_histories, life_cycle_params = life_cycle_params)
 
-      # Filter for target location
-      hab_dd_k <- habitat_dd_k[habitat_dd_k$HUC_ID == HUC_ID,]
-
-      if (nrow(hab_dd_k) != 1) {
-        stop("HUC_ID inhabitat_dd_k.xlsx does not match stressor magnitude data...")
-      }
-
-      bh_dd_stages_set <- list()
-
-      stage_k_override <- rep(NA, (life_histories$Nstage + 1))
-      names(stage_k_override) <-
-        paste0("k_stage_", 0:(life_histories$Nstage))
-
-      # Ensure that stages are represented
-      # resample habitat k values
-      for (s in 0:(life_histories$Nstage)) {
-
-        # Sample capacity for year and location
-        mean_k <- hab_dd_k[1, paste0("k_stage_", s, "_mean")]
-        cv_k <- hab_dd_k[1, paste0("k_stage_", s, "_cv")]
-
-        if (!is.na(mean_k)) {
-          cv_k <- ifelse(is.na(cv_k), 0, cv_k)
-          this_k <-
-            stats::rnorm(1, mean = as.numeric(mean_k), sd = as.numeric(mean_k * cv_k))
-          stage_k_override[s + 1] <- this_k
-        }
-
-        # Set the Beverton-Holt DD mechanism (if set in life cycles file)
-        if(s == 0){
-
-          egg_fry <- life_cycle_params$Value[life_cycle_params$Name == "dd_hs_0"]
-
-          if(length(egg_fry) > 0) {
-            if(!(is.na(egg_fry))) {
-              if(egg_fry == 1) {
-                bh_dd_stages_set[[1]] <- "dd_hs_0"
-              }
-            }
-          }
-
-        } else {
-          dd_stage <- life_cycle_params$Value[life_cycle_params$Name == paste0("bh_stage_", s)]
-          if(length(dd_stage) > 0) {
-            if(!(is.na(dd_stage))) {
-              if(dd_stage == 1) {
-                bh_dd_stages_set[[1 + s]] <- paste0("bh_stage_", s)
-              }
-            }
-          }
-        }
-      }
-
-      # Then specify which parameters to use
-      bh_dd_stages <- unlist(bh_dd_stages_set)
-    }
-
-
-
+    stage_k_override <- ret_obj$ret_stage_k_override
+    bh_dd_stages <- ret_obj$ret_bh_dd_stages
+    total_anadromous_spawners <- ret_obj$ret_total_anadromous_spawners
 
     #------------------------------------------------------------------------
     # Run the population model for each batch replicate
@@ -283,6 +230,17 @@ PopulationModel_Run <- function(dose = NA,
                 CE_df_rep[which(!(is.na(CE_df_rep$parameter))), ]
         }
 
+      # Determin if K spanwrs for anadromous fish should override Ka
+        K_input <- life_histories$Ka
+
+        if (!(is.null(total_anadromous_spawners))) {
+          if (total_anadromous_spawners > 0) {
+            # If there are anadromous fish, override the Ka value
+            K_input <- total_anadromous_spawners
+          }
+        }
+
+
         # Run simple population projection - project forward through time
         # Run the simulation with CE stressors
         run_with_ce <-
@@ -294,7 +252,7 @@ PopulationModel_Run <- function(dose = NA,
                 H.mx = NULL,
                 dat = life_histories,
                 # life history data
-                K = life_histories$Ka,
+                K = K_input,
                 # initial pop size as stage-structure vector
                 Nyears = test_n_years,
                 # years to run simulation
@@ -322,7 +280,7 @@ PopulationModel_Run <- function(dose = NA,
                 H.mx = NULL,
                 dat = life_histories,
                 # life history data
-                K = life_histories$Ka,
+                K = K_input,
                 # initial pop size as stage-structure vector
                 Nyears = test_n_years,
                 # years to run simulation

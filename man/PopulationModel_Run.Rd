@@ -25,7 +25,7 @@ imported from StressorResponseWorkbook().}
 
 \item{life_cycle_params}{dataframe. Life cycle parameters.}
 
-\item{HUC_ID}{character. HUC_ID for the subwatershed unit.}
+\item{HUC_ID}{character. HUC_ID for the location unit. Can only be one HUC_ID (not an array).}
 
 \item{n_years}{numeric. Number of years to run the population.}
 
@@ -42,7 +42,7 @@ applicable to the population model.}
 \item{habitat_dd_k}{(optional) dataframe of location and stage-specific habitat capacity k values for the target species. If used this dataframe will override the capacity estimates}
 }
 \description{
-Runs the population model
+Runs the population model with stressors and stressor-response relationships
 }
 \details{
 Runs the population model within
