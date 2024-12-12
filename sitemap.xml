@@ -6,6 +6,7 @@
 <url><loc>https://essatech.github.io/CEMPRA/articles/a03-population-model.html</loc></url>
 <url><loc>https://essatech.github.io/CEMPRA/articles/a04-population-model-batch-run.html</loc></url>
 <url><loc>https://essatech.github.io/CEMPRA/articles/a05-bc-cef.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/articles/a06-population-model-sensitivity.html</loc></url>
 <url><loc>https://essatech.github.io/CEMPRA/articles/index.html</loc></url>
 <url><loc>https://essatech.github.io/CEMPRA/authors.html</loc></url>
 <url><loc>https://essatech.github.io/CEMPRA/index.html</loc></url>
@@ -47,6 +48,7 @@
 <url><loc>https://essatech.github.io/CEMPRA/reference/pmx_eval.html</loc></url>
 <url><loc>https://essatech.github.io/CEMPRA/reference/pop_model_K_adj.html</loc></url>
 <url><loc>https://essatech.github.io/CEMPRA/reference/pop_model_ce_apply.html</loc></url>
+<url><loc>https://essatech.github.io/CEMPRA/reference/pop_model_get_spawners.html</loc></url>
 <url><loc>https://essatech.github.io/CEMPRA/reference/pop_model_matrix_elements.html</loc></url>
 <url><loc>https://essatech.github.io/CEMPRA/reference/pop_model_matrix_elements_anadromous.html</loc></url>
 <url><loc>https://essatech.github.io/CEMPRA/reference/pop_model_setup.html</loc></url>

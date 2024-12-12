@@ -7,7 +7,8 @@ articles:
   a03-population-model: a03-population-model.html
   a04-population-model-batch-run: a04-population-model-batch-run.html
   a05-bc-cef: a05-bc-cef.html
-last_built: 2024-09-27T04:58Z
+  a06-population-model-sensitivity: a06-population-model-sensitivity.html
+last_built: 2024-12-12T18:55Z
 urls:
   reference: https://essatech.github.io/CEMPRA/reference
   article: https://essatech.github.io/CEMPRA/articles
