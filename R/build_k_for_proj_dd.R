@@ -55,16 +55,26 @@ build_k_for_proj_dd <- function(habitat_dd_k, HUC_ID, life_histories, life_cycle
 
       # Need to add on the K0 fry class if present
       check_this <- paste0("k_stage_0_mean")
+
       if (check_this %in% colnames(hab_dd_k)) {
+
         mean_k <- hab_dd_k[1, paste0("k_stage_0_mean")]
 
         # Set spawner K
         if (!is.na(mean_k)) {
-          stage_k_override["K0"] <- as.numeric(mean_k[1, 1])
+
+          if(class(mean_k)[1] == "numeric" | class(mean_k)[1] == "integer" | class(mean_k)[1] == "character") {
+            stage_k_override["K0"] <- as.numeric(mean_k)
+          } else {
+            stage_k_override["K0"] <- as.numeric(mean_k[1, 1])
+          }
+
+
           bh_dd_stages_set_qa[[countr]] <- paste0("bh_stage_0")
 
           indx1 <- which(life_cycle_params$Name == paste0("bh_stage_0"))
           indx2 <- which(life_cycle_params$Name == paste0("hs_stage_0"))
+
           if(length(indx1) > 0) {
             bh_dd_stages_set[[countr]] <- paste0("bh_stage_0")
           } else if(length(indx2) > 0) {
@@ -81,6 +91,7 @@ build_k_for_proj_dd <- function(habitat_dd_k, HUC_ID, life_histories, life_cycle
       for (s in 1:life_histories$Nstage_Pb) {
 
         check_this <- paste0("k_stage_Pb_", s, "_mean")
+
         if (check_this %in% colnames(hab_dd_k)) {
           # Sample capacity for year and location
           mean_k_pb <- hab_dd_k[1, paste0("k_stage_Pb_", s, "_mean")]
@@ -103,14 +114,24 @@ build_k_for_proj_dd <- function(habitat_dd_k, HUC_ID, life_histories, life_cycle
           }
         }
 
+
         # For spawner age classes
         check_this <- paste0("k_stage_B_", s, "_mean")
+
         if (check_this %in% colnames(hab_dd_k)) {
+
           mean_k_B <- hab_dd_k[1, paste0("k_stage_B_", s, "_mean")]
 
           # Set age-specific spawner K
           if (!is.na(mean_k_B)) {
-            stage_k_override[paste0("stage_B_", s)] <- as.numeric(mean_k_B[1, 1])
+
+            if(class(stage_k_override)[1] == "numeric" | class(stage_k_override)[1] == "integer" | class(mean_k)[1] == "character") {
+              stage_k_override[paste0("stage_B_", s)] <- as.numeric(mean_k_B)
+            } else {
+              stage_k_override[paste0("stage_B_", s)] <- as.numeric(mean_k_B[1, 1])
+            }
+
+
             bh_dd_stages_set_qa[[countr]] <- paste0("bh_stage_b_", s)
 
             indx1 <- which(life_cycle_params$Name == paste0("bh_stage_b_", s))
@@ -133,17 +154,25 @@ build_k_for_proj_dd <- function(habitat_dd_k, HUC_ID, life_histories, life_cycle
       # Finally adjust for total spawners... if there is any
       # generic input for k_stage_B_mean
       check_this <- paste0("k_stage_B_mean")
+
       if (check_this %in% colnames(hab_dd_k)) {
 
         mean_k <- hab_dd_k[1, paste0("k_stage_B_mean")]
 
         # Set spawner K
         if (!is.na(mean_k)) {
-          total_anadromous_spawners <- as.numeric(mean_k[1, 1])
+
+          if(class(mean_k)[1] == "numeric" | class(mean_k)[1] == "integer" | class(mean_k)[1] == "character") {
+            total_anadromous_spawners <- as.numeric(mean_k)
+          } else {
+            total_anadromous_spawners <- as.numeric(mean_k[1, 1])
+          }
+
           bh_dd_stages_set_qa[[countr]] <- paste0("bh_spawners")
 
           indx1 <- which(life_cycle_params$Name == paste0("bh_spawners"))
           indx2 <- which(life_cycle_params$Name == paste0("hs_spawners"))
+
           if(length(indx1) > 0) {
             bh_dd_stages_set[[countr]] <- paste0("bh_spawners")
           } else if(length(indx2) > 0) {

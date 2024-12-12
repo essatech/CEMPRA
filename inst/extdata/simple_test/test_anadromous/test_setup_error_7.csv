@@ -1,0 +1,39 @@
+"Parameters","Name","Value"
+"Number of life stages","Nstage",5
+"Anadromous","anadromous",0
+"Adult capacity","k",5000
+"Spawn events per female","events",1
+"spawning interval","int",1
+"egg survival","SE",0.2
+"Fry survival to first Aug","S0",0.3
+"sex ratio","SR",0.5
+"Stage 1 to Stage 2 Fry/parr overwinter survival to pre-smolt (0.3)","surv_1",0.35
+"Stage 2 to Stage 3 Smolt out-migration survival (0.4) * first full year at sea (0.6) (assume no Jimmies)","surv_2",0.24
+"Stage 3 to Stage 4 full year at sea (0.05)","surv_3",0.7
+"Stage 4 to Stage 5 full year at sea (0.05)","surv_4",0.8
+"Terminal spawner surv age-5 to age-6 is zero","surv_5",0
+"egg survival compensation ratio","cr_E",1
+"yoy survival compensation ratio","cr_0",1
+"fry survival compensation ratio","cr_1",1
+"parr NR survival compensation ratio","cr_2",1
+"smolt NR survival compensation ratio","cr_3",1
+"ocean adult survival compensation ratio","cr_4",1
+"spawner survival compensation ratio","cr_5",1
+"maturity as adult","mat_3",0.03
+"maturity as adult","mat_4",0.85
+"maturity as adult","mat_5",1
+"variance in eggs per female","eps_sd",500
+"correlation in egg fecundity through time","egg_rho",0.1
+"coefficient of variation in stage-specific mortality","M.cv",0.2
+"correlation in mortality through time","M.rho",0.1
+"bh_stage_0","bh_stage_0",1
+"bh_stage_pb_1","bh_stage_pb_1",1
+"bh_spawners","bh_spawners",1
+"mat_1","mat_1",0
+"mat_2","mat_2",0
+"year_1","year_1",1
+"year_2","year_2",1
+"year_3","year_3",1
+"year_4","year_4",1
+"year_5","year_5",1
+"eps","eps",4000

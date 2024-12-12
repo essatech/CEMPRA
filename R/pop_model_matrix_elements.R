@@ -54,6 +54,15 @@ pop_model_matrix_elements <- function(pop_mod_setup = NA) {
 
   Nyears <- 10 * sum(life_histories$nYrs)
 
+
+  # MJB Nov 19, 2024 Check for issue with one year and surv 1
+  # Check for issue where survivorship is 1.0 and years in stage is 1.0
+  bad_match <- life_histories$S[paste0("s", 1:pop_mod_setup$Nstage)] == 1
+  if(any(bad_match)) {
+    life_histories$S[paste0("s", 1:pop_mod_setup$Nstage)][which(bad_match)] <- 0.999999
+  }
+
+
   # Build the projection matrix
   pmx.det <-
     pmx_eval(
@@ -65,6 +74,14 @@ pop_model_matrix_elements <- function(pop_mod_setup = NA) {
         life_histories$mat
       )
     )
+
+  # Set NA values to zero for final transition stage - Nov 19th 2024
+  if(is.na(pmx.det[nrow(pmx.det), ncol(pmx.det)])) {
+    pmx.det[nrow(pmx.det), ncol(pmx.det)] <- 0
+  }
+
+
+
 
   # Initialize populations and find carrying capacity for each life stage
   # Carrying capacity is defined at the adult stage and
@@ -143,6 +160,13 @@ pop_model_matrix_elements <- function(pop_mod_setup = NA) {
           life_histories$mat
         )
       )
+  }
+
+  # life_histories
+
+  # Set NA values to zero for final transition stage - Nov 19th 2024
+  if(is.na(M.1.pmx[nrow(M.1.pmx), ncol(M.1.pmx)])) {
+    M.1.pmx[nrow(M.1.pmx), ncol(M.1.pmx)] <- 0
   }
 
 

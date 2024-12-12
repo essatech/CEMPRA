@@ -51,6 +51,7 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
     anadromous <- FALSE
   } else {
     anadromous <- life_cycles$Value[life_cycles$Name == "anadromous"]
+    anadromous <- as.logical(anadromous)
     if(anadromous == "TRUE") {
       anadromous <- TRUE
     } else {
@@ -66,6 +67,16 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
   if (!(anadromous)) {
     stop("Use pop_model_setup() instead of pop_model_setup_anadromous() for non-anadromous species...")
   }
+
+
+  # ==========================================
+  # Fix Survival - cannot be 100%
+  # ==========================================
+  surv_100 <- which(life_cycles$Name %in% paste0("surv_", 1:1000) & life_cycles$Value == 1)
+  if(length(surv_100) > 0) {
+    life_cycles$Value[surv_100] <- 0.999999
+  }
+  # .........................................................
 
 
   # Rename to match reference code
@@ -341,7 +352,12 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
 
   # calculate stage-specific survivals and transition rates
   years <- ifelse(is.na(years), 1, years)
+
   probs <- stage_probs(survival, years)
+
+  # MJB added Nov 19 2024 - one year in the last stage
+  probs <- ifelse(is.na(probs), 0, probs)
+
   tr_prob <- survival - probs
   life_cycle <- matrix(0, Nstage, Nstage)
 

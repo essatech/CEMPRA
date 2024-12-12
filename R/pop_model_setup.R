@@ -36,22 +36,40 @@ pop_model_setup <- function(life_cycles = NA) {
   # Load the species life cycles traits
   # must have N number of survival, years, and compensation ratios
 
+  # Drop extra columns (if any)
+  life_cycles <- life_cycles[, c("Parameters", "Name", "Value")]
+
   #------------------------------------------------------------
   # Determine if anadromous transformations need to be applied
   #------------------------------------------------------------
   if(!("anadromous" %in% life_cycles$Name)) {
-    # if anadromous is not specifed assume false
+    # if anadromous is not specified assume false
     anadromous <- FALSE
+
   } else {
+
+    # anadromous exists in the input file
     anadromous <- life_cycles$Value[life_cycles$Name == "anadromous"]
+
     if(anadromous == "TRUE") {
       anadromous <- TRUE
-    } else {
-      if(isTRUE(anadromous)) {
-        anadromous <- TRUE # if someone typed "No"
-      } else {
-        anadromous <- FALSE
-      }
+    }
+    if(anadromous == "FALSE") {
+      anadromous <- FALSE
+    }
+
+    if(class(anadromous) != "logical") {
+      anadromous <- as.numeric(as.character(anadromous))
+    }
+
+    if(anadromous == 1) {
+      anadromous <- TRUE
+    }
+    if(anadromous == 0) {
+      anadromous <- FALSE
+    }
+    if(is.na(anadromous)) {
+      stop("Error - could not determine anadromous class...")
     }
   }
 
@@ -64,6 +82,50 @@ pop_model_setup <- function(life_cycles = NA) {
   }
 
 
+  # ==========================================
+  # Fix eps
+  # ==========================================
+
+  # Check if "eps_1", "eps_2", "eps_3... is defined but not "eps"
+  check_sum <- sum(grepl("eps_", life_cycles$Name))
+
+  # should be just 1 for eps_sd - if many
+  if(check_sum > 1 & !("eps" %in% life_cycles$Name)) {
+    # Find the eps_1, eps_2, eps_3... and sum them
+    eps_vals <- life_cycles$Value[life_cycles$Name %in% paste0("eps_", 1:1000)]
+    eps_vals <- as.numeric(eps_vals)
+    eps_vals <- eps_vals[!(is.na(eps_vals))]
+    eps_vals <- eps_vals[eps_vals > 0]
+    # Add the sum to the data frame
+    add_row <- data.frame(Parameters = "eps", Name = "eps", Value = median(eps_vals, na.rm = TRUE))
+    life_cycles <- rbind(life_cycles, add_row)
+  }
+
+  # Check if both "eps_1", "eps_2", "eps_3... and "eps" are defined
+  if(check_sum > 1 & ("eps" %in% life_cycles$Name)) {
+    # check if eps value is na or blank
+    main_eps <- life_cycles$Value[life_cycles$Name == "eps"]
+    if(is.na(main_eps)) {
+      eps_vals <- life_cycles$Value[life_cycles$Name %in% paste0("eps_", 1:1000)]
+      eps_vals <- eps_vals[!(is.na(eps_vals))]
+      eps_vals <- eps_vals[eps_vals > 0]
+      life_cycles$Value[life_cycles$Name == "eps"] <- eps_vals
+    }
+    # delete the opther eps_ rows
+    life_cycles <- life_cycles[which(!(life_cycles$Name %in% paste0("eps_", 1:1000))), ]
+  }
+  # .........................................................
+
+
+  # ==========================================
+  # Fix Survival - cannot be 100%
+  # ==========================================
+  surv_100 <- which(life_cycles$Name %in% paste0("surv_", 1:1000) & life_cycles$Value == 1)
+  if(length(surv_100) > 0) {
+    life_cycles$Value[surv_100] <- 0.999999
+  }
+  # .........................................................
+
 
 
   # Rename to match reference code
@@ -71,9 +133,6 @@ pop_model_setup <- function(life_cycles = NA) {
   row.names(life_pars) <- life_pars$Name
   Nstage <- life_pars["Nstage", "Value"]
 
-  #if(Nstage != 4) {
-    # possible_error_state <- "Model only accepts 4 unique stages"
-  #}
 
   stage_names <- paste("stage", 1:Nstage, sep = "_")
 
@@ -176,7 +235,7 @@ pop_model_setup <- function(life_cycles = NA) {
   for (i in 2:Nstage)
   {
     life_stages_symbols[1, i] <-
-      paste("(mat", i, "* events * eps * sE * s0 * sR)/int", sep = "")
+      paste("(mat", i, " * events * eps * sE * s0 * sR)/int", sep = "")
   }
 
   diag(life_stages_symbols) <-
@@ -262,11 +321,21 @@ pop_model_setup <- function(life_cycles = NA) {
 
   # calculate stage-specific survivals and transition rates
   probs <- stage_probs(survival, years)
+
+  # Probability of staying within existing stage
+  # MJB added Nov 19 2024 - one year in the last stage
+  probs <- ifelse(is.na(probs), 0, probs)
+
   tr_prob <- survival - probs
+
   life_cycle <- matrix(0, Nstage, Nstage)
 
   # survival probabilities
-  life_cycle[grep("pr", life_stages)] <- probs
+  msub <- life_stages[grepl("pr", life_stages)]
+  msub <- gsub("pr_", "stage_", msub)
+  probs_sub_in <- probs[msub]
+
+  life_cycle[grep("pr", life_stages)] <- probs_sub_in # probs
 
   # transition probabilities
   life_cycle[grep("tr", life_stages)] <- tr_prob[-Nstage]

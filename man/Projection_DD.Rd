@@ -31,7 +31,7 @@ Projection_DD(
 
 \item{Nyears}{Years to run simulation}
 
-\item{K}{The population carrying Capacity of adults (mature individuals)}
+\item{K}{The population carrying Capacity of adults (mature individuals). Used for back-calculating stage-specific carrying capacities with compensation ratios. Also used in anadromous model for setting K of adult spawners (across all age classes).}
 
 \item{p.cat}{Probability of catastrophic event.}
 
@@ -44,7 +44,9 @@ Projection_DD(
 \item 1. Egg to fry (K), NA - no constraint
 \item 2. Fry to stage_1 (K), constrained to 3000 fry entering stage_1
 \item 3. stage_1 to stage_2 (K), NA - no constraint
-}}
+}
+For anadromous species with a spawner capacity constraint, create a vector of NAs equal number
+of stages + 1 and then set the spawner capacity in the K input parameter of this function.}
 
 \item{bh_dd_stages}{Optional Character vector of life stages c("dd_hs_0", "bh_stage_1", "bh_stage_2", "bh_stage_3", ...) to apply classical Beverton-Holt density-dependence. To be used in place of compensation ratios if set. Use "dd_hs_0" for egg-to-fry k, "bh_stage_1" for fry to stage_1 k and "bh_stage_2" for stage_1 to stage_2 k etc. Densities are the capped value for the transition stage.}
 
@@ -59,7 +61,7 @@ A list object with projected years, population size, lambda, fecundity, survival
 Project the matrix model forward in time with density dependence.
 }
 \details{
-The function runs the population projections forward through time.
+The function runs the population projections forward through time. It is better to use PopulationModel_Run (a higher-level function) to ensure everything is input correctly for anadromous and non-anadromous runs.
 Life-cycle specific stressors (if set) will be applied based on values in the \code{CE_df} table.
 There are several ways to implement density dependence.
 deterministic projection matrix using \code{popbio::stable.stage} with initial parameters based on arguments provided. Applies CE stressors to appropriate targets based on \code{CE_df}. All population modeling components are contained within this function. Users define a projection matrix, density-dependence matrix, harm projection matrix, life history parameters, years to simulate, carrying capacity, catastrophic event probabilities and a cumulative effects data frame (CE_df). When run this function will project the population forward in time. See the vignette tutorial Population Model Overview for details and instructions.

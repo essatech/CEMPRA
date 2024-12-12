@@ -14,7 +14,7 @@ library(testthat)
 rm(list = ls())
 devtools::load_all()
 devtools::document()
-devtools::test()  # Run tests
+devtools::test()  # Run tests - all passed Nov 19 2024
 devtools::check() # Operating system test
 
 

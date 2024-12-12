@@ -1,5 +1,59 @@
 test_that("test-pop-model-anadromous-basic", {
 
+  #----------------------------------------------
+  # Test Strange (but possible input formats)
+  #----------------------------------------------
+
+  # eps (legacy) vs eps_3, eps_4, eps_5 etc. for non-anadromous fish
+  filename <- system.file("extdata/simple_test/test_anadromous/test_non_anadromous_eps_fill.csv", package = "CEMPRA")
+  life_cycles <- read.csv(filename, stringsAsFactors = FALSE)
+  pop_mod_setup <- pop_model_setup(life_cycles = life_cycles)
+  pop_mod_mat <- pop_model_matrix_elements(pop_mod_setup = pop_mod_setup)
+  expect_true(pop_mod_mat$life_histories$eps == 3000) # This must be equal to 3000
+  A <- pop_mod_mat$projection_matrix
+  lambda <- popbio::lambda(A)
+  expect_true(round(lambda, 2) == 1.21) # Manual check - might be wrong
+
+  filename <- system.file("extdata/simple_test/test_anadromous/test_setup_error.csv", package = "CEMPRA")
+  life_cycles <- read.csv(filename, stringsAsFactors = FALSE)
+  pop_mod_setup <- pop_model_setup(life_cycles = life_cycles)
+  pop_mod_mat <- pop_model_matrix_elements(pop_mod_setup = pop_mod_setup)
+
+  filename <- system.file("extdata/simple_test/test_anadromous/test_setup_error_2.csv", package = "CEMPRA")
+  life_cycles <- read.csv(filename, stringsAsFactors = FALSE)
+  pop_mod_setup <- pop_model_setup(life_cycles = life_cycles)
+  pop_mod_mat <- pop_model_matrix_elements(pop_mod_setup = pop_mod_setup)
+
+  filename <- system.file("extdata/simple_test/test_anadromous/test_setup_error_3.csv", package = "CEMPRA")
+  life_cycles <- read.csv(filename, stringsAsFactors = FALSE)
+  pop_mod_setup <- pop_model_setup(life_cycles = life_cycles)
+  pop_mod_mat <- pop_model_matrix_elements(pop_mod_setup = pop_mod_setup)
+
+  filename <- system.file("extdata/simple_test/test_anadromous/test_setup_error_4.csv", package = "CEMPRA")
+  life_cycles <- read.csv(filename, stringsAsFactors = FALSE)
+  pop_mod_setup <- pop_model_setup(life_cycles = life_cycles)
+  pop_mod_mat <- pop_model_matrix_elements(pop_mod_setup = pop_mod_setup)
+
+  filename <- system.file("extdata/simple_test/test_anadromous/test_setup_error_5.csv", package = "CEMPRA")
+  life_cycles <- read.csv(filename, stringsAsFactors = FALSE)
+  pop_mod_setup <- pop_model_setup(life_cycles = life_cycles)
+  pop_mod_mat <- pop_model_matrix_elements(pop_mod_setup = pop_mod_setup)
+
+  filename <- system.file("extdata/simple_test/test_anadromous/test_setup_error_6.csv", package = "CEMPRA")
+  life_cycles <- read.csv(filename, stringsAsFactors = FALSE)
+  pop_mod_setup <- pop_model_setup(life_cycles = life_cycles)
+  pop_mod_mat <- pop_model_matrix_elements(pop_mod_setup = pop_mod_setup)
+
+  filename <- system.file("extdata/simple_test/test_anadromous/test_setup_error_7.csv", package = "CEMPRA")
+  life_cycles <- read.csv(filename, stringsAsFactors = FALSE)
+  pop_mod_setup <- pop_model_setup(life_cycles = life_cycles)
+  pop_mod_mat <- pop_model_matrix_elements(pop_mod_setup = pop_mod_setup)
+
+
+  #----------------------------------------------
+  # Start Anadromous Tests
+  #----------------------------------------------
+
   # Load dummy CE_df
   filename <- system.file("extdata/simple_test/CE_df_testing.csv", package = "CEMPRA")
   CE_df <- read.csv(filename, stringsAsFactors = FALSE)
@@ -62,6 +116,7 @@ test_that("test-pop-model-anadromous-basic", {
   lambda_dist <- sapply(M.list, function(x) {
     popbio::lambda(x)
   })
+
   diff <- abs(1 - median(lambda_dist))
   # With CR applied lambda should roughly equal 1.0
   expect_true(diff < 0.2)

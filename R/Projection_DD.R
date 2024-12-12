@@ -2,7 +2,7 @@
 #'
 #' @description Project the matrix model forward in time with density dependence.
 #'
-#' @details The function runs the population projections forward through time.
+#' @details The function runs the population projections forward through time. It is better to use PopulationModel_Run (a higher-level function) to ensure everything is input correctly for anadromous and non-anadromous runs.
 #' Life-cycle specific stressors (if set) will be applied based on values in the `CE_df` table.
 #' There are several ways to implement density dependence.
 #'  deterministic projection matrix using `popbio::stable.stage` with initial parameters based on arguments provided. Applies CE stressors to appropriate targets based on `CE_df`. All population modeling components are contained within this function. Users define a projection matrix, density-dependence matrix, harm projection matrix, life history parameters, years to simulate, carrying capacity, catastrophic event probabilities and a cumulative effects data frame (CE_df). When run this function will project the population forward in time. See the vignette tutorial Population Model Overview for details and instructions.
@@ -12,7 +12,7 @@
 #' @param H.mx A harm projection matrix
 #' @param dat Life history data
 #' @param Nyears Years to run simulation
-#' @param K The population carrying Capacity of adults (mature individuals)
+#' @param K The population carrying Capacity of adults (mature individuals). Used for back-calculating stage-specific carrying capacities with compensation ratios. Also used in anadromous model for setting K of adult spawners (across all age classes).
 #' @param p.cat Probability of catastrophic event.
 #' @param CE_df Cumulative effect data frame. Data frame identifying cumulative effects stressors targets system capacity or population parameter, or both, and target life stages.
 #' @param K_adj Boolean. Should K_adj be run. Defaults to false.
@@ -22,6 +22,8 @@
 #'   \item 2. Fry to stage_1 (K), constrained to 3000 fry entering stage_1
 #'   \item 3. stage_1 to stage_2 (K), NA - no constraint
 #' }
+#' For anadromous species with a spawner capacity constraint, create a vector of NAs equal number
+#' of stages + 1 and then set the spawner capacity in the K input parameter of this function.
 #' @param bh_dd_stages Optional Character vector of life stages c("dd_hs_0", "bh_stage_1", "bh_stage_2", "bh_stage_3", ...) to apply classical Beverton-Holt density-dependence. To be used in place of compensation ratios if set. Use "dd_hs_0" for egg-to-fry k, "bh_stage_1" for fry to stage_1 k and "bh_stage_2" for stage_1 to stage_2 k etc. Densities are the capped value for the transition stage.
 #' @param anadromous Boolean. If true, the model will apply anadromous life history parameters. Defaults to false.
 #' @param alt_return Character. Alternative return objects for internal use.
@@ -65,7 +67,7 @@ Projection_DD <- function(M.mx = NA,
 
   # MJB: Did user forget to set anadromous?
   if (("Nstage_B" %in% names(dat))  && !anadromous) {
-    print("Setting anadromous to TRUE in Projection_DD()...")
+    # print("Setting anadromous to TRUE in Projection_DD()...")
     anadromous <- TRUE
     if(!(dat$anadromous == anadromous)) {
       stop("anadromous must be set to TRUE in dat if Nstage_B is set...")
@@ -77,7 +79,7 @@ Projection_DD <- function(M.mx = NA,
   if (!(is.null(stage_k_override))) {
     if ((length(stage_k_override) != (dat$Nstage + 1))) {
       stop(
-        "length of stage_k_override must value for dd_hs_0, bh_stage_1, and be equal to Nstage + 1..."
+        "length of stage_k_override must have value for dd_hs_0, bh_stage_1, and be equal to Nstage + 1..."
       )
     }
     # Reset fry survivorship to original
@@ -473,7 +475,7 @@ Projection_DD <- function(M.mx = NA,
       N <- as.vector(A %*% N)
     }
 
-    # Prevent runaway to infinity
+    # Prevent runaway to Inf
     too_many <- sum(N_prev, na.rm = TRUE)
     if(too_many > 10^100) {
       # Lock values at previous time step to prevent Inf

@@ -45,6 +45,14 @@ pop_model_matrix_elements_anadromous <- function(pop_mod_setup = NA) {
 
   Nyears <- 10 * sum(life_histories$nYrs)
 
+  # Check for issue where survivorship is 1.0 and years in stage is 1.0
+  bad_match <- life_histories$S[paste0("s", 1:(pop_mod_setup$Nstage - 1))] == 1
+  bad_match <- bad_match[!(is.na(bad_match))]
+  if(any(bad_match)) {
+    life_histories$S[paste0("s", 1:(pop_mod_setup$Nstage - 1))][which(bad_match)] <- 0.999999
+  }
+
+
   # Build the projection matrix
   pmx.det <-
     pmx_eval(
@@ -158,6 +166,8 @@ pop_model_matrix_elements_anadromous <- function(pop_mod_setup = NA) {
   # Replace any missing NA values with 1
   M.1.pmx <- ifelse(is.na(M.1.pmx), 1, M.1.pmx)
 
+  # Replace any Inf values with 1
+  # M.1.pmx <- ifelse(is.infinite(M.1.pmx), 1, M.1.pmx)
 
   life_histories$gen.time <- popbio::generation.time(M.1.pmx)
   names(life_histories$gen.time) <- "gen.time"

@@ -1,0 +1,40 @@
+Parameters,Name,Value,Notes
+Number of life stages,Nstage,5,
+Anadromous,anadromous,TRUE,
+Adult capacity,k,5000,
+Spawn events per female,events,1,
+Eggs per age-3 female spawn,eps_3,3000,From Sprombery and Meador 2006
+Eggs per age-4 female spawn,eps_4,4000,"(5,122 McIsaac, D.O., PhD thesis U of W)"
+Eggs per age-5 female spawn,eps_5,4810,"(5,122 McIsaac, D.O., PhD thesis U of W)"
+spawning interval,int,1,
+egg survival,SE,0.2,"(65.3% McIsaac, D.O., PhD thesis U of W)"
+Fry survival to first Aug,S0,0.3,"Beechie et al., 2021 (0.894 * 0.5 … to 0.894 * 0.29"
+sex ratio,SR,0.5,
+Stage 1 to Stage 2 Fry/parr overwinter survival to pre-smolt (0.3),surv_1,0.35,
+Stage 2 to Stage 3 Smolt out-migration survival (0.4) * first full year at sea (0.6) (assume no Jimmies),surv_2,0.24,
+Stage 3 to Stage 4 full year at sea (0.05),surv_3,0.7,
+Stage 4 to Stage 5 full year at sea (0.05),surv_4,0.8,
+Terminal spawner surv age-5 to age-6 is zero,surv_5,0,
+Pre-spawn mortality of Age-3 spawners,u_3,0.95,
+Pre-spawn mortality of Age-4 spawners,u_4,0.95,
+Pre-spawn mortality of Age-5 spawners,u_5,0.95,
+Migration survival of Age-3 spawners,smig_3,0.9,"Beechie et al., 2021"
+Migration survival of Age-4 spawners,smig_4,0.9,"Beechie et al., 2021"
+Migration survival of Age-5 spawners,smig_5,0.9,"Beechie et al., 2021"
+egg survival compensation ratio,cr_E,1,(used location-specific capacities)
+yoy survival compensation ratio,cr_0,1,(used location-specific capacities)
+fry survival compensation ratio,cr_1,1,(used location-specific capacities)
+parr NR survival compensation ratio,cr_2,1,(used location-specific capacities)
+smolt NR survival compensation ratio,cr_3,1,(used location-specific capacities)
+ocean adult survival compensation ratio,cr_4,1,(used location-specific capacities)
+spawner survival compensation ratio,cr_5,1,(used location-specific capacities)
+maturity as adult,mat_3,0.03,From Sprombery and Meador 2006
+maturity as adult,mat_4,0.85,From Sprombery and Meador 2006
+maturity as adult,mat_5,1,From Sprombery and Meador 2006
+variance in eggs per female,eps_sd,500,
+correlation in egg fecundity through time,egg_rho,0.1,
+coefficient of variation in stage-specific mortality,M.cv,0.2,Previouslly 0.02
+correlation in mortality through time,M.rho,0.1,
+bh_stage_0,bh_stage_0,TRUE,
+bh_stage_pb_1,bh_stage_pb_1,TRUE,
+bh_spawners,bh_spawners,TRUE,
