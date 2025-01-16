@@ -240,25 +240,41 @@ build_k_for_proj_dd <- function(habitat_dd_k, HUC_ID, life_histories, life_cycle
         mean_k <- hab_dd_k[1, paste0("k_stage_", s, "_mean")]
         cv_k <- hab_dd_k[1, paste0("k_stage_", s, "_cv")]
 
+        mean_k <- ifelse(length(mean_k) == 0, NA, mean_k)
+
         if (!is.na(mean_k)) {
           cv_k <- ifelse(is.na(cv_k), 0, cv_k)
+          mean_k <- mean_k[[1]]
+          cv_k <- cv_k[[1]]
           this_k <-
-            stats::rnorm(1, mean = as.numeric(mean_k), sd = as.numeric(mean_k * cv_k))
+            suppressWarnings({ stats::rnorm(1, mean = as.numeric(mean_k), sd = as.numeric(mean_k * cv_k)) })
+          this_k <- ifelse(is.na(this_k), as.numeric(mean_k), this_k)
           stage_k_override[s + 1] <- this_k
         }
 
         # Set the Beverton-Holt DD mechanism (if set in life cycles file)
         if(s == 0){
 
-          egg_fry <- life_histories$Value[life_cycle_params$Name == "dd_hs_0"]
+          egg_fry <- life_cycle_params$Value[life_cycle_params$Name == "dd_hs_0"]
 
           if(length(egg_fry) > 0) {
             if(!(is.na(egg_fry))) {
-              if(egg_fry == 1) {
+              if(egg_fry == 1 | egg_fry == "TRUE" | egg_fry == TRUE) {
                 bh_dd_stages_set[[1]] <- "dd_hs_0"
               }
             }
           }
+
+          egg_fry <- life_cycle_params$Value[life_cycle_params$Name == "bh_stage_0"]
+
+          if(length(egg_fry) > 0) {
+            if(!(is.na(egg_fry))) {
+              if(egg_fry == 1 | egg_fry == "TRUE" | egg_fry == TRUE) {
+                bh_dd_stages_set[[1]] <- "bh_stage_0"
+              }
+            }
+          }
+
 
         } else {
           dd_stage <- life_histories$Value[life_cycle_params$Name == paste0("bh_stage_", s)]

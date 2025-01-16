@@ -35,7 +35,7 @@ test_that("test-pop-model-nanaimo", {
   expect_true(round(lambda, 2) == 1.55) # Should be around this
 
 
-  # Nanaimo Composit Test
+  # Nanaimo Composite Test
   filename <- system.file("extdata/nanaimo/species_profiles/nanaimo_comp_ocean_summer.csv", package = "CEMPRA")
   life_cycles <- read.csv(filename, stringsAsFactors = FALSE)
   pop_mod_setup <- pop_model_setup(life_cycles = life_cycles)

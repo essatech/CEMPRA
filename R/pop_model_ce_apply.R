@@ -33,6 +33,7 @@ pop_model_ce_apply <- function(dat = NULL,
   #-----------------------------------------------
 
   # Define nicknames for stages --- legacy code --- do not expand on these
+  # Old format --- do not worry about this
   alevin_stage <- 2
   all_juv <- 3:5
   fry_stages <- 3
@@ -60,6 +61,7 @@ pop_model_ce_apply <- function(dat = NULL,
 
   # Split CE_df and make unique rows for each life stage
   CE_df_rebuid <- list()
+
   for(i in 1:nrow(CE_df)) {
     trow <- CE_df[i, ]
     stages <- unlist(strsplit(trow$life_stage, ","))
@@ -72,6 +74,10 @@ pop_model_ce_apply <- function(dat = NULL,
   # overwrite original
   CE_df <- CE_df_rebuid
 
+  # drop duplicates by ref_id and Year - will disable this function shortly...
+  CE_df$ref_id <- NULL
+  CE_df$Year <- NULL
+  CE_df <- CE_df[!duplicated(CE_df), ]
 
   # otherwise modify dat with CE stressors
   CE_df$parameter <- tolower(CE_df$parameter)
@@ -106,6 +112,7 @@ pop_model_ce_apply <- function(dat = NULL,
   # apply stressors to survival for eggs, juveniles, adults, or all life stages
   if (nrow(CE_surv) > 0) {
     for (i in 1:nrow(CE_surv)) {
+
       # Multiply effects additively for survival
       trow <- CE_surv[i, ]
 
@@ -174,6 +181,11 @@ pop_model_ce_apply <- function(dat = NULL,
         dat$u <- dat$u * trow$sys.cap
       }
 
+      # If coded as spawning then apply to all u stages
+      # it will target the prespawn surv class
+      if (trow$life_stage == "spawners") {
+        dat$u <- dat$u * trow$sys.cap
+      }
 
       if (trow$life_stage == "prespawn1" | trow$life_stage == "u1") {
         dat$u["u1"] <- dat$u["u1"] * trow$sys.cap

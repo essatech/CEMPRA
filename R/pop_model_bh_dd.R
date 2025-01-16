@@ -16,7 +16,7 @@ bh_stage_f <- function(alpha = NA,
 #' @description Apply location and stage-specific Beverton-Holt density dependent constraints
 #'
 #' @keywords internal
-dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages = NA) {
+dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages = NA, smig = NA) {
 
   # Exist function if values not set
   if(length(bh_dd_stages) == 0) {
@@ -267,7 +267,7 @@ dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages
         msplit <- as.numeric(msplit[length(msplit)])
 
         # Remember s is set back by one stage
-        alpha_B <- st[[t + 1]][paste0("s", msplit - 1)] * dat$mat[paste0("mat", msplit)] * dat$smig[paste0("smig", msplit)]
+        alpha_B <- st[[t + 1]][paste0("s", msplit - 1)] * dat$mat[paste0("mat", msplit)] * smig[paste0("smig", msplit)]
 
         # Get the number at time Nt1
         Nt1_B <- sNt1[paste0("K", msplit - 1)]

@@ -84,6 +84,7 @@ test_that("test-populationmodel-run-anadromous", {
   # TEST: Turn off some stressors (fines) and compare
   # ------------------------------------------------------
   unique(dose$Stressor)
+
   data_b <- PopulationModel_Run(
     dose = dose,
     sr_wb_dat = sr_wb_dat,
@@ -92,7 +93,7 @@ test_that("test-populationmodel-run-anadromous", {
     # HUC ID 2
     n_years = 100,
     MC_sims = 3,
-    stressors = c(
+    stressors = c( # excluded fines.
       "Cap Rearing",
       "Cap Spawning",
       "MWAT Prespawn",
@@ -100,6 +101,10 @@ test_that("test-populationmodel-run-anadromous", {
     ),
     habitat_dd_k = habitat_dd_k
   )
+
+  names(data)
+  plot(data$ce[[1]]$pop, type = 'l', ylim = c(0, 300), col = "red")
+  points(data$baseline[[2]]$pop, type = 'l', col = "green")
 
   mmean_a_1 <- mean(data$ce[[1]]$pop$N)
   mmean_a_2 <- mean(data$ce[[2]]$pop$N)

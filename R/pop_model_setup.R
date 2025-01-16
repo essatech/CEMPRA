@@ -43,6 +43,7 @@ pop_model_setup <- function(life_cycles = NA) {
   # Determine if anadromous transformations need to be applied
   #------------------------------------------------------------
   if(!("anadromous" %in% life_cycles$Name)) {
+
     # if anadromous is not specified assume false
     anadromous <- FALSE
 
@@ -126,13 +127,26 @@ pop_model_setup <- function(life_cycles = NA) {
   }
   # .........................................................
 
+  # =======================================================
+  # Fix Survival - cannot be 0% in the middle of the chain
+  # =======================================================
+  surv_0 <- which(life_cycles$Name %in% paste0("surv_", 1:1000) & life_cycles$Value == 0)
+  if(length(surv_0) > 1) {
+    surv_0_index <- surv_0[1:(length(surv_0) - 1)]
+    life_cycles$Value[surv_0_index] <- 0.001
+    possible_error_state <- "Cannot have 0 survival in intermediate life stage"
+  }
+
+
 
 
   # Rename to match reference code
   life_pars <- life_cycles
   row.names(life_pars) <- life_pars$Name
+
   Nstage <- life_pars["Nstage", "Value"]
 
+  Nstage <- as.numeric(Nstage)
 
   stage_names <- paste("stage", 1:Nstage, sep = "_")
 
@@ -143,6 +157,11 @@ pop_model_setup <- function(life_cycles = NA) {
   cr <-
     life_pars[match(paste("cr", 1:Nstage, sep = "_"), life_pars$Name), "Value"]
 
+  survival <- as.numeric(survival)
+  years <- as.numeric(years)
+  cr <- as.numeric(cr)
+
+
   if (any((cr * survival) > 1)) {
     print("compensation ratios too high")
     possible_error_state <- "compensation ratios too high"
@@ -152,10 +171,15 @@ pop_model_setup <- function(life_cycles = NA) {
   mat <-
     life_pars[match(paste("mat", 1:Nstage, sep = "_"), life_pars$Name), "Value"]
 
+  mat <- as.numeric(mat)
+
+
   names(survival) <- names(years) <- names(cr) <- stage_names
 
   # Equilibrium adults population K
   N0 <- life_pars["k", "Value"]
+
+  N0 <- as.numeric(N0)
 
   # Sensitivity to equilibrium
   sens <- life_pars["sens", "Value"]
@@ -340,10 +364,15 @@ pop_model_setup <- function(life_cycles = NA) {
   # transition probabilities
   life_cycle[grep("tr", life_stages)] <- tr_prob[-Nstage]
 
+  # Create numeric copy
+  lpn <- life_pars
+
+  suppressWarnings({ lpn$Value <- as.numeric(lpn$Value) })
+
   life_cycle[grep("fec", life_stages)] <-
-    mat[which(mat > 0)] * life_pars["events", "Value"] * life_pars["eps", "Value"] *
-    life_pars["SE", "Value"] * life_pars["S0", "Value"] * life_pars["SR", "Value"] /
-    life_pars["int", "Value"]
+    mat[which(mat > 0)] * lpn["events", "Value"] * lpn["eps", "Value"] *
+    lpn["SE", "Value"] * lpn["S0", "Value"] * lpn["SR", "Value"] /
+    lpn["int", "Value"]
 
   # initialize the survival/transition rates subject to a stage-specific density-dependence
   d_mat <- matrix(1, nrow = Nstage, Nstage)
@@ -367,12 +396,12 @@ pop_model_setup <- function(life_cycles = NA) {
 
   # egg-survival, age-0 survival, and then stage-specific survival probabilities
   life_histories$S <-
-    c(life_pars["SE", "Value"], life_pars["S0", "Value"], survival)
+    c(lpn["SE", "Value"], lpn["S0", "Value"], survival)
 
   names(life_histories$S) <- c("sE", "s0", paste("s", 1:Nstage, sep = ""))
 
   life_histories$Surv_annual <-
-    c(life_pars["SE", "Value"], life_pars["S0", "Value"], survival)
+    c(lpn["SE", "Value"], lpn["S0", "Value"], survival)
 
   names(life_histories$Surv_annual) <-
     c("sE", "s0", paste("s", 1:Nstage, sep = ""))
@@ -383,17 +412,17 @@ pop_model_setup <- function(life_cycles = NA) {
 
   # spawning events per year
   life_histories$events <-
-    life_pars["events", "Value"]
+    lpn["events", "Value"]
 
   names(life_histories$events) <- "events"
 
   # eggs per spawner
-  life_histories$eps <- life_pars["eps", "Value"]
+  life_histories$eps <- lpn["eps", "Value"]
 
   names(life_histories$eps) <- "eps"
 
   # spawning intervals
-  life_histories$int <- life_pars["int", "Value"]
+  life_histories$int <- lpn["int", "Value"]
   names(life_histories$int) <- "int"
 
   # adult carrying capacity
@@ -401,7 +430,7 @@ pop_model_setup <- function(life_cycles = NA) {
   names(life_histories$Ka) <- "Ka"
 
   # sex ratio
-  life_histories$sR <- life_pars["SR", "Value"]
+  life_histories$sR <- lpn["SR", "Value"]
   names(life_histories$sR) <- "sR"
 
 

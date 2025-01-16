@@ -95,18 +95,44 @@ PopulationModel_Run <- function(dose = NA,
     # Calculate the dose and system capacity score for the selected HUC
     # for each stressor
 
-    jm <- CEMPRA::JoeModel_Run(
+    # n_reps will be MC_sims * number of years
+    n_reps <- MC_sims * n_years
+
+    jm <- suppressWarnings({ CEMPRA::JoeModel_Run(
         dose = smw_sample,
         sr_wb_dat = sr_wb_dat,
-        MC_sims = MC_sims,
+        MC_sims = n_reps,
         adult_sys_cap = FALSE
-    )
+    ) })
 
     # Gather summary at stressor level
     dobj <- jm$sc.dose.df
 
     # Ensure no NA values
     dobj$sys.cap <- ifelse(is.na(dobj$sys.cap), 1, dobj$sys.cap)
+
+    # Merge on MCMC sims and year
+    mcmc_yr <- expand.grid(
+        MCMC = 1:MC_sims,
+        Year = 1:n_years
+    )
+    mcmc_yr$simulation <- 1:nrow(mcmc_yr)
+
+    dobj <-
+      merge(
+        dobj,
+        mcmc_yr,
+        by.x = "simulation",
+        by.y = "simulation",
+        all.x = TRUE,
+        all.y = FALSE
+      )
+
+    # Overwrite simulation with MCMC
+    dobj$simulation <- dobj$MCMC
+    dobj$MCMC <- NULL
+
+
 
     # add on missing attr columns
     merge_cols <-
@@ -143,8 +169,10 @@ PopulationModel_Run <- function(dose = NA,
     # Return cleaned object
     CE_df <- m_all
 
+    # nrow(CE_df) # MC_sims * n_years * nrow(merge_cols)
     # head(CE_df)
-
+    # tail(CE_df)
+    # hist(CE_df$sys.cap[CE_df$Stressor == "MWAT Rearing"])
 
     #------------------------------------------------------------------------
     # Setup the population model to project the population forward in time
@@ -161,9 +189,11 @@ PopulationModel_Run <- function(dose = NA,
 
     # Set the K.adj (K adjustment prior to pop model run)
     life_histories <- pop_mod_mat$life_histories
+
     # Mathematical expression of the transition matrix
     life_stages_symbolic <-
         pop_mod_mat$life_stages_symbolic
+
     # Mathematical expression of the density matrix
     density_stage_symbolic <-
         pop_mod_mat$density_stage_symbolic
@@ -171,8 +201,6 @@ PopulationModel_Run <- function(dose = NA,
     all_outputs <- list()
     all_outputs_baseline <- list()
     counter_huc <- 1
-
-
 
     #------------------------------------------------------------------------
     # Add in effect of population catastrophe
@@ -191,10 +219,15 @@ PopulationModel_Run <- function(dose = NA,
 
     #------------------------------------------------------------------------
     # (optional) habitat_dd_k - import the habitat capacity k values
+    # Need to build table of bh_stage_0, bh_stage_pb_1, bh_spawners, etc.
+    # to flag with stages will have DD restrictions
 
-    ret_obj <- build_k_for_proj_dd(habitat_dd_k = habitat_dd_k,
-                        HUC_ID = HUC_ID,
-                        life_histories = life_histories, life_cycle_params = life_cycle_params)
+    ret_obj <- build_k_for_proj_dd(
+      habitat_dd_k = habitat_dd_k,
+      HUC_ID = HUC_ID,
+      life_histories = life_histories,
+      life_cycle_params = life_cycle_params
+    )
 
     stage_k_override <- ret_obj$ret_stage_k_override
     bh_dd_stages <- ret_obj$ret_bh_dd_stages
@@ -214,32 +247,40 @@ PopulationModel_Run <- function(dose = NA,
     # Loop through simulations per HUC
     for (ii in 1:test_n_replicates) {
 
-        # Environmental sample for this rep
-        if (is.null(CE_df)) {
-            CE_df_rep <- CE_df
-        } else {
+      # Environmental sample for this rep
+      if (is.null(CE_df)) {
 
-          CE_df_rep <-
-                CE_df[which(CE_df$simulation == ii &
-                    CE_df$HUC == this_huc), ]
-            CE_df_rep <-
-                CE_df_rep[!(duplicated(CE_df_rep[, c("Stressor", "life_stage", "HUC")])), ]
+        CE_df_rep <- CE_df
 
-            # Do not include regular Joe parameters
-            CE_df_rep <-
-                CE_df_rep[which(!(is.na(CE_df_rep$parameter))), ]
+      } else {
+
+        CE_df_rep <-
+          CE_df[which(CE_df$simulation == ii &
+                        CE_df$HUC == this_huc), ]
+        CE_df_rep <-
+          CE_df_rep[!(duplicated(CE_df_rep[, c("Stressor", "life_stage", "HUC", "Year")])), ]
+
+        # Do not include regular Joe parameters
+        CE_df_rep <-
+          CE_df_rep[which(!(is.na(CE_df_rep$parameter))), ]
+
+      }
+
+      # Determine if K spanwrs for anadromous fish should override Ka
+      K_input <- life_histories$Ka
+
+      if (!(is.null(total_anadromous_spawners))) {
+        if (total_anadromous_spawners > 0) {
+          # If there are anadromous fish, override the Ka value
+          K_input <- total_anadromous_spawners
         }
+      }
 
-      # Determin if K spanwrs for anadromous fish should override Ka
-        K_input <- life_histories$Ka
 
-        if (!(is.null(total_anadromous_spawners))) {
-          if (total_anadromous_spawners > 0) {
-            # If there are anadromous fish, override the Ka value
-            K_input <- total_anadromous_spawners
-          }
-        }
-
+      # Should normal population vector be returned...
+      # or should matricies be returned
+      alt_return <- ""
+      alt_return <- ifelse(output_type == "qa_matrices", "qa_matrices", "")
 
         # Run simple population projection - project forward through time
         # Run the simulation with CE stressors
@@ -262,12 +303,10 @@ PopulationModel_Run <- function(dose = NA,
                 # Vector of K values for fry, stage 1 ...
                 stage_k_override = stage_k_override,
                 # Vector of life stages "dd_hs_0", "bh_stage_1" with DD
-                bh_dd_stages = bh_dd_stages
+                bh_dd_stages = bh_dd_stages,
+                anadromous = life_histories$anadromous,
+                alt_return = alt_return
             )
-
-
-        #print(stage_k_override)
-        #print(bh_dd_stages)
 
 
         # Run baseline with no CE
@@ -290,8 +329,19 @@ PopulationModel_Run <- function(dose = NA,
                 # Vector of K values for fry, stage 1 ...
                 stage_k_override = stage_k_override,
                 # Vector of life stages "dd_hs_0", "bh_stage_1" with DD
-                bh_dd_stages = bh_dd_stages
+                bh_dd_stages = bh_dd_stages,
+                anadromous = life_histories$anadromous,
+                alt_return = alt_return
             )
+
+
+        # Return matrices here if for lambda calculations
+        if (output_type == "qa_matrices") {
+          out_list <- list(ce = run_with_ce, baseline = run_with_baseline)
+          return(out_list)
+        }
+        # or continue script below with population vector
+
 
         # Gather info - for CE run
         run_with_ce$vars <- NULL

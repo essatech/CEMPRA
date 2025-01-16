@@ -48,6 +48,7 @@ pop_model_matrix_elements_anadromous <- function(pop_mod_setup = NA) {
   # Check for issue where survivorship is 1.0 and years in stage is 1.0
   bad_match <- life_histories$S[paste0("s", 1:(pop_mod_setup$Nstage - 1))] == 1
   bad_match <- bad_match[!(is.na(bad_match))]
+
   if(any(bad_match)) {
     life_histories$S[paste0("s", 1:(pop_mod_setup$Nstage - 1))][which(bad_match)] <- 0.999999
   }

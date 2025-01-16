@@ -4,7 +4,15 @@
 \alias{dd.N.bh}
 \title{dd.N.bh}
 \usage{
-dd.N.bh(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages = NA)
+dd.N.bh(
+  dat = NA,
+  t = NA,
+  st = NA,
+  N = NA,
+  N_prev = NA,
+  bh_dd_stages = NA,
+  smig = NA
+)
 }
 \description{
 Apply location and stage-specific Beverton-Holt density dependent constraints

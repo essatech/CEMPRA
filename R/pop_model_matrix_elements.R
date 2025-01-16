@@ -127,6 +127,7 @@ pop_model_matrix_elements <- function(pop_mod_setup = NA) {
   # MJB override: If adult k is NA or NULL then keep s0.1.det
   # at original fry survivorship
   adult_k <- life_pars$Value[life_pars$Name == "k"]
+  adult_k <- as.numeric(adult_k)
 
   if(length(adult_k) == 0) {
     # Cant find
@@ -185,22 +186,24 @@ pop_model_matrix_elements <- function(pop_mod_setup = NA) {
   names(life_histories$gen.time) <- "gen.time"
 
   # variation in eggs per spawner
-  life_histories$eps_sd <- life_pars["eps_sd", "Value"]
-  names(life_histories$sR) <- "eps_sd"
+  life_histories$eps_sd <- as.numeric(life_pars["eps_sd", "Value"])
+  names(life_histories$eps_sd) <- "eps_sd"
+
+  # names(life_histories$sR) <- "eps_sd"
 
   # temporal correlation in eggs per spawner
-  life_histories$egg_rho <- life_pars["egg_rho", "Value"]
+  life_histories$egg_rho <- as.numeric(life_pars["egg_rho", "Value"])
   names(life_histories$egg_rho) <- "egg_rho"
 
   # variation in natural mortality
-  life_histories$M.cv <- life_pars["M.cv", "Value"]
+  life_histories$M.cv <- as.numeric(life_pars["M.cv", "Value"])
   names(life_histories$M.cv) <- "M.cv"
 
   # temporal correlation in natural mortality
-  life_histories$M.rho <- life_pars["M.rho", "Value"]
+  life_histories$M.rho <- as.numeric(life_pars["M.rho", "Value"])
   names(life_histories$M.rho) <- "M.rho"
 
-  life_histories$cr <- life_pars[grep("cr", life_pars$Name), "Value"]
+  life_histories$cr <- as.numeric(life_pars[grep("cr", life_pars$Name), "Value"])
   names(life_histories$cr) <- paste("cr", c("E", 0:Nstage), sep = "")
 
 

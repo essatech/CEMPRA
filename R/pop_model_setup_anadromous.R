@@ -79,6 +79,17 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
   # .........................................................
 
 
+  # =======================================================
+  # Fix Survival - cannot be 0% in the middle of the chain
+  # =======================================================
+  surv_0 <- which(life_cycles$Name %in% paste0("surv_", 1:1000) & life_cycles$Value == 0)
+  if(length(surv_0) > 1) {
+    surv_0_index <- surv_0[1:(length(surv_0) - 1)]
+    life_cycles$Value[surv_0_index] <- 0.001
+    possible_error_state <- "Cannot have 0 survival in intermediate life stage"
+  }
+
+
   # Rename to match reference code
   life_pars <- life_cycles
 
