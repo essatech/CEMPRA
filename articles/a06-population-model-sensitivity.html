@@ -61,7 +61,7 @@
 
       <h1>6. Population Model Evaluation</h1>
             
-            <h4 data-toc-skip class="date">2024-12-12</h4>
+            <h4 data-toc-skip class="date">2025-01-16</h4>
       
 
       <div class="d-none name"><code>a06-population-model-sensitivity.Rmd</code></div>
@@ -160,14 +160,6 @@ numbers down to more realistic estimates.</p>
 <span>        MC_sims <span class="op">=</span> <span class="fl">5</span>, <span class="co"># batch replicates</span></span>
 <span>        habitat_dd_k <span class="op">=</span> <span class="va">habitat_capcities</span> <span class="co"># Population-specific carrying capacities</span></span>
 <span>    <span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in regularize.values(x, y, ties, missing(ties), na.rm = na.rm):</span></span>
-<span><span class="co">#&gt; collapsing to unique 'x' values</span></span>
-<span><span class="co">#&gt; Warning in regularize.values(x, y, ties, missing(ties), na.rm = na.rm):</span></span>
-<span><span class="co">#&gt; collapsing to unique 'x' values</span></span>
-<span><span class="co">#&gt; Warning in regularize.values(x, y, ties, missing(ties), na.rm = na.rm):</span></span>
-<span><span class="co">#&gt; collapsing to unique 'x' values</span></span>
-<span><span class="co">#&gt; Warning in regularize.values(x, y, ties, missing(ties), na.rm = na.rm):</span></span>
-<span><span class="co">#&gt; collapsing to unique 'x' values</span></span>
 <span><span class="co">#&gt; [1] "Running... pop_model_setup_anadromous()"</span></span>
 <span></span>
 <span>    <span class="co"># Model returns object with all data nested in a list object</span></span>
@@ -185,13 +177,13 @@ numbers down to more realistic estimates.</p>
 <span>    </span>
 <span>    <span class="co"># We want to review the N object that contains the population abundance in each stage class</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">ce</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">N</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;           K1   K2   K3  K4  K5   K6  K7</span></span>
-<span><span class="co">#&gt; [196,] 57504 4362  518 456 119  617 398</span></span>
-<span><span class="co">#&gt; [197,] 61364 2024 2336 159 526  221 372</span></span>
-<span><span class="co">#&gt; [198,] 47144 2218 1120 790 261 1051 128</span></span>
-<span><span class="co">#&gt; [199,] 68768 3097 1294 387 287  508 672</span></span>
-<span><span class="co">#&gt; [200,] 44443 3682 1644 417 364  548 332</span></span>
-<span><span class="co">#&gt; [201,] 64172 5334 2411 534 547  689 324</span></span></code></pre></div>
+<span><span class="co">#&gt;           K1   K2   K3  K4  K5  K6  K7</span></span>
+<span><span class="co">#&gt; [196,] 19698 2660  382 732  84 984  95</span></span>
+<span><span class="co">#&gt; [197,] 71512  335 1480 134 339 185 603</span></span>
+<span><span class="co">#&gt; [198,] 50142 3531  170 452  37 618 108</span></span>
+<span><span class="co">#&gt; [199,] 54265 3497 2082  55 454  73 352</span></span>
+<span><span class="co">#&gt; [200,] 58136 2445 1681 676 378 917  44</span></span>
+<span><span class="co">#&gt; [201,] 67526 1613 1368 595 308 806 530</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="visualize-the-time-series-projections">Visualize the Time Series Projections<a class="anchor" aria-label="anchor" href="#visualize-the-time-series-projections"></a>
@@ -207,11 +199,11 @@ numbers down to more realistic estimates.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">spawners</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   location_id rep_id year spawners</span></span>
 <span><span class="co">#&gt; 1           2      1    1    15384</span></span>
-<span><span class="co">#&gt; 2           2      1    2     1461</span></span>
-<span><span class="co">#&gt; 3           2      1    3     1471</span></span>
-<span><span class="co">#&gt; 4           2      1    4     1419</span></span>
-<span><span class="co">#&gt; 5           2      1    5     1152</span></span>
-<span><span class="co">#&gt; 6           2      1    6     1420</span></span>
+<span><span class="co">#&gt; 2           2      1    2     1649</span></span>
+<span><span class="co">#&gt; 3           2      1    3     2277</span></span>
+<span><span class="co">#&gt; 4           2      1    4     1759</span></span>
+<span><span class="co">#&gt; 5           2      1    5     1663</span></span>
+<span><span class="co">#&gt; 6           2      1    6     1134</span></span>
 <span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -234,12 +226,12 @@ numbers down to more realistic estimates.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 4</span></span></span>
 <span><span class="co">#&gt;   location_id  year mean_spawners sd_spawners</span></span>
 <span><span class="co">#&gt;         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>           2    51          650.        338.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>           2    52          696.        408.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>           2    53          854.        557.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>           2    54          866.        570.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>           2    55          955.        453.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>           2    56         <span style="text-decoration: underline;">1</span>063.        524.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>           2    51          830.        305.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>           2    52          957         682.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>           2    53          897.        502.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>           2    54         <span style="text-decoration: underline;">1</span>088         471.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>           2    55         <span style="text-decoration: underline;">1</span>293.        489.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>           2    56         <span style="text-decoration: underline;">1</span>044.        353.</span></span>
 <span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span><span class="co"># Create the ggplot</span></span>

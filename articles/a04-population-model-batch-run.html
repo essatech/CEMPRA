@@ -61,7 +61,7 @@
 
       <h1>4. Population Model Batch Run</h1>
             
-            <h4 data-toc-skip class="date">2024-12-12</h4>
+            <h4 data-toc-skip class="date">2025-01-16</h4>
       
 
       <div class="d-none name"><code>a04-population-model-batch-run.Rmd</code></div>
@@ -157,20 +157,20 @@ variables “ce” or baseline reference conditions “baseline”.</p>
 <span></span>
 <span>    <span class="co"># Review output</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">data</span>, <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   year        N MC_sim group</span></span>
-<span><span class="co">#&gt; 1    0 95.15279      1    ce</span></span>
-<span><span class="co">#&gt; 2    1 95.18712      1    ce</span></span>
-<span><span class="co">#&gt; 3    2 92.97419      1    ce</span></span>
+<span><span class="co">#&gt;   year         N MC_sim group</span></span>
+<span><span class="co">#&gt; 1    0 213.04017      1    ce</span></span>
+<span><span class="co">#&gt; 2    1  27.98446      1    ce</span></span>
+<span><span class="co">#&gt; 3    2  33.35724      1    ce</span></span>
 <span></span>
 <span>    <span class="co"># Look the median adult abundance</span></span>
 <span>    </span>
 <span>    <span class="co"># with stressor variables (cumulative effects)</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">N</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">group</span> <span class="op">==</span> <span class="st">"ce"</span><span class="op">)</span><span class="op">]</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 94.31018</span></span>
+<span><span class="co">#&gt; [1] 82.69442</span></span>
 <span>    </span>
 <span>    <span class="co"># and without stressor variables (baseline status quo)</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">N</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">group</span> <span class="op">==</span> <span class="st">"baseline"</span><span class="op">)</span><span class="op">]</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 98.16333</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 97.83644</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="visualize-the-time-series-projections">Visualize the Time Series Projections<a class="anchor" aria-label="anchor" href="#visualize-the-time-series-projections"></a>
@@ -241,20 +241,20 @@ variables “ce” or baseline reference conditions “baseline”.</p>
 <span></span>
 <span>    <span class="co"># Review output</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">data</span>, <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   year           N MC_sim group</span></span>
-<span><span class="co">#&gt; 1    0    930.0799      1    ce</span></span>
-<span><span class="co">#&gt; 2    1   5105.1002      1    ce</span></span>
-<span><span class="co">#&gt; 3    2 269877.3006      1    ce</span></span>
+<span><span class="co">#&gt;   year          N MC_sim group</span></span>
+<span><span class="co">#&gt; 1    0   1113.123      1    ce</span></span>
+<span><span class="co">#&gt; 2    1   7403.120      1    ce</span></span>
+<span><span class="co">#&gt; 3    2 237223.444      1    ce</span></span>
 <span></span>
 <span>    <span class="co"># Look the median adult abundance</span></span>
 <span>    </span>
 <span>    <span class="co"># with stressor variables (cumulative effects)</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">N</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">group</span> <span class="op">==</span> <span class="st">"ce"</span><span class="op">)</span><span class="op">]</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 1.97787e+24</span></span>
+<span><span class="co">#&gt; [1] 1.166062e+22</span></span>
 <span>    </span>
 <span>    <span class="co"># and without stressor variables (baseline status quo)</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">N</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">group</span> <span class="op">==</span> <span class="st">"baseline"</span><span class="op">)</span><span class="op">]</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 6.993925e+24</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 2.675373e+25</span></span></code></pre></div>
 <p>Plot out the results again for each scenario</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>    <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
