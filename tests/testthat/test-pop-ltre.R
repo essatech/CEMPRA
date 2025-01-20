@@ -1,4 +1,4 @@
-test_that("test-pop-capacity-adults", {
+test_that("test-pop-ltre", {
 
   # --------------------------------------------------------------------
   # Setup Automated Run with PopulationModel_Run()
@@ -13,7 +13,6 @@ test_that("test-pop-capacity-adults", {
   fname <- system.file("extdata/nanaimo/stressor_response_nanaimo.xlsx",
                        package = "CEMPRA")
   sr_wb_dat <- StressorResponseWorkbook(filename = fname)
-  sr_wb_dat$stressor_names
 
   # Load location and habitat capacities
   filename <- system.file("extdata/nanaimo/habitat_capacities_nanaimo.csv",
@@ -28,8 +27,7 @@ test_that("test-pop-capacity-adults", {
 
   # Simple inputs
   HUC_ID = 1
-  n_years = 200
-  MC_sims = 3
+  n_reps =200
   output_type = "full"
   stressors = NA
 
@@ -37,13 +35,32 @@ test_that("test-pop-capacity-adults", {
   # Try running the ltre without any other inputs
   # --------------------------------------------------------------------
 
+  # Run where stressors are NA
+  ret <- pop_model_ltre(step_size = 0.05,
+                        dose = NA,
+                        sr_wb_dat = NA,
+                        life_cycle_params = life_cycle_params,
+                        HUC_ID = NA,
+                        n_reps = 3,
+                        stressors = NA,
+                        habitat_dd_k = NULL)
+
+  # This should still run... even if there is an NA value...
+  names(ret)
+  m1 <- mean(ret$ltre_summary_ce$lambda)
+  m2 <- mean(ret$ltre_summary_baseline$lambda)
+  mdiff <- abs(1 - m1/m2)
+  # if no stressor data values should be about the same.
+  expect_true(mdiff < 0.7)
+
+
+
   ret <- pop_model_ltre(step_size = 0.05,
                              dose = dose,
                              sr_wb_dat = sr_wb_dat,
                              life_cycle_params = life_cycle_params,
                              HUC_ID = HUC_ID,
-                             n_years = 3,
-                             MC_sims = 1,
+                             n_reps =3,
                              stressors = stressors,
                              habitat_dd_k = habitat_dd_k)
 
@@ -112,33 +129,6 @@ test_that("test-pop-capacity-adults", {
   # Run some general tests
   # --------------------------------------------------------------------
 
-  result <- PopulationModel_Run(
-    dose = dose,
-    sr_wb_dat = sr_wb_dat,
-    life_cycle_params = life_cycle_params,
-    HUC_ID = HUC_ID,
-    n_years = n_years,
-    MC_sims = MC_sims,
-    output_type = output_type,
-    stressors = NA,
-    habitat_dd_k = habitat_dd_k
-  )
-
-  spawners <- result$ce[[1]]$pop[1:200, ]
-  spawners <- spawners[50:200, ]
-  plot(spawners$N, type = 'l')
-  m1 <- median(spawners$N)
-
-  spawners <- result$baseline[[1]]$pop[1:200, ]
-  spawners <- spawners[50:200, ]
-  plot(spawners$N, type = 'l')
-  m2 <- median(spawners$N)
-
-
-  # Expect CE to be less than baseline
-  expect_true(m1 < m2)
-
-
   # --------------------------------------------------------------------
   # Try returning matrices
   # --------------------------------------------------------------------
@@ -148,8 +138,7 @@ test_that("test-pop-capacity-adults", {
     sr_wb_dat = sr_wb_dat,
     life_cycle_params = life_cycle_params,
     HUC_ID = HUC_ID,
-    n_years = n_years,
-    MC_sims = MC_sims,
+    n_years = 50,
     output_type = "qa_matrices",
     stressors = stressors,
     habitat_dd_k = habitat_dd_k

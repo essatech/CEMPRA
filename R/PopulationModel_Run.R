@@ -42,54 +42,57 @@ PopulationModel_Run <- function(dose = NA,
                                 output_type = "full",
                                 habitat_dd_k = NULL) {
 
-    # Define variables in function as null
-    # .data <- HUC <- simulation <- NULL
+  # Define variables in function as null
+  # .data <- HUC <- simulation <- NULL
 
-    #------------------------------------------------------------------------
-    # Run the population model time series projection for a target watershed
-    #------------------------------------------------------------------------
+  #------------------------------------------------------------------------
+  # Run the population model time series projection for a target watershed
+  #------------------------------------------------------------------------
 
+  # Check to see if stressor-response data is missing and fill slots
+  if (is.data.frame(dose)) {
     #------------------------------------------------------------------------
     # Subset the stressor magnitude dataframe to
     # include only the target HUC unit
     # (population model is run seperatly for each HUC)
+
     ce_df_sub <- dose[which(dose$HUC_ID == HUC_ID), ]
 
     # Omit non-target stressors from the stressor magnitude and sr dataframes
     if (any(!is.na(stressors))) {
-        # Subset the stressor magnitude dataframe to include only the target stressors
-        ce_df_sub <- ce_df_sub[which(ce_df_sub$Stressor %in% stressors), ]
-        # Subset the stressor response dataframe to include only the target stressors
-        sr_wb_dat$main_sheet <- sr_wb_dat$main_sheet[which(sr_wb_dat$main_sheet$Stressors %in% stressors), ]
-        sr_wb_dat$stressor_names <- sr_wb_dat$stressor_names[sr_wb_dat$stressor_names %in% stressors] # nolint
-        sr_wb_dat$sr_dat <- sr_wb_dat$sr_dat[which(names(sr_wb_dat$sr_dat) %in% stressors)]
+      # Subset the stressor magnitude dataframe to include only the target stressors
+      ce_df_sub <- ce_df_sub[which(ce_df_sub$Stressor %in% stressors), ]
+      # Subset the stressor response dataframe to include only the target stressors
+      sr_wb_dat$main_sheet <- sr_wb_dat$main_sheet[which(sr_wb_dat$main_sheet$Stressors %in% stressors), ]
+      sr_wb_dat$stressor_names <- sr_wb_dat$stressor_names[sr_wb_dat$stressor_names %in% stressors] # nolint
+      sr_wb_dat$sr_dat <- sr_wb_dat$sr_dat[which(names(sr_wb_dat$sr_dat) %in% stressors)]
 
     }
 
     # Merge stressor_response main sheet data
     ce_df_sub$Stressor_cat <- NULL
     ce_df_sub <-
-        merge(
-            ce_df_sub,
-            sr_wb_dat$main_sheet,
-            by.x = "Stressor",
-            by.y = "Stressors",
-            all.x = TRUE
-        )
+      merge(
+        ce_df_sub,
+        sr_wb_dat$main_sheet,
+        by.x = "Stressor",
+        by.y = "Stressors",
+        all.x = TRUE
+      )
 
     # Stressor Magnitude...
     smw_sample <-
-        data.frame(
-            HUC_ID = ce_df_sub$HUC_ID,
-            NAME = ce_df_sub$NAME,
-            Stressor = ce_df_sub$Stressor,
-            Stressor_cat = ce_df_sub$Stressor_cat,
-            Mean = ce_df_sub$Mean,
-            SD = ce_df_sub$SD,
-            Distribution = ce_df_sub$Distribution,
-            Low_Limit = ce_df_sub$Low_Limit,
-            Up_Limit = ce_df_sub$Up_Limit
-        )
+      data.frame(
+        HUC_ID = ce_df_sub$HUC_ID,
+        NAME = ce_df_sub$NAME,
+        Stressor = ce_df_sub$Stressor,
+        Stressor_cat = ce_df_sub$Stressor_cat,
+        Mean = ce_df_sub$Mean,
+        SD = ce_df_sub$SD,
+        Distribution = ce_df_sub$Distribution,
+        Low_Limit = ce_df_sub$Low_Limit,
+        Up_Limit = ce_df_sub$Up_Limit
+      )
 
     #------------------------------------------------------------------------
     # Calculate the dose and system capacity score for the selected HUC
@@ -98,12 +101,14 @@ PopulationModel_Run <- function(dose = NA,
     # n_reps will be MC_sims * number of years
     n_reps <- MC_sims * n_years
 
-    jm <- suppressWarnings({ CEMPRA::JoeModel_Run(
+    jm <- suppressWarnings({
+      CEMPRA::JoeModel_Run(
         dose = smw_sample,
         sr_wb_dat = sr_wb_dat,
         MC_sims = n_reps,
         adult_sys_cap = FALSE
-    ) })
+      )
+    })
 
     # Gather summary at stressor level
     dobj <- jm$sc.dose.df
@@ -112,10 +117,7 @@ PopulationModel_Run <- function(dose = NA,
     dobj$sys.cap <- ifelse(is.na(dobj$sys.cap), 1, dobj$sys.cap)
 
     # Merge on MCMC sims and year
-    mcmc_yr <- expand.grid(
-        MCMC = 1:MC_sims,
-        Year = 1:n_years
-    )
+    mcmc_yr <- expand.grid(MCMC = 1:MC_sims, Year = 1:n_years)
     mcmc_yr$simulation <- 1:nrow(mcmc_yr)
 
     dobj <-
@@ -136,38 +138,39 @@ PopulationModel_Run <- function(dose = NA,
 
     # add on missing attr columns
     merge_cols <-
-        ce_df_sub[, c(
-            "Stressor",
-            "Life_stages",
-            "Parameters",
-            "Stressor_cat"
-        )]
+      ce_df_sub[, c("Stressor", "Life_stages", "Parameters", "Stressor_cat")]
 
     merge_cols <-
-        merge_cols[!(duplicated(merge_cols)), ]
+      merge_cols[!(duplicated(merge_cols)), ]
 
     m_all <-
-        merge(
-            merge_cols,
-            dobj,
-            by.x = "Stressor",
-            by.y = "Stressor",
-            all.x = TRUE,
-            all.y = TRUE
-        )
+      merge(
+        merge_cols,
+        dobj,
+        by.x = "Stressor",
+        by.y = "Stressor",
+        all.x = TRUE,
+        all.y = TRUE
+      )
 
     # Fix col names
     colnames(m_all)[colnames(m_all) == "Stressors"] <-
-        "Stressor"
+      "Stressor"
     colnames(m_all)[colnames(m_all) == "Life_stages"] <-
-        "life_stage"
+      "life_stage"
     colnames(m_all)[colnames(m_all) == "Parameters"] <-
-        "parameter"
+      "parameter"
     colnames(m_all)[colnames(m_all) == "Stressor_cat"] <-
-        "Stressor_cat"
+      "Stressor_cat"
 
     # Return cleaned object
     CE_df <- m_all
+
+  } else {
+    # Run without CE layers
+    CE_df <- NULL
+  }
+
 
     # nrow(CE_df) # MC_sims * n_years * nrow(merge_cols)
     # head(CE_df)

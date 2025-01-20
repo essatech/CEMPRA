@@ -10,8 +10,7 @@ pop_model_ltre(
   sr_wb_dat = NA,
   life_cycle_params = NA,
   HUC_ID = NA,
-  n_years = 100,
-  MC_sims = 10,
+  n_reps = 100,
   stressors = NA,
   habitat_dd_k = NULL
 )
@@ -29,9 +28,7 @@ imported from StressorResponseWorkbook().}
 
 \item{HUC_ID}{character. HUC_ID for the location unit. Can only be one HUC_ID (not an array).}
 
-\item{n_years}{numeric. Number of years to run the population.}
-
-\item{MC_sims}{numeric. set number of Monte
+\item{n_reps}{numeric. Number of replicates.
 Carlo simulations for the Population Model.}
 
 \item{stressors}{(optional) character vector of stressor

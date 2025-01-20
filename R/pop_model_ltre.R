@@ -11,8 +11,7 @@
 #' imported from StressorResponseWorkbook().
 #' @param life_cycle_params dataframe. Life cycle parameters.
 #' @param HUC_ID character. HUC_ID for the location unit. Can only be one HUC_ID (not an array).
-#' @param n_years numeric. Number of years to run the population.
-#' @param MC_sims numeric. set number of Monte
+#' @param n_reps numeric. Number of replicates.
 #'  Carlo simulations for the Population Model.
 #' @param stressors (optional) character vector of stressor
 #'  names to include in the Population Model. Leave the default
@@ -35,8 +34,7 @@ pop_model_ltre <- function(step_size = 0.05,
                            sr_wb_dat = NA,
                            life_cycle_params = NA,
                            HUC_ID = NA,
-                           n_years = 100,
-                           MC_sims = 10,
+                           n_reps = 100,
                            stressors = NA,
                            habitat_dd_k = NULL) {
 
@@ -44,6 +42,10 @@ pop_model_ltre <- function(step_size = 0.05,
   n_stage <- life_cycle_params$Value[life_cycle_params$Name == "Nstage"]
   n_stage <- as.numeric(n_stage)
   lcm_clean <- pop_model_dat_clean(dat = life_cycle_params, nstage_fill = n_stage)
+
+
+  MC_sims <- 1
+  n_years <- n_reps
 
 
   # Function to calculate lambda for a list of matrices
