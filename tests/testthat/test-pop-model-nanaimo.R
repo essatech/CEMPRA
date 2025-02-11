@@ -74,6 +74,10 @@ test_that("test-pop-model-nanaimo", {
       stage_k_override = stage_k_override,
     )
 
+
+  names(baseline)
+  head(baseline$N)
+
   dat$stage_names
 
   spawn_cols <- which(grepl("_B_", dat$stage_names))

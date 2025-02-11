@@ -6,6 +6,11 @@
 \usage{
 build_k_for_proj_dd(habitat_dd_k, HUC_ID, life_histories, life_cycle_params)
 }
+\arguments{
+\item{life_histories}{Object returned from pop_model_matrix_elements()$life_histories}
+
+\item{life_cycle_params}{Object returned from pop_model_dat_clean() without any further editing}
+}
 \description{
 Build build_habitat_dd_k object and bh_dd_stages from PopulationModel_Run for Projection_DD
 }

@@ -12,7 +12,7 @@ test_that("test-pop-model-anadromous-shiny-error", {
   expect_true(pop_mod_mat$life_histories$eps[1] == 3000) # This must be equal to 3000
   A <- pop_mod_mat$projection_matrix
   lambda <- popbio::lambda(A)
-  expect_true(round(lambda, 2) == 0.59) # Manual check - might be wrong
+  expect_true(round(lambda, 2) == 0.58) # Manual check - might be wrong
 
 
   # Setup for Projection_DD()

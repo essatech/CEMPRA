@@ -12,7 +12,8 @@ The Cumulative Effects Model for Prioritizing Recovery Actions (CEMPRA) is a cum
 -   GitHub Repository for R-Shiny Application (<https://github.com/essatech/CEMPRAShiny>)
 -   LIVE (online R-Shiny Application) (<https://essa.shinyapps.io/CEMPRAShiny/>)
 -   R-Package Tutorials (<https://essatech.github.io/CEMPRA/index.html>)
--   Guidance Document: (<https://mattjbayly.github.io/CEMPRA_documentation/>)
+-   Guidance Document (Realtime Updates): (<https://mattjbayly.github.io/CEMPRA_documentation/>)
+-   Guidance Document (2024 pdf): (<https://www.essa.com/wp-content/uploads/2024/05/Guideline_Documentation_Report-2024.03.14.pdf>)
 
 
 **[Shiny App Tutorial Video](https://youtu.be/Ln9EYi_NVPo)** [access the tool](https://essa.shinyapps.io/CEMPRAShiny)

@@ -1,8 +1,13 @@
 #' build_k_for_proj_dd
 #' @description Build build_habitat_dd_k object and bh_dd_stages from PopulationModel_Run for Projection_DD
+#' @param life_histories Object returned from pop_model_matrix_elements()$life_histories
+#' @param life_cycle_params Object returned from pop_model_dat_clean() without any further editing
 #'
 #' @keywords internal
-build_k_for_proj_dd <- function(habitat_dd_k, HUC_ID, life_histories, life_cycle_params) {
+build_k_for_proj_dd <- function(habitat_dd_k,
+                                HUC_ID,
+                                life_histories,
+                                life_cycle_params) {
 
   # Assume there is no DD is applied unless specified
   stage_k_override <- NULL
@@ -12,9 +17,18 @@ build_k_for_proj_dd <- function(habitat_dd_k, HUC_ID, life_histories, life_cycle
   # Filter for target watershed
   if (is.null(habitat_dd_k) == FALSE) {
 
-
     # Filter for target location
     hab_dd_k <- habitat_dd_k[habitat_dd_k$HUC_ID == HUC_ID, ]
+
+    # Fix case for _Pb_ and _B_
+    fixnms <- colnames(hab_dd_k)
+    fixnms <- gsub("_pb_", "_Pb_", fixnms)
+    fixnms <- gsub("_PB_", "_Pb_", fixnms)
+    fixnms <- gsub("_b_", "_B_", fixnms)
+    fixnms <- gsub("_Stage_", "_stage_", fixnms)
+
+    colnames(hab_dd_k) <- fixnms
+
 
     if (nrow(hab_dd_k) != 1) {
       stop("HUC_ID inhabitat_dd_k.xlsx does not match stressor magnitude data...")
@@ -24,7 +38,7 @@ build_k_for_proj_dd <- function(habitat_dd_k, HUC_ID, life_histories, life_cycle
     anadromous <- life_histories$anadromous
 
     # Assume not anadromous if null
-    if(is.null(anadromous)) {
+    if (is.null(anadromous)) {
       anadromous <- FALSE
     }
 
@@ -32,8 +46,7 @@ build_k_for_proj_dd <- function(habitat_dd_k, HUC_ID, life_histories, life_cycle
     # Build K vector for anadromous population
     # ----------------------------------------
 
-    if(anadromous) {
-
+    if (anadromous) {
       # --------------------------------
       # For anadrmous populations
 
@@ -56,14 +69,16 @@ build_k_for_proj_dd <- function(habitat_dd_k, HUC_ID, life_histories, life_cycle
       # Need to add on the K0 fry class if present
       check_this <- paste0("k_stage_0_mean")
 
-      if (check_this %in% colnames(hab_dd_k)) {
+      if (check_this %in% tolower(colnames(hab_dd_k))) {
 
         mean_k <- hab_dd_k[1, paste0("k_stage_0_mean")]
 
-        # Set spawner K
+        # Set fry K
         if (!is.na(mean_k)) {
 
-          if(class(mean_k)[1] == "numeric" | class(mean_k)[1] == "integer" | class(mean_k)[1] == "character") {
+          if (class(mean_k)[1] == "numeric" |
+              class(mean_k)[1] == "integer" |
+              class(mean_k)[1] == "character") {
             stage_k_override["K0"] <- as.numeric(mean_k)
           } else {
             stage_k_override["K0"] <- as.numeric(mean_k[1, 1])
@@ -75,9 +90,9 @@ build_k_for_proj_dd <- function(habitat_dd_k, HUC_ID, life_histories, life_cycle
           indx1 <- which(life_cycle_params$Name == paste0("bh_stage_0"))
           indx2 <- which(life_cycle_params$Name == paste0("hs_stage_0"))
 
-          if(length(indx1) > 0) {
+          if (length(indx1) > 0) {
             bh_dd_stages_set[[countr]] <- paste0("bh_stage_0")
-          } else if(length(indx2) > 0) {
+          } else if (length(indx2) > 0) {
             bh_dd_stages_set[[countr]] <- paste0("hs_stage_0")
           }
 
@@ -93,20 +108,30 @@ build_k_for_proj_dd <- function(habitat_dd_k, HUC_ID, life_histories, life_cycle
         check_this <- paste0("k_stage_Pb_", s, "_mean")
 
         if (check_this %in% colnames(hab_dd_k)) {
+
           # Sample capacity for year and location
           mean_k_pb <- hab_dd_k[1, paste0("k_stage_Pb_", s, "_mean")]
 
           # Set non-spawner K
           if (!is.na(mean_k_pb)) {
-            stage_k_override[paste0("stage_Pb_", s)] <- as.numeric(mean_k_pb[1, 1])
+
+            if (class(mean_k_pb)[1] == "integer" | class(mean_k_pb)[1] == "numeric") {
+              k1_cap <- as.numeric(mean_k_pb)
+            } else {
+              k1_cap <- as.numeric(mean_k_pb[1, 1])
+            }
+
+            stage_k_override[paste0("stage_Pb_", s)] <- k1_cap
+
             # Set BH set
             bh_dd_stages_set_qa[[countr]] <- paste0("bh_stage_pb_", s)
 
             indx1 <- which(life_cycle_params$Name == paste0("bh_stage_pb_", s))
             indx2 <- which(life_cycle_params$Name == paste0("hs_stage_pb_", s))
-            if(length(indx1) > 0) {
+
+            if (length(indx1) > 0) {
               bh_dd_stages_set[[countr]] <- paste0("bh_stage_pb_", s)
-            } else if(length(indx2) > 0) {
+            } else if (length(indx2) > 0) {
               bh_dd_stages_set[[countr]] <- paste0("hs_stage_pb_", s)
             }
 
@@ -122,10 +147,15 @@ build_k_for_proj_dd <- function(habitat_dd_k, HUC_ID, life_histories, life_cycle
 
           mean_k_B <- hab_dd_k[1, paste0("k_stage_B_", s, "_mean")]
 
+          if (length(mean_k_B) == 0) {
+            mean_k_B <- NA
+          }
+
           # Set age-specific spawner K
           if (!is.na(mean_k_B)) {
-
-            if(class(stage_k_override)[1] == "numeric" | class(stage_k_override)[1] == "integer" | class(mean_k)[1] == "character") {
+            if (class(stage_k_override)[1] == "numeric" |
+                class(stage_k_override)[1] == "integer" |
+                class(mean_k)[1] == "character") {
               stage_k_override[paste0("stage_B_", s)] <- as.numeric(mean_k_B)
             } else {
               stage_k_override[paste0("stage_B_", s)] <- as.numeric(mean_k_B[1, 1])
@@ -136,9 +166,10 @@ build_k_for_proj_dd <- function(habitat_dd_k, HUC_ID, life_histories, life_cycle
 
             indx1 <- which(life_cycle_params$Name == paste0("bh_stage_b_", s))
             indx2 <- which(life_cycle_params$Name == paste0("hs_stage_b_", s))
-            if(length(indx1) > 0) {
+
+            if (length(indx1) > 0) {
               bh_dd_stages_set[[countr]] <- paste0("bh_stage_b_", s)
-            } else if(length(indx2) > 0) {
+            } else if (length(indx2) > 0) {
               bh_dd_stages_set[[countr]] <- paste0("hs_stage_b_", s)
             }
 
@@ -162,7 +193,9 @@ build_k_for_proj_dd <- function(habitat_dd_k, HUC_ID, life_histories, life_cycle
         # Set spawner K
         if (!is.na(mean_k)) {
 
-          if(class(mean_k)[1] == "numeric" | class(mean_k)[1] == "integer" | class(mean_k)[1] == "character") {
+          if (class(mean_k)[1] == "numeric" |
+              class(mean_k)[1] == "integer" |
+              class(mean_k)[1] == "character") {
             total_anadromous_spawners <- as.numeric(mean_k)
           } else {
             total_anadromous_spawners <- as.numeric(mean_k[1, 1])
@@ -173,9 +206,9 @@ build_k_for_proj_dd <- function(habitat_dd_k, HUC_ID, life_histories, life_cycle
           indx1 <- which(life_cycle_params$Name == paste0("bh_spawners"))
           indx2 <- which(life_cycle_params$Name == paste0("hs_spawners"))
 
-          if(length(indx1) > 0) {
+          if (length(indx1) > 0) {
             bh_dd_stages_set[[countr]] <- paste0("bh_spawners")
-          } else if(length(indx2) > 0) {
+          } else if (length(indx2) > 0) {
             bh_dd_stages_set[[countr]] <- paste0("hs_spawners")
           }
 
@@ -202,12 +235,12 @@ build_k_for_proj_dd <- function(habitat_dd_k, HUC_ID, life_histories, life_cycle
       any_diff2 <- setdiff(check2, check1)
 
 
-      if(length(any_diff1) > 0 | length(any_diff2) > 0) {
+      if (length(any_diff1) > 0 | length(any_diff2) > 0) {
         print("Expect from life cycles table:")
         print(bh_dd_stages)
         print("Data in location K table:")
         print(bh_dd_stages_set_qa)
-        stop("Error: bh_stage_... in life cycle params does not match K ages... in habitat data")
+        print("Warning: bh_stage_... in life cycle params does not match K ages... in habitat data")
       }
 
 
@@ -215,7 +248,6 @@ build_k_for_proj_dd <- function(habitat_dd_k, HUC_ID, life_histories, life_cycle
       # end of anadromous populations
 
     } else {
-
       #########################################################
       #########################################################
       #########################################################
@@ -240,6 +272,11 @@ build_k_for_proj_dd <- function(habitat_dd_k, HUC_ID, life_histories, life_cycle
         mean_k <- hab_dd_k[1, paste0("k_stage_", s, "_mean")]
         cv_k <- hab_dd_k[1, paste0("k_stage_", s, "_cv")]
 
+        # Set to 0 if missing
+        cv_k <- ifelse(length(cv_k) == 0, 0, cv_k)
+        cv_k <- ifelse(is.na(cv_k), 0, cv_k)
+
+
         mean_k <- ifelse(length(mean_k) == 0, NA, mean_k)
 
         if (!is.na(mean_k)) {
@@ -247,19 +284,22 @@ build_k_for_proj_dd <- function(habitat_dd_k, HUC_ID, life_histories, life_cycle
           mean_k <- mean_k[[1]]
           cv_k <- cv_k[[1]]
           this_k <-
-            suppressWarnings({ stats::rnorm(1, mean = as.numeric(mean_k), sd = as.numeric(mean_k * cv_k)) })
+            suppressWarnings({
+              stats::rnorm(1,
+                           mean = as.numeric(mean_k),
+                           sd = as.numeric(mean_k * cv_k))
+            })
           this_k <- ifelse(is.na(this_k), as.numeric(mean_k), this_k)
           stage_k_override[s + 1] <- this_k
         }
 
         # Set the Beverton-Holt DD mechanism (if set in life cycles file)
-        if(s == 0){
-
+        if (s == 0) {
           egg_fry <- life_cycle_params$Value[life_cycle_params$Name == "dd_hs_0"]
 
-          if(length(egg_fry) > 0) {
-            if(!(is.na(egg_fry))) {
-              if(egg_fry == 1 | egg_fry == "TRUE" | egg_fry == TRUE) {
+          if (length(egg_fry) > 0) {
+            if (!(is.na(egg_fry))) {
+              if (egg_fry == 1 | egg_fry == "TRUE" | egg_fry == TRUE) {
                 bh_dd_stages_set[[1]] <- "dd_hs_0"
               }
             }
@@ -267,9 +307,9 @@ build_k_for_proj_dd <- function(habitat_dd_k, HUC_ID, life_histories, life_cycle
 
           egg_fry <- life_cycle_params$Value[life_cycle_params$Name == "bh_stage_0"]
 
-          if(length(egg_fry) > 0) {
-            if(!(is.na(egg_fry))) {
-              if(egg_fry == 1 | egg_fry == "TRUE" | egg_fry == TRUE) {
+          if (length(egg_fry) > 0) {
+            if (!(is.na(egg_fry))) {
+              if (egg_fry == 1 | egg_fry == "TRUE" | egg_fry == TRUE) {
                 bh_dd_stages_set[[1]] <- "bh_stage_0"
               }
             }
@@ -278,9 +318,9 @@ build_k_for_proj_dd <- function(habitat_dd_k, HUC_ID, life_histories, life_cycle
 
         } else {
           dd_stage <- life_histories$Value[life_cycle_params$Name == paste0("bh_stage_", s)]
-          if(length(dd_stage) > 0) {
-            if(!(is.na(dd_stage))) {
-              if(dd_stage == 1) {
+          if (length(dd_stage) > 0) {
+            if (!(is.na(dd_stage))) {
+              if (dd_stage == 1) {
                 bh_dd_stages_set[[1 + s]] <- paste0("bh_stage_", s)
               }
             }

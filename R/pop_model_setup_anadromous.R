@@ -79,15 +79,38 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
   # .........................................................
 
 
-  # =======================================================
-  # Fix Survival - cannot be 0% in the middle of the chain
-  # =======================================================
-  surv_0 <- which(life_cycles$Name %in% paste0("surv_", 1:1000) & life_cycles$Value == 0)
+  # ============================================================
+  # Fix Survival - cannot be 0% surv in the middle of the chain
+  # ============================================================
+  surv_fix <- life_cycles[life_cycles$Name %in% paste0("surv_", 1:1000), ]
+  surv_fix <- surv_fix[order(surv_fix$Name), ]
+
+  eps_check <- life_cycles[life_cycles$Name %in% paste0("eps_", 1:1000), ]
+  eps_check <- eps_check[order(eps_check$Name), ]
+
+  # Find max repo age - based on non-zero eps
+  max_repo_age <- max(as.numeric(gsub("eps_", "", eps_check$Name[eps_check$Value > 0])))
+
+  surv_0 <- surv_fix$Name[surv_fix$Value == 0]
+
+  # More than one zero Pb endpoint
   if(length(surv_0) > 1) {
-    surv_0_index <- surv_0[1:(length(surv_0) - 1)]
-    life_cycles$Value[surv_0_index] <- 0.001
+    # Fix surv zeros in the life stage chain
+    # Set surv_x where x < max_repo_age to 0.00001
+    for(k in 1:length(surv_0)) {
+      if(as.numeric(gsub("surv_", "", surv_0[k])) < max_repo_age) {
+        life_cycles$Value[life_cycles$Name == surv_0[k]] <- 0.00001
+      }
+    }
     possible_error_state <- "Cannot have 0 survival in intermediate life stage"
   }
+
+  # ==============================================================
+  # Drop extra 0 placeholder values in the life cycle params file
+  # ==============================================================
+
+
+
 
 
   # Rename to match reference code
@@ -104,7 +127,6 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
 
   # Determine Nstage from non-zero survival
   Nstage <- sum(life_pars[grepl("^surv_", rownames(life_pars)), "Value"] > 0)
-
 
   # Get the mature stage classes
   mature_spawners <- life_pars[grepl("mat_", rownames(life_pars)), ]
