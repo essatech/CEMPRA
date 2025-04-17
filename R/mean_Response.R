@@ -54,13 +54,15 @@
 #' @export
 #'
 mean_Response <- function(n.stressors = NA, str.list = NA, main = NA) {
+
   mean.resp.list <- list(NULL)
 
   stress_nms <- main$Stressors
 
-
   for (i in 1:length(stress_nms)) {
+
     this_stressor <- stress_nms[i]
+
     this_data <- str.list[[this_stressor]]
     this_main <- main[main$Stressors == this_stressor, ]
 
@@ -84,10 +86,6 @@ mean_Response <- function(n.stressors = NA, str.list = NA, main = NA) {
     # Set any NAs for upr to the median
     m_upr <- stats::median(this_data$upr, na.rm = TRUE)
     this_data$upr <- ifelse(is.na(this_data$upr), m_upr, this_data$upr)
-
-
-
-
 
 
     if (this_main$Stress_Scale == "log") {

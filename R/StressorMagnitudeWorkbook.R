@@ -23,7 +23,9 @@ StressorMagnitudeWorkbook <- function(filename = NA, scenario_worksheet = NA) {
   data <- readxl::read_excel(filename, sheet = scenario_worksheet)
 
   # Round values to two decimal places
-  data$Mean <- round(data$Mean, 2)
+  # data$Mean <- round(data$Mean, 2)
+  data$Mean <- as.numeric(as.character(data$Mean))
+  data$Mean <- round(data$Mean, 5)
 
   # Allow ID column to by any name
   if(!("HUC_ID" %in% colnames(data))) {
