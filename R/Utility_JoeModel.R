@@ -103,12 +103,25 @@ ce.func <- function(df) {
     max
   )
 
-  sys.cap.max <- ifelse(length(sys.cap.max) == 0, 1, sys.cap.max)
-  sys.cap.min <- ifelse(length(sys.cap.min) == 0, 1, sys.cap.min)
+  # If no interaction then multiply by 1
+  if(length(sys.cap.max) == 0) {
+    sys.cap.max <- 1
+  } else {
+    sys.cap.max
+  }
 
+  # If no interaction then multiply by 1
+  if(length(sys.cap.min) == 0) {
+    sys.cap.min <- 1
+  } else {
+    sys.cap.min
+  }
+
+  # If only interaction (rare case)
   if(length(sys.cap.no.int) == 0) {
     sys.cap.no.int <- 1
   }
+
   # sys.cap.no.int <- ifelse(length(sys.cap.no.int) == 0, 1, sys.cap.no.int)
 
   # AT THIS POINT NO OTHER INTERACTIONS ARE CONSIDERED
@@ -116,6 +129,7 @@ ce.func <- function(df) {
   # Calculate the product across all cumulative effects
   # accounting for interactions
   # MJB fix Nov 9 2023: prod() returns NA if any of the values are NA
+
   ce.df <- data.frame(CE = prod(c(sys.cap.no.int, sys.cap.min, sys.cap.max), na.rm = TRUE))
 
   return(ce.df)

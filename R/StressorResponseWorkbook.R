@@ -34,6 +34,15 @@ StressorResponseWorkbook <- function(filename = NA) {
   # Order rows in main_sheet to match stressor names alphabetically
   main_sheet <- main_sheet[order(main_sheet$Stressors), ]
 
+  # Make the Stressor_cat column in the main sheet equal to the Stressors column
+  main_sheet$Stressor_cat <- main_sheet$Stressors
+
+
+  # Make sure interactions column inputs are valid
+  # main_sheet$Interaction
+
+
+
   # Get Stressor names
   stressor_names <- as.character(main_sheet$Stressors)
   stressor_names <- stressor_names[!(is.na(stressor_names))]
@@ -45,7 +54,6 @@ StressorResponseWorkbook <- function(filename = NA) {
 
   # Retain all names and matrix names
   snames_all <- snames
-
 
   # Check if there are any matrix interactions
   if(any(grepl("MInt_", snames))) {
@@ -67,8 +75,6 @@ StressorResponseWorkbook <- function(filename = NA) {
   if (!(all(stressor_names %in% snames))) {
     return("Bad worksheet names")
   }
-
-
 
 
   # Gather stressor-response relationships for other variables

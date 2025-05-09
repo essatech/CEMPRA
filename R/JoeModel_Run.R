@@ -9,7 +9,7 @@
 #' @param sr_wb_dat list object. Stressor response workbook returned from StressorResponseWorkbook().
 #' @param MC_sims numeric. set number of Monte Carlo simulations for the Joe Model.
 #' @param stressors (optional) character vector of stressor names to include in the Joe Model. Leave the default value as NA if you wish to include all stressors applicable to the adult life stage or provide a character vector of stressors if you only want to run the model on a subset of the stressors.
-#' @param adult_sys_cap Should the Joe Model be run only with variables identified for adult system capacity.
+#' @param adult_sys_cap Should the Joe Model be run only with variables identified for `adult` system capacity.
 #' @param socioeconomic_inputs (optional) list object. Socioeconomic inputs returned from SocioEconomicWorkbook().
 #'
 #'   set number of Monte Carlo simulations for the Joe model.
@@ -44,7 +44,7 @@ JoeModel_Run <- function(dose = NA,
                          sr_wb_dat = NA,
                          MC_sims = 100,
                          stressors = NA,
-                         adult_sys_cap = TRUE,
+                         adult_sys_cap = FALSE,
                          socioeconomic_inputs = NULL) {
 
   # Define variables in function as null
