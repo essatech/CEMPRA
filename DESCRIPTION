@@ -1,11 +1,16 @@
 Package: CEMPRA
 Type: Package
 Title: Cumulative Effects Model for Prioritizing Recovery Actions (CEMPRA)
-Version: 0.1.0
-Date: 2023-11-10
-Author: Matthew Bayly, Kyle Wilson, Andrew Paul, Jordan Rosenfeld, and others 
-Maintainer: Matthew Bayly <mbayly@essa.com>
-Description: Cumulative Effects Model for Prioritizing Recovery Actions.
+Version: 0.2.0
+Date: 2026-01-06
+Authors@R: c(
+    person("Matthew", "Bayly", email = "mbayly@essa.com", role = c("aut", "cre")),
+    person("Kyle", "Wilson", role = "aut", comment = "Population model development"),
+    person("Andrew", "Paul", role = "aut", comment = "Original development of Joe Model"),
+    person("Jordan", "Rosenfeld", role = "aut"),
+    person("ESSA Technologies Ltd.", role = "cph")
+    )
+Description: Cumulative Effects Model for Prioritizing Recovery Actions. Links environmental stressors to system capacity and population productivity to help prioritize recovery actions for data-limited and at-risk species.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -14,6 +19,7 @@ Imports:
     reshape2,
     magrittr,
     dplyr,
+    rlang,
     stats,
     MASS,
     pracma,
@@ -30,3 +36,4 @@ VignetteBuilder: knitr
 RoxygenNote: 7.3.2
 Roxygen: list(markdown = TRUE)
 URL: https://essatech.github.io/CEMPRA/
+BugReports: https://github.com/essatech/CEMPRA/issues

@@ -15,6 +15,8 @@
 #' @param adult_sys_cap Should the Joe Model be run only with variables
 #' identified for adult system capacity.
 #'
+#' @returns Updated sc.dose.df data frame with system capacity values
+#'
 #'
 #' @export
 #'
@@ -54,7 +56,7 @@ interaction_matrix_sys_cap <- function(MInt, sc.dose.df, adult_sys_cap) {
   # If main effect variables are unavailable or
   # already used in another matrix return original (skip)
   if(nrow(dose_mat) == 0) {
-    print("Main effects not available...")
+    message("Main effects not available...")
     return(sc.dose.df)
   }
 

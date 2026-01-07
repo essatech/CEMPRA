@@ -145,13 +145,13 @@ SystemCapacity <- function(f.dose.df,
   # from the curve function (ie., first/last value used for approx. function)
   # IE. extrapolation takes the last given system capacity score
 
-  rnd.dose <- ifelse(rnd.dose < min(f.stressor.df[, 1], na.rm = T),
-    min(f.stressor.df[, 1], na.rm = T),
+  rnd.dose <- ifelse(rnd.dose < min(f.stressor.df[, 1], na.rm = TRUE),
+    min(f.stressor.df[, 1], na.rm = TRUE),
     rnd.dose
   )
 
-  rnd.dose <- ifelse(rnd.dose > max(f.stressor.df[, 1], na.rm = T),
-    max(f.stressor.df[, 1], na.rm = T),
+  rnd.dose <- ifelse(rnd.dose > max(f.stressor.df[, 1], na.rm = TRUE),
+    max(f.stressor.df[, 1], na.rm = TRUE),
     rnd.dose
   )
 

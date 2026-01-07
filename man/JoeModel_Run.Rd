@@ -24,9 +24,15 @@ JoeModel_Run(
 
 \item{adult_sys_cap}{Should the Joe Model be run only with variables identified for \code{adult} system capacity.}
 
-\item{socioeconomic_inputs}{(optional) list object. Socioeconomic inputs returned from SocioEconomicWorkbook().
+\item{socioeconomic_inputs}{(optional) list object. Socioeconomic inputs returned from SocioEconomicWorkbook().}
+}
+\value{
+A list object with the following components:
+\item{ce.df}{dataframe. Cumulative effects data frame with columns for HUC, simulation, and CE (cumulative effect).}
+\item{sc.dose.df}{dataframe. Stressor-specific system capacity and dose data frame with columns for HUC, Stressor, simulation, dose, sys.cap, int.type, and link.}
+\item{socioeconomic_inputs}{(optional) list object. Socioeconomic inputs returned from SocioEconomicWorkbook() if socioeconomic_inputs were provided to the function.}
 
-set number of Monte Carlo simulations for the Joe model.}
+set number of Monte Carlo simulations for the Joe model.
 }
 \description{
 Runs the Joe Model.
@@ -42,7 +48,7 @@ library(CEMPRA)
 # Load in the sample data from the reference Excel workbook
 filename_rm <- system.file("extdata", "stressor_magnitude_unc_ARTR.xlsx", package = "CEMPRA")
 filename_sr <- system.file("extdata", "stressor_response_fixed_ARTR.xlsx", package = "CEMPRA")
-# Stessor Magnitue and Doese Response Workbooks
+# Stressor Magnitue and Doese Response Workbooks
 dose <- StressorMagnitudeWorkbook(filename = filename_rm)
 sr_wb_dat <- StressorResponseWorkbook(filename = filename_sr)
 

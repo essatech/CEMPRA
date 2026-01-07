@@ -92,7 +92,7 @@ Projection_DD <- function(M.mx = NA,
   if (!(is.null(bh_dd_stages))) {
     # check stage names ok
     if(!(bh_dd_stages_check_ok(bh_dd_stages))) {
-      print(bh_dd_stages)
+      message(bh_dd_stages)
       stop("bh_dd_stages not set correctly...")
     }
     if (anadromous) {
@@ -138,7 +138,7 @@ Projection_DD <- function(M.mx = NA,
   if (is.null(H.mx)) {
     H <- rep(1, Nyears)
   } else if (is.matrix(H.mx)) {
-    H <- replicate(Nyears, H.mx, simplify = F)
+    H <- replicate(Nyears, H.mx, simplify = FALSE)
   } else {
     H <- H.mx
   }

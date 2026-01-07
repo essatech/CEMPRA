@@ -17,7 +17,6 @@
 #'  names to include in the Population Model. Leave the default
 #'  value as NA if you wish to include all stressors
 #'  applicable to the population model.
-#' @param output_type (optional) character. Set to "full" for all data of "adults" for only adult data.
 #' @param habitat_dd_k (optional) dataframe of location and stage-specific habitat capacity k values for the target species. If used this dataframe will override the capacity estimates
 #'
 #' @importFrom rlang .data
@@ -106,7 +105,7 @@ pop_model_ltre <- function(step_size = 0.05,
   for (p in 1:length(adj_params)) {
     this_param <- adj_params[p]
 
-    print(paste0(
+    message(paste0(
       "Working on ",
       this_param,
       ", p = ",

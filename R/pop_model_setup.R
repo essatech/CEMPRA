@@ -59,7 +59,7 @@ pop_model_setup <- function(life_cycles = NA) {
       anadromous <- FALSE
     }
 
-    if(class(anadromous) != "logical") {
+    if(!is.logical(anadromous)) {
       anadromous <- as.numeric(as.character(anadromous))
     }
 
@@ -98,7 +98,7 @@ pop_model_setup <- function(life_cycles = NA) {
     eps_vals <- eps_vals[!(is.na(eps_vals))]
     eps_vals <- eps_vals[eps_vals > 0]
     # Add the sum to the data frame
-    add_row <- data.frame(Parameters = "eps", Name = "eps", Value = median(eps_vals, na.rm = TRUE))
+    add_row <- data.frame(Parameters = "eps", Name = "eps", Value = stats::median(eps_vals, na.rm = TRUE))
     life_cycles <- rbind(life_cycles, add_row)
   }
 
@@ -163,7 +163,7 @@ pop_model_setup <- function(life_cycles = NA) {
 
 
   if (any((cr * survival) > 1)) {
-    print("compensation ratios too high")
+    message("compensation ratios too high")
     possible_error_state <- "compensation ratios too high"
   }
 

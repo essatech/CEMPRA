@@ -17,6 +17,9 @@ pop_model_get_spawners(
 
 \item{life_cycle_params}{dataframe. Life cycle parameters.}
 }
+\value{
+dataframe of spawner abundance by location, replicate, and year.
+}
 \description{
 Get spawners from \code{PopulationModel_Run()} output.
 }

@@ -6,6 +6,7 @@ esub <-
     do.call("substitute", list(expr, sublist))
   }
 
+
 #' proc
 #'
 #' @keywords internal
@@ -72,10 +73,7 @@ dd_calc <- function(dat, varNames, Nmat) {
 #'
 #' @keywords internal
 E_est <- function(N, dat) {
-  E <- with(
-    dat,
-    sum(N * mat * events * eps * sR / int)
-  )
+  E <- with(dat, sum(N * mat * events * eps * sR / int))
   names(E) <- NULL
   E
 }
@@ -87,7 +85,6 @@ E_est <- function(N, dat) {
 #'
 #' @keywords internal
 E_est_anadromous <- function(N, dat, spanwing_years) {
-
   # (u4 * events * eps4 * sE * s0 * sR)/int
   E <- numeric(length(spanwing_years))
 
@@ -95,7 +92,13 @@ E_est_anadromous <- function(N, dat, spanwing_years) {
     x <- spanwing_years[i]
     m_func <- paste0("(u", x, " * events * eps", x, " * sE * s0 * sR)/int")
     # Update values in string
-    m_func <- paste0("(dat$u['u", x, "'] * dat$events * dat$eps['eps", x, "'] * dat$S['sE'] * dat$S['s0'] * dat$sR) / dat$int")
+    m_func <- paste0(
+      "(dat$u['u",
+      x,
+      "'] * dat$events * dat$eps['eps",
+      x,
+      "'] * dat$S['sE'] * dat$S['s0'] * dat$sR) / dat$int"
+    )
 
     # Evaluate the expression in the context of the list
     E[i] <- eval(parse(text = m_func))
@@ -128,7 +131,6 @@ s0_optim.f <- function(s0, mx, dat, target.lambda) {
 #'
 #' @keywords internal
 s0_optim_anadromous.f <- function(s0, mx, dat, target.lambda) {
-
   dat$S["s0"] <- s0
 
   pmx <- pmx_eval(mx, c(dat, dat$S, dat$nYrs, dat$mat, dat$u, dat$smig, dat$eps))
@@ -142,13 +144,13 @@ s0_optim_anadromous.f <- function(s0, mx, dat, target.lambda) {
 #'
 #' @keywords internal
 K_adj_old <- function(replicates = 100,
-                  dat, # life histories
-                  ncores,
-                  mx,
-                  dx,
-                  Nyears = 250,
-                  enviro) {
-
+                      dat,
+                      # life histories
+                      ncores,
+                      mx,
+                      dx,
+                      Nyears = 250,
+                      enviro) {
   env <- environment()
   new_ls <- ls(envir = env)
   no_cores <- ncores # number of cores
@@ -157,7 +159,6 @@ K_adj_old <- function(replicates = 100,
   parallel::clusterExport(cl, new_ls, envir = env)
   #parallel::clusterEvalQ(cl, library(popbio)) # load library in clusters
   pop_data <- parallel::parLapply(cl, 1:replicates, function(r) {
-
     res <- Projection_DD(
       M.mx = mx,
       # projection matrix expression
@@ -226,10 +227,9 @@ init_pop <- function(mx, Nt, p.rep) {
 #'
 #' @keywords internal
 d.vec.f <- function(df, Ks, Nv) {
-
   is_anadromous <- df$anadromous
 
-  if(df$anadromous) {
+  if (df$anadromous) {
     # for anadromous life histories
     sN <- rep(NA, length(df$S))
 
@@ -238,14 +238,12 @@ d.vec.f <- function(df, Ks, Nv) {
     for (i in 1:length(sN))
     {
       sN[i] <-
-        eval(
-          dd_stage(),
-          list(
-            cr = as.numeric(df$cr[i]),
-            k = as.numeric(Ks[i]),
-            x = as.numeric(Nv[i])
-          )
-        )
+        eval(dd_stage(),
+             list(
+               cr = as.numeric(df$cr[i]),
+               k = as.numeric(Ks[i]),
+               x = as.numeric(Nv[i])
+             ))
     }
 
     names(sN) <- names(df$S)
@@ -262,21 +260,18 @@ d.vec.f <- function(df, Ks, Nv) {
 
 
   } else {
-
     # for non-anadromous life histories
     sN <- rep(NA, length(df$S))
 
     for (i in 1:length(sN))
     {
       sN[i] <-
-        eval(
-          dd_stage(),
-          list(
-            cr = as.numeric(df$cr[i]),
-            k = as.numeric(Ks[i]),
-            x = as.numeric(Nv[i])
-          )
-        )
+        eval(dd_stage(),
+             list(
+               cr = as.numeric(df$cr[i]),
+               k = as.numeric(Ks[i]),
+               x = as.numeric(Nv[i])
+             ))
     }
 
     names(sN) <- names(df$S)
@@ -323,8 +318,7 @@ f_rand <- function(mn, sigma, rho) {
   # mean and sd adjust for log-normal dist.such
   # that mean and sd of output match input values
   qX <-
-    stats::qlnorm(pX, log(mn / sqrt(1 + sigma^2 / mn^2)), sqrt(log(1 + sigma^
-      2 / mn^2)))
+    stats::qlnorm(pX, log(mn / sqrt(1 + sigma^2 / mn^2)), sqrt(log(1 + sigma^2 / mn^2)))
   # log normal distribution
 
   names(qX) <- names(mn)
@@ -341,12 +335,11 @@ f_rand <- function(mn, sigma, rho) {
 #'
 #' @keywords internal
 s_rand <- function(mn, cv, rho) {
-
   # Correlation matrix
   corr <-
     cor.AR1(length(mn), rho) # AR1 structure
 
-  if(ncol(corr) > 1) {
+  if (ncol(corr) > 1) {
     corr[1, 2:ncol(corr)] <-
       corr[2:nrow(corr), 1] <-
       0 # Make egg survival independent
@@ -381,9 +374,9 @@ s_rand <- function(mn, cv, rho) {
   # START MJB: Fix issue if surv 1.0 returns NA then 0
   # allow 100% survival with no variability
   check_nas <- function(x, y) {
-    if(is.na(x)) {
+    if (is.na(x)) {
       # check if sample is NA
-      if(y > 0 & y <= 1.0) {
+      if (y > 0 & y <= 1.0) {
         return(y)
       } else {
         return(x)
@@ -465,12 +458,10 @@ beta_stretch_val <- function(mn,
     (1 - mean.b) * ((mean.b * (1 - mean.b)) / var.b - 1)
 
   # output
-  list(
-    a = a,
-    b = b,
-    min = min,
-    max = max
-  )
+  list(a = a,
+       b = b,
+       min = min,
+       max = max)
 }
 
 
@@ -498,10 +489,14 @@ bh_dd_stages_check_ok <- function(bh_dd_stages = NA) {
   ok4 <- paste0("bh_stage_b_", seq(1:15))
   ok5 <- paste0("hs_stage_", seq(1:15))
   ok6 <- paste0("bh_stage_", seq(1:15))
-  ok7 <- c("dd_hs_0", "hs_stage_0", "hs_spawners", "bh_spawners", "bh_stage_0")
+  ok7 <- c("dd_hs_0",
+           "hs_stage_0",
+           "hs_spawners",
+           "bh_spawners",
+           "bh_stage_0")
   ok_all <- c(ok1, ok2, ok3, ok4, ok5, ok6, ok7)
   check_diff <- setdiff(sc, ok_all)
-  if(length(check_diff) > 0) {
+  if (length(check_diff) > 0) {
     return(FALSE)
   } else {
     return(TRUE)

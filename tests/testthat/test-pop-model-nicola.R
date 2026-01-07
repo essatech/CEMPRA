@@ -93,7 +93,7 @@ test_that("test-pop-model-nicola", {
     HUC_ID <- dose$HUC_ID[1]
     n_pop <- 0
 
-    jm <- CEMPRA::JoeModel_Run(
+    jm <- JoeModel_Run(
       dose = dose,
       sr_wb_dat = sr_wb_dat,
       MC_sims = 1,

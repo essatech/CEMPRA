@@ -172,7 +172,7 @@ pop_model_matrix_elements <- function(pop_mod_setup = NA) {
 
 
   if (!(all(pop_mod_setup$projection_matrix == M.1.pmx))) {
-    print(
+    message(
       "Running with S0 adjusted to s0.1.det..."
     )
   }

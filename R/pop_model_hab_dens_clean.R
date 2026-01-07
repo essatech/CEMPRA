@@ -50,7 +50,7 @@ pop_model_hab_dens_clean <- function(hab_dens = NA) {
     k_cols <- grep("^k_", names(df), value = TRUE)
     # Loop over the identified columns and convert them
     for (col in k_cols) {
-      if (class(df[[col]]) == "character") {
+      if (is.character(df[[col]])) {
         df[[col]] <- gsub(",", "", df[[col]])
         df[[col]] <- as.numeric(as.character(df[[col]]))
       }

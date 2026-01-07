@@ -17,6 +17,9 @@ JoeModel_Run_Batch(scenarios = NA, dose = NA, sr_wb_dat = NA, MC_sims = 10)
 \item{MC_sims}{numeric. set number of Monte Carlo simulations for the Joe Model. set number
 of Monte Carlo simulations for the Joe model.}
 }
+\value{
+A dataframe of system capacity results for each HUC and scenario.
+}
 \description{
 Batch version of JoeModel_Run across scenarios input file.
 }
@@ -32,7 +35,7 @@ library(ggplot2)
 
 # Import stressor-magnitude workbook
 filename_rm <- system.file("extdata", "stressor_magnitude_unc_ARTR.xlsx", package = "CEMPRA")
-stressor_magnitude <- StressorMagnitudeWorkbook(filename = filename_rm, 
+stressor_magnitude <- StressorMagnitudeWorkbook(filename = filename_rm,
 scenario_worksheet = "natural_unc")
 
 # Import stressor-response workbook

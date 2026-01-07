@@ -31,6 +31,7 @@
 #'
 #' @returns a list object of symbolic objects.
 #'
+#' @importFrom utils tail
 #' @export
 #'
 pop_model_setup_anadromous <- function(life_cycles = NA) {
@@ -41,7 +42,7 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
   # Load the species life cycles traits
   # must have N number of survival, years, and compensation ratios
 
-  print("Running... pop_model_setup_anadromous()")
+  # print("Running... pop_model_setup_anadromous()")
 
   #------------------------------------------------------------
   # Determine if anadromous transformations need to be applied
@@ -89,7 +90,8 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
   eps_check <- eps_check[order(eps_check$Name), ]
 
   # Find max repo age - based on non-zero eps
-  max_repo_age <- max(as.numeric(gsub("eps_", "", eps_check$Name[eps_check$Value > 0])))
+  # May not work if older format or only single eps defined.
+  max_repo_age <- suppressWarnings({ max(as.numeric(gsub("eps_", "", eps_check$Name[eps_check$Value > 0]))) })
 
   surv_0 <- surv_fix$Name[surv_fix$Value == 0]
 
@@ -108,10 +110,6 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
   # ==============================================================
   # Drop extra 0 placeholder values in the life cycle params file
   # ==============================================================
-
-
-
-
 
   # Rename to match reference code
   life_pars <- life_cycles
@@ -171,7 +169,7 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
     life_pars[match(paste("cr", 1:Nstage_Pb, sep = "_"), life_pars$Name), "Value"]
 
   if (any((cr * survival) > 1)) {
-    print("compensation ratios too high")
+    message("compensation ratios too high")
     possible_error_state <- "compensation ratios too high"
   }
 
@@ -268,7 +266,7 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
   for (i in 1:Nstage)
   {
     # offset the repo stage id
-    param_ref <- sapply(strsplit(stage_names[i], "_"), tail, 1)
+    param_ref <- sapply(strsplit(stage_names[i], "_"), utils::tail, 1)
 
     if (grepl("_B_", stage_names[i])) {
       life_stages_symbols[1, i] <-

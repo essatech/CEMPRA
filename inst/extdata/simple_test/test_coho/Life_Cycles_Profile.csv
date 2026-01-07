@@ -1,0 +1,34 @@
+Parameters,Name,Value,Notes
+Number of life stages,Nstage,3,Three stage model (3 years)
+Anadromous,anadromous,1,Run the anadromous version of the model
+Adult capacity,k,0,Not used - older reference
+Spawn events per female,events,1,Fixed at 1 for salmon model structure/assumptions
+Eggs per age-3 female spawn,eps_3,2500,"est. Beechie et al., 2021 > Salo and Bayliff 1958"
+spawning interval,int,1,Fixed at 1 for salmon model structure/assumptions
+egg survival,SE,0.2,Adjust as function of fines
+Fry survival,S0,0.655,"est. Beechie et al., 2021 > Reeves 1989 (0.78*0.84)"
+sex ratio,SR,0.5,Fixed at 1 for salmon model structure/assumptions
+Stage 1 to Stage 2,surv_1,0.595,est. Beechie (0.35 - 0.84) varies with wood abundance: 
+Stage 2 to Stage 3 ,surv_2,0.05,smolt to adult return prior to upstream migration survival
+Stage 3 (remaining in ocean),surv_3,0,All fish return as spawners (stage missed).
+Pre-spawn mortality of Age-3 spawners,u_3,0.95,TODO - add estimate
+Migration survival of Age-3 spawners,smig_3,0.95,TODO - add estimate
+egg survival compensation ratio,cr_E,1,Turned off / not applied (1)
+yoy survival compensation ratio,cr_0,1,Turned off / not applied (1)
+fry survival compensation ratio,cr_1,1,Turned off / not applied (1)
+parr NR survival compensation ratio,cr_2,1,Turned off / not applied (1)
+smolt NR survival compensation ratio,cr_3,1,Turned off / not applied (1)
+mat,mat_1,0,Maturity only at age-3
+mat,mat_2,0,Maturity only at age-3
+maturity as adult,mat_3,1,Assume 100% chance of becoming mature at age-3
+year_1,year_1,1,Fixed at 1 for salmon model structure/assumptions
+year_2,year_2,1,Fixed at 1 for salmon model structure/assumptions
+year_3,year_3,1,Fixed at 1 for salmon model structure/assumptions
+variance in eggs per female,eps_sd,500,TODO - add estimate
+correlation in egg fecundity through time,egg_rho,0,correlation across age-classes (not relevant for coho)
+coefficient of variation in stage-specific mortality,M.cv,0.2,TODO - add estimate
+correlation in mortality through time,M.rho,0.1,TODO - add estimate
+p.cat,p.cat,0,
+bh_stage_pb_1,bh_stage_pb_1,1,
+DD Bottleneck #2: Parr Winter Rearing,bh_stage_pb_2,1,
+DD Bottleneck #3: Spawning Capacity,hs_spawners,1,

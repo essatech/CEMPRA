@@ -84,7 +84,7 @@ pop_model_dat_clean <- function(dat, nstage_fill = NULL) {
   #================================================
   # Probability of catastrophy p.cat
   #================================================
-  print("Add rules for p.cat")
+  # print("Add rules for p.cat")
 
   if("p.cat" %in% dat$Name) {
     # p.cat is present - make sure it's run-able
@@ -186,7 +186,6 @@ pop_model_dat_clean <- function(dat, nstage_fill = NULL) {
   #================================================
 
   # Years in stage
-  ###browser()
   all_year  <- dat$Name[grepl("^year_", dat$Name)]
   year_keep <- paste0("year_", 1:n_stage)
   year_drop <- all_year[!all_year %in% year_keep]

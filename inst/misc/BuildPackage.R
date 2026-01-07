@@ -14,103 +14,32 @@ library(testthat)
 rm(list = ls())
 devtools::load_all()
 devtools::document()
-devtools::test()  # Run tests - all passed Nov 19 2024
+devtools::test()  # Run tests - all passed Jan 6 2025
 devtools::check() # Operating system test
-
 
 remove.packages("CEMPRA")
 # install.packages(getwd(), repos = NULL, type = "source")
 # devtools::install_github("essatech/CEMPRA")
 # library(CEMPRA)
 # Installing unfinished package to computer...
-
-
-list.files('./inst/extdata/matrix_test/')
-
 # Check on cran against LTR version of R
 # devtools::check_win_release()
-
-
-
-
 # citation("CEMPRA")
 
 
 
-#-------------------------------
-# Check External Function Calls
-#-------------------------------
-library(tidyverse)
-library(rgdal)
-library(plyr)
-library(shiny)
-library(DT)
-library(readxl)
-library(leaflet)
-library(tidyr)
-library(tidyselect)
-library(reshape2)
-library(rmapshaper)
-library(popbio)
-library(parallel)
-library(MASS)
-library(pracma)
-library(ggplot2)
-library(plotly)
-library(NCmisc)
-list.functions.in.file("./R/Utility_JoeModel.R")
-list.functions.in.file("./R/Utility_CumulativeEffect.R")
-list.functions.in.file("./R/Utility_PopulationModel.R")
-list.functions.in.file("./R/SystemCapacity.R")
-list.functions.in.file("./R/StressorMagnitudeWorkbook.R")
-list.functions.in.file("./R/StressorResponseWorkbook.R")
-list.functions.in.file("./R/Projection_DD.R")
-list.functions.in.file("./R/mean_Response.R")
-list.functions.in.file("./R/beta_param.R")
-list.functions.in.file("./R/JoeModel_Run.R")
-lintr::lint("./R/Utility_JoeModel.R")
-
-
-# For Shiny App
-library(NCmisc)
-fnames <- list.files("./R")
-blist <- list()
-for(f in 1:length(fnames)) {
-  print(fnames[f])
-  fsource <- list.functions.in.file(paste0("./R/", fnames[f]))
-  blist[[f]] <- names(fsource)
-}
-unique(unlist(blist))
-
-
-
 #----------------------------------------------------
-# More Serious Tests
+# pkgdown Creation
 #----------------------------------------------------
-# Generate cran-comments.md file
-# results <- rhub::check_for_cran()
-# Get the summary of your results
-# results$cran_summary()
-
-# Check for good practices
-library(goodpractice)
-goodpractice::gp()
-
-# Build Manual
-# install.packages('tinytex')
-# library(tinytex)
-# tinytex::install_tinytex()
-# tinytex::tlmgr_install("makeindex")
-# tinytex::reinstall_tinytex()
-# devtools::build_manual(pkg = ".", path = "../")
-# devtools::build_manual(pkg = ".")
-# library(devtools)
-# ?build_manual()
-
-library(inteRgrate)
-inteRgrate::check_pkg()
-
-
+# Ensure all tests pass
+devtools::test()
+# Must pass with no notes or warnings
+devtools::check() # Operating system test
+devtools::spell_check() # Spell check
+# Windows Checks
+devtools::check_win_devel()
+# Run rhub::check_for_cran() for multi-platform validation
+rhub::check_for_cran()
 
 #----------------------------------------------------
 # pkgdown Creation
@@ -129,28 +58,6 @@ pkgdown::build_site(new_process = FALSE)
 # 2. push to github...
 # 3. go to settings and set the github pages to the docs folder...
 # Main branch and launching from the docs folder...
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

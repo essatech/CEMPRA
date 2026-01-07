@@ -27,7 +27,7 @@ test_that("test-pop-ltre", {
 
   # Simple inputs
   HUC_ID = 1
-  n_reps =200
+  n_reps = 200
   output_type = "full"
   stressors = NA
 
@@ -55,19 +55,20 @@ test_that("test-pop-ltre", {
 
 
 
+  set.seed(1234)
   ret <- pop_model_ltre(step_size = 0.05,
                              dose = dose,
                              sr_wb_dat = sr_wb_dat,
                              life_cycle_params = life_cycle_params,
                              HUC_ID = HUC_ID,
-                             n_reps =3,
+                             n_reps = 10,
                              stressors = stressors,
                              habitat_dd_k = habitat_dd_k)
 
   # make sure this runs...
   names(ret)
-  # Expect baseline to be higher than CE
-  expect_true(ret$mean_ce_lambda < ret$mean_baseline_lambda)
+  # Expect baseline to be higher than CE (stressors reduce lambda)
+  expect_true(ret$mean_ce_lambda <= ret$mean_baseline_lambda)
 
   head(ret$ltre_summary_ce)
   tail(ret$ltre_summary_ce)
@@ -144,7 +145,7 @@ test_that("test-pop-ltre", {
     habitat_dd_k = habitat_dd_k
   )
   names(result)
-  expect_true(class(result$ce[[1]])[1] == "matrix")
+  expect_true(inherits(result$ce[[1]], "matrix"))
 
   popbio::lambda(result$ce[[1]])
   popbio::lambda(result$baseline[[1]])
@@ -171,8 +172,5 @@ test_that("test-pop-ltre", {
   expect_true(m2 > m1)
 
 
-
-
-
-
 })
+

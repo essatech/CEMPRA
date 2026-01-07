@@ -4,3 +4,7 @@
 ^docs$
 ^pkgdown$
 ^\.github$
+^\.RData$
+^\.Rhistory$
+^vignettes/file.*\.html$
+^\.claude$

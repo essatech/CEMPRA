@@ -41,6 +41,9 @@ applicable to the population model.}
 
 \item{habitat_dd_k}{(optional) dataframe of location and stage-specific habitat capacity k values for the target species. If used this dataframe will override the capacity estimates}
 }
+\value{
+List object of population model outputs. These include the population vectors for each Monte Carlo simulation and year. List objects names include "ce" for the runs with stressors and "baseline" for the runs without stressors.
+}
 \description{
 Runs the population model with stressors and stressor-response relationships
 }

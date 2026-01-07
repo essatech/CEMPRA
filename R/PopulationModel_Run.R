@@ -24,6 +24,9 @@
 #' @param output_type (optional) character. Set to "full" for all data of "adults" for only adult data.
 #' @param habitat_dd_k (optional) dataframe of location and stage-specific habitat capacity k values for the target species. If used this dataframe will override the capacity estimates
 #'
+#' @returns List object of population model outputs. These include the population vectors for each Monte Carlo simulation and year. List objects names include "ce" for the runs with stressors and "baseline" for the runs without stressors.
+#'
+#'
 #' @importFrom rlang .data
 #'
 #' @examples
@@ -102,7 +105,7 @@ PopulationModel_Run <- function(dose = NA,
     n_reps <- MC_sims * n_years
 
     jm <- suppressWarnings({
-      CEMPRA::JoeModel_Run(
+      JoeModel_Run(
         dose = smw_sample,
         sr_wb_dat = sr_wb_dat,
         MC_sims = n_reps,
@@ -183,11 +186,11 @@ PopulationModel_Run <- function(dose = NA,
     # Gather population model inputs
     # Setup objects for population model
     pop_mod_setup <-
-        CEMPRA::pop_model_setup(life_cycles = life_cycle_params)
+        pop_model_setup(life_cycles = life_cycle_params)
 
     # Build matrix elements for population model
     pop_mod_mat <-
-        CEMPRA::pop_model_matrix_elements(pop_mod_setup = pop_mod_setup)
+        pop_model_matrix_elements(pop_mod_setup = pop_mod_setup)
 
 
     # Set the K.adj (K adjustment prior to pop model run)
@@ -288,7 +291,7 @@ PopulationModel_Run <- function(dose = NA,
         # Run simple population projection - project forward through time
         # Run the simulation with CE stressors
         run_with_ce <-
-            CEMPRA::Projection_DD(
+            Projection_DD(
                 M.mx = life_stages_symbolic,
                 # projection matrix expression
                 D.mx = density_stage_symbolic,
@@ -314,7 +317,7 @@ PopulationModel_Run <- function(dose = NA,
 
         # Run baseline with no CE
         run_with_baseline <-
-            CEMPRA::Projection_DD(
+            Projection_DD(
                 M.mx = life_stages_symbolic,
                 # projection matrix expression
                 D.mx = density_stage_symbolic,

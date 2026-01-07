@@ -13,6 +13,7 @@ inst/doc**
 # History files
 .Rhistory
 .Rapp.history
+.claude
 
 # Session Data files
 .RData

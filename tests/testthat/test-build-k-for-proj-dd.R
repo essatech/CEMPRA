@@ -31,7 +31,7 @@ test_that("test-build-k-for-proj-dd", {
   HUC_ID <- 1
 
   # Return object
-  ro <- CEMPRA::build_k_for_proj_dd(
+  ro <- build_k_for_proj_dd(
     habitat_dd_k = habitat_dd_k,
     HUC_ID = 1,
     life_histories = life_histories,
@@ -52,7 +52,7 @@ test_that("test-build-k-for-proj-dd", {
   habitat_dd_k$HUC_ID <- habitat_dd_k$huc_id
   habitat_dd_k$NAME <- habitat_dd_k$name
 
-  ro <- CEMPRA::build_k_for_proj_dd(
+  ro <- build_k_for_proj_dd(
     habitat_dd_k = habitat_dd_k,
     HUC_ID = 1,
     life_histories = life_histories,
@@ -89,7 +89,7 @@ test_that("test-build-k-for-proj-dd", {
   life_histories <- pop_mod_mat$life_histories
 
   # Return object
-  ro <- CEMPRA::build_k_for_proj_dd(
+  ro <- build_k_for_proj_dd(
     habitat_dd_k = habitat_dd_k,
     HUC_ID = 1,
     life_histories = life_histories,

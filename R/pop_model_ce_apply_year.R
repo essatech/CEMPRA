@@ -561,7 +561,7 @@ pop_model_ce_apply_year <- function(
       }
 
       if (index_row$life_stage == "all") {
-        print("index_row$life_stage == 'all'")
+        message("index_row$life_stage == 'all'")
         stop("all stage not yet implemented")
       }
 

@@ -10,6 +10,8 @@
 #'
 #' @importFrom rlang .data
 #'
+#' @returns dataframe of spawner abundance by location, replicate, and year.
+#'
 #' @examples
 #' \dontrun{
 #' library(CEMPRA)

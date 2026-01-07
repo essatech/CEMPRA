@@ -186,16 +186,19 @@ dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages
       )
     )
     N_stage_1 <- N_stage_1_BH
+    # Apply updates to population vector
+    N_adj[[1]] <- N_stage_1
+  } else if(any(c("hs_stage_1", "hs_stage_pb_1") %in% bh_dd_stages)) {
+    # HS constraint was already applied above - do NOT overwrite N_adj[[1]]
+    # The HS code caps the current population, not the fry-derived calculation
   } else {
     # Do not apply BH-DD constraint
     # but recalculate stage_1 with fry adjusted for
     # possible egg survival constraint
     N_stage_1 <- N_stage_0 * step_s0
+    # Apply updates to population vector
+    N_adj[[1]] <- N_stage_1
   }
-
-  # Apply updates to population vector
-  # only update the first stage
-  N_adj[[1]] <- N_stage_1
 
 
   # ----------------------------------------------

@@ -1,10 +1,3 @@
-#' esub utility function
-#' @keywords internal
-esub <- function(expr, sublist) {
-  do.call("substitute", list(expr, sublist))
-}
-
-
 #' proc utility function
 #' @keywords internal
 get_transition_positions <- function(matrix_size) {

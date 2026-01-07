@@ -15,6 +15,9 @@ and sys.cap.}
 \item{adult_sys_cap}{Should the Joe Model be run only with variables
 identified for adult system capacity.}
 }
+\value{
+Updated sc.dose.df data frame with system capacity values
+}
 \description{
 Use run a 2D linear interpolation with interaction matrix to
 calculate system capacity.

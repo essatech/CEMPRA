@@ -11,6 +11,9 @@ beta_param(mean, sd)
 
 \item{sd}{Numeric. The standard deviation.}
 }
+\value{
+A list with alpha and beta parameters along with messages about mean and cv
+}
 \description{
 Estimates beta parameter given mean (rates) and SD for the
 the "untruncated" beta distribution.

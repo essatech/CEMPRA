@@ -24,7 +24,7 @@ StressorMagnitudeWorkbook <- function(filename = NA, scenario_worksheet = NA) {
 
   # Round values to two decimal places
   # data$Mean <- round(data$Mean, 2)
-  data$Mean <- as.numeric(as.character(data$Mean))
+  data$Mean <- suppressWarnings({ as.numeric(as.character(data$Mean)) })
   data$Mean <- round(data$Mean, 5)
 
   # Allow ID column to by any name
@@ -37,7 +37,7 @@ StressorMagnitudeWorkbook <- function(filename = NA, scenario_worksheet = NA) {
 
   if (any(duplicated(dups))) {
     # print(dups[which(duplicated(dups))])
-    print("Duplicated values in stressor magnitude worksheet...")
+    message("Duplicated values in stressor magnitude worksheet...")
   }
 
 

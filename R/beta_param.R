@@ -5,6 +5,8 @@
 #'
 #' @details Updated using analytical solution from Kyle Wilson.
 #'
+#' @returns A list with alpha and beta parameters along with messages about mean and cv
+#'
 #' @param mean Numeric. The mean.
 #' @param sd Numeric. The standard deviation.
 #'

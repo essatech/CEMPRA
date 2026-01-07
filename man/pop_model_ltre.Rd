@@ -37,8 +37,6 @@ value as NA if you wish to include all stressors
 applicable to the population model.}
 
 \item{habitat_dd_k}{(optional) dataframe of location and stage-specific habitat capacity k values for the target species. If used this dataframe will override the capacity estimates}
-
-\item{output_type}{(optional) character. Set to "full" for all data of "adults" for only adult data.}
 }
 \description{
 Run a LTRE for the population model

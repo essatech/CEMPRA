@@ -1,7 +1,24 @@
 #' build_k_for_proj_dd
-#' @description Build build_habitat_dd_k object and bh_dd_stages from PopulationModel_Run for Projection_DD
+#' @description Build build_habitat_dd_k object and bh_dd_stages from PopulationModel_Run for Projection_DD.
 #' @param life_histories Object returned from pop_model_matrix_elements()$life_histories
 #' @param life_cycle_params Object returned from pop_model_dat_clean() without any further editing
+#'
+#' @details This function builds the habitat carrying capacity (K) vector for
+#' use in density dependent projections. It extracts K values from the
+#' habitat_dd_k input data frame for the target HUC_ID and formats them for
+#' use in Projection_DD(). It also identifies which life stages are subject
+#' to density dependence based on the life cycle parameters. The function will
+#' return an empty list of there is no location-based DD.
+#'
+#' @returns A list with the following components:
+#' * ret_stage_k_override: A named numeric vector of carrying capacity (K) values
+#'  for each life stage, including fry (K0) and spawners if applicable.
+#'  * ret_bh_dd_stages: A character vector of life stage names that are subject to
+#'  Beverton-Holt density dependence.
+#'  * ret_total_anadromous_spawners: A numeric value representing the
+#'  total carrying capacity for anadromous spawners, if applicable.
+#'
+#'
 #'
 #' @keywords internal
 build_k_for_proj_dd <- function(habitat_dd_k,
@@ -236,11 +253,11 @@ build_k_for_proj_dd <- function(habitat_dd_k,
 
 
       if (length(any_diff1) > 0 | length(any_diff2) > 0) {
-        print("Expect from life cycles table:")
-        print(bh_dd_stages)
-        print("Data in location K table:")
-        print(bh_dd_stages_set_qa)
-        print("Warning: bh_stage_... in life cycle params does not match K ages... in habitat data")
+        message("Expect from life cycles table:")
+        message(bh_dd_stages)
+        message("Data in location K table:")
+        message(bh_dd_stages_set_qa)
+        message("Warning: bh_stage_... in life cycle params does not match K ages... in habitat data")
       }
 
 

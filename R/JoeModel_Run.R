@@ -12,8 +12,15 @@
 #' @param adult_sys_cap Should the Joe Model be run only with variables identified for `adult` system capacity.
 #' @param socioeconomic_inputs (optional) list object. Socioeconomic inputs returned from SocioEconomicWorkbook().
 #'
+#' @returns A list object with the following components:
+#' \item{ce.df}{dataframe. Cumulative effects data frame with columns for HUC, simulation, and CE (cumulative effect).}
+#' \item{sc.dose.df}{dataframe. Stressor-specific system capacity and dose data frame with columns for HUC, Stressor, simulation, dose, sys.cap, int.type, and link.}
+#' \item{socioeconomic_inputs}{(optional) list object. Socioeconomic inputs returned from SocioEconomicWorkbook() if socioeconomic_inputs were provided to the function.}
+#'
+#'
 #'   set number of Monte Carlo simulations for the Joe model.
 #' @importFrom rlang .data
+#' @importFrom magrittr %>%
 #'
 #'@examples
 #'\dontrun{
@@ -22,7 +29,7 @@
 #' # Load in the sample data from the reference Excel workbook
 #' filename_rm <- system.file("extdata", "stressor_magnitude_unc_ARTR.xlsx", package = "CEMPRA")
 #' filename_sr <- system.file("extdata", "stressor_response_fixed_ARTR.xlsx", package = "CEMPRA")
-#' # Stessor Magnitue and Doese Response Workbooks
+#' # Stressor Magnitue and Doese Response Workbooks
 #' dose <- StressorMagnitudeWorkbook(filename = filename_rm)
 #' sr_wb_dat <- StressorResponseWorkbook(filename = filename_sr)
 #'
@@ -157,11 +164,14 @@ JoeModel_Run <- function(dose = NA,
 
 
   # Run the Joe curves to generate the response functions
-  mean.resp.list <- mean_Response(
-    n.stressors = nrow(sr_wb_dat$main_sheet),
-    str.list = sr_wb_dat$sr_dat,
-    main = sr_wb_dat$main_sheet
-  )
+  mean.resp.list <-
+    suppressWarnings({
+      mean_Response(
+        n.stressors = nrow(sr_wb_dat$main_sheet),
+        str.list = sr_wb_dat$sr_dat,
+        main = sr_wb_dat$main_sheet
+      )
+    })
 
 
   # We now have two important objects:
@@ -372,6 +382,8 @@ JoeModel_Run <- function(dose = NA,
 
     for (mm in 1:length(m_mats)) {
       MInt <- sr_wb_dat$MInt[[mm]]
+
+      # Update sc.dose.df object to account for interaction matrix
       sc.dose.df <-
         interaction_matrix_sys_cap(MInt, sc.dose.df = sc.dose.df,
                                    adult_sys_cap = adult_sys_cap)

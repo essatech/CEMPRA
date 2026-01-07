@@ -5,12 +5,14 @@
 #' @details Runs the Joe Model for cumulative system capacity
 #' across multiple scenarios. See vignette for custom input file format.
 #'
-#' @param scenarios dataframe. Custom scenarios dataframe with columns `Scenario` (scenario ID), 
+#' @param scenarios dataframe. Custom scenarios dataframe with columns `Scenario` (scenario ID),
 #' `Stressor` (stressor name), `Metric` (either Mean or SD) and `Multiplier` (a numeric multiplier).
 #' @param dose dataframe. Stressor magnitude file exported from StressorMagnitudeWorkbook().
 #' @param sr_wb_dat list object. Stressor response workbook returned from StressorResponseWorkbook().
-#' @param MC_sims numeric. set number of Monte Carlo simulations for the Joe Model. set number 
+#' @param MC_sims numeric. set number of Monte Carlo simulations for the Joe Model. set number
 #' of Monte Carlo simulations for the Joe model.
+#'
+#' @returns A dataframe of system capacity results for each HUC and scenario.
 #'
 #' @importFrom rlang .data
 #'
@@ -22,7 +24,7 @@
 #'
 #' # Import stressor-magnitude workbook
 #' filename_rm <- system.file("extdata", "stressor_magnitude_unc_ARTR.xlsx", package = "CEMPRA")
-#' stressor_magnitude <- StressorMagnitudeWorkbook(filename = filename_rm, 
+#' stressor_magnitude <- StressorMagnitudeWorkbook(filename = filename_rm,
 #' scenario_worksheet = "natural_unc")
 #'
 #' # Import stressor-response workbook
@@ -130,11 +132,11 @@ JoeModel_Run_Batch <-
     sims <- unique(scenarios$Scenario)
 
     if (length(sims) < 1) {
-      print(sims)
       stop("The scenario column must be populated")
     }
 
     for (s in 1:length(sims)) {
+
       this_sim <- sims[s]
       paste0("running scenario... ", this_sim)
 
@@ -148,6 +150,7 @@ JoeModel_Run_Batch <-
 
       # Implement all adjustments
       for (a in 1:nrow(adjustments)) {
+
         this_adj <- adjustments[a, ]
 
         if (!(this_adj$Metric %in% c("Mean", "SD", "Low_Limit", "Up_Limit"))) {
@@ -157,7 +160,7 @@ JoeModel_Run_Batch <-
         multi <- as.numeric(as.character(this_adj$Multiplier))
 
         if (is.na(multi)) {
-          print(this_adj)
+          message(this_adj)
           stop("Multiplier must be a number...")
         }
 
