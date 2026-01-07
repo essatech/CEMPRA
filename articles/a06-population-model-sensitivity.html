@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">CEMPRA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,6 +46,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/essatech/CEMPRA/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -61,9 +62,9 @@
 
       <h1>6. Population Model Evaluation</h1>
             
-            <h4 data-toc-skip class="date">2025-05-09</h4>
+            <h4 data-toc-skip class="date">2026-01-07</h4>
       
-
+      <small class="dont-index">Source: <a href="https://github.com/essatech/CEMPRA/blob/main/vignettes/a06-population-model-sensitivity.Rmd" class="external-link"><code>vignettes/a06-population-model-sensitivity.Rmd</code></a></small>
       <div class="d-none name"><code>a06-population-model-sensitivity.Rmd</code></div>
     </div>
 
@@ -160,7 +161,6 @@ numbers down to more realistic estimates.</p>
 <span>        MC_sims <span class="op">=</span> <span class="fl">5</span>, <span class="co"># batch replicates</span></span>
 <span>        habitat_dd_k <span class="op">=</span> <span class="va">habitat_capcities</span> <span class="co"># Population-specific carrying capacities</span></span>
 <span>    <span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "Running... pop_model_setup_anadromous()"</span></span>
 <span></span>
 <span>    <span class="co"># Model returns object with all data nested in a list object</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span>
@@ -194,7 +194,6 @@ numbers down to more realistic estimates.</p>
 <span><span class="va">spawners</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pop_model_get_spawners.html">pop_model_get_spawners</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">data</span>,</span>
 <span>                                   life_stage <span class="op">=</span> <span class="st">"spawners"</span>,</span>
 <span>                                   life_cycle_params <span class="op">=</span> <span class="va">life_cycle_params</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "Running... pop_model_setup_anadromous()"</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">spawners</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   location_id rep_id year spawners</span></span>
@@ -250,7 +249,7 @@ numbers down to more realistic estimates.</p>
 <span><span class="co">#&gt; <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
 <span><span class="co">#&gt; <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
 <span><span class="co">#&gt; <span style="color: #555555;">generated.</span></span></span></code></pre></div>
-<p><img src="a06-population-model-sensitivity_files/figure-html/m3-1.png" width="100%" style="display: block; margin: auto;"></p>
+<p><img src="a06-population-model-sensitivity_files/figure-html/m3-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level2">
 <h2 id="location-and-life-stage-specific-bh-capacities">Location and life stage-specific BH capacities<a class="anchor" aria-label="anchor" href="#location-and-life-stage-specific-bh-capacities"></a>
@@ -264,11 +263,11 @@ numbers down to more realistic estimates.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Matthew Bayly.</p>
+  <p>Developed by Matthew Bayly, Kyle Wilson, Andrew Paul, Jordan Rosenfeld.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.2.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

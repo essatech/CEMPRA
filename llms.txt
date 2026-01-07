@@ -1,0 +1,241 @@
+# CEMPRA ![](reference/figures/CEMPRA_small.png)
+
+The Cumulative Effects Model for Prioritizing Recovery Actions (CEMPRA)
+is a cumulative effects modelling framework. The CEMPRA tool uses a
+series of standardized stressor-response functions to link environmental
+attributes to the system capacity and productivity of a target species
+or system.
+
+The framework is designed to be generalizable, simple, and versatile so
+that users can apply the model to various geographic regions, contexts,
+systems, and species. As the name suggests, the CEMPRA tool helps
+prioritize recovery actions for data-limited species and
+species-at-risk, with the flexibility to accommodate both data-rich and
+data-poor study systems.
+
+The CEMPRA tool is accessible as an open-source R package and R Shiny
+interactive web application.
+
+## Key Features
+
+- **Stressor-Response Framework**: Link environmental stressors to
+  system capacity using customizable dose-response relationships
+- **Joe Model**: Calculate cumulative system capacity across multiple
+  stressors and locations
+- **Stage-Structured Population Model**: Project population dynamics
+  with life-stage-specific vital rates
+- **Density-Dependence Options**: Support for Beverton-Holt and
+  Hockey-Stick density-dependent constraints at any life stage
+- **Anadromous & Resident Life Histories**: Model both anadromous
+  (salmon) and non-anadromous (resident) populations
+- **Batch Processing**: Run scenarios across multiple locations and
+  stressor combinations
+- **Sensitivity Analysis**: Evaluate parameter uncertainty and identify
+  key drivers
+
+## Project Components
+
+- GitHub Repository for R-Package: <https://github.com/essatech/CEMPRA>
+- GitHub Repository for R-Shiny Application:
+  <https://github.com/essatech/CEMPRAShiny>
+- LIVE Online R-Shiny Application:
+  <https://essa.shinyapps.io/CEMPRAShiny/>
+- R-Package Tutorials: <https://essatech.github.io/CEMPRA/index.html>
+- Guidance Document (Realtime Updates):
+  <https://mattjbayly.github.io/CEMPRA_documentation/>
+- Guidance Document (2024 pdf):
+  <https://www.essa.com/wp-content/uploads/2024/05/Guideline_Documentation_Report-2024.03.14.pdf>
+
+## Shiny App
+
+**[Shiny App Tutorial Video](https://youtu.be/Ln9EYi_NVPo)** \| [Access
+the tool](https://essa.shinyapps.io/CEMPRAShiny)
+
+[![Tutorial
+Video](./reference/figures/shiny_app_cover.png)](https://youtu.be/Ln9EYi_NVPo)
+
+## Installation
+
+The easiest way to install the `CEMPRA` package is from within the
+[RStudio IDE](https://www.rstudio.com/products/rstudio/download/) using
+[`remotes::install_github()`](https://remotes.r-lib.org/reference/install_github.html).
+At this time the package has not been published to CRAN so the default
+[`install.packages()`](https://rdrr.io/r/utils/install.packages.html)
+will not work. Instead use remotes (or devtools) to install the package
+directly from GitHub:
+
+``` r
+# You may need to install remotes
+library(remotes)
+remotes::install_github("essatech/CEMPRA")
+```
+
+## Tutorials
+
+Detailed tutorials are available as package vignettes:
+
+| Tutorial                                                                                                           | Description                                                     |
+|--------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------|
+| [1. Joe Model Overview](https://essatech.github.io/CEMPRA/articles/a01-joe-model.html)                             | Introduction to the Joe Model for cumulative effects assessment |
+| [2. Joe Model Batch Run](https://essatech.github.io/CEMPRA/articles/a02-joe-model-batch-run.html)                  | Running the Joe Model across multiple locations                 |
+| [3. Population Model Overview](https://essatech.github.io/CEMPRA/articles/a03-population-model.html)               | Introduction to stage-structured population modeling            |
+| [4. Population Model Batch Run](https://essatech.github.io/CEMPRA/articles/a04-population-model-batch-run.html)    | Running population projections across multiple scenarios        |
+| [5. BC CEF Data Import](https://essatech.github.io/CEMPRA/articles/a05-bc-cef.html)                                | Importing data from BC Cumulative Effects Framework             |
+| [6. Population Model Evaluation](https://essatech.github.io/CEMPRA/articles/a06-population-model-sensitivity.html) | Sensitivity analysis and model evaluation                       |
+
+Additional guidance is available in the [CEMPRA
+Documentation](https://mattjbayly.github.io/CEMPRA_documentation/):
+
+- [Setup and
+  Installation](https://mattjbayly.github.io/CEMPRA_documentation/04_initial_setup.html)
+- [Data
+  Inputs](https://mattjbayly.github.io/CEMPRA_documentation/05_data_inputs.html)
+
+## Package Contributors
+
+This is a broad collaboration between Fisheries and Oceans Canada (DFO),
+B.C. Ministry of Environment and Climate Change Strategy (ECCS), Alberta
+Environment and Parks (AEP), and Simon Fraser University (SFU).
+
+Contributors include:
+
+- [Matthew Bayly](https://github.com/mattjbayly): MJBA, Core application
+  development
+- [Alexandra Tekatch](https://github.com/alextekatch): ESSA, Application
+  development
+- [Jordan Rosenfeld](http://www.aferu.ca/rosenfeld-lab): Project design
+  and coordination; ECC Aquatic Ecologist
+- [Andrew Paul](https://github.com/andrewpaul68): Collaborator; AEP
+  Research Scientist
+- Lauren Jarvis: Collaborator; AEP Research Scientist
+- [Eva
+  Enders](https://profils-profiles.science.gc.ca/en/profile/eva-enders):
+  Project Lead; DFO Research Scientist
+- [Kyle Wilson](https://github.com/klwilson23): Population model
+  development
+- [Isuru
+  Dharmasena](https://www.linkedin.com/in/isuru-dharmasena-90269895/):
+  Core Shiny app development
+- [Julian Heavyside](https://github.com/julianheavyside): [ESSA
+  Technologies Ltd](https://essa.com/), R package and Shiny app
+  development support
+- Alejandra Urcelay
+- Pedro Gonzalez
+- Marc Porter
+
+## Citation
+
+If you use CEMPRA in your research, please cite it as:
+
+    Bayly, M., Tekatch, A., Rosenfeld, J., Paul, A., Jarvis, L., Enders, E., & Wilson, K. (2024).
+    CEMPRA: Cumulative Effects Model for Prioritizing Recovery Actions.
+    R package. https://github.com/essatech/CEMPRA
+
+## License
+
+This project is licensed under the MIT License - see the
+[LICENSE](https://essatech.github.io/CEMPRA/LICENSE) file for details.
+
+## Code of Conduct
+
+Please note that the `CEMPRA` package is released with a [Contributor
+Code of
+Conduct](https://pkgs.rstudio.com/rmarkdown/CODE_OF_CONDUCT.html). By
+contributing to this project, you agree to abide by its terms.
+
+## Reporting Bugs and Issues
+
+To report bugs or request features, please open an issue at:
+<https://github.com/essatech/CEMPRA/issues>
+
+### Rebuilding R-package locally
+
+Helpful commands to run to deploy package locally:
+
+``` r
+# Build and test package
+library(testthat)
+library(devtools)
+rm(list = ls())      # Clear memory
+devtools::load_all() # Load functions
+devtools::document() # Update documentation
+devtools::test()     # Run tests
+devtools::check()    # Operating system test
+```
+
+### Re-install R-package locally
+
+Helpful commands to install package from source:
+
+``` r
+remove.packages("CEMPRA") # Remove local installation
+install.packages(getwd(), repos = NULL, type = "source")
+# library(CEMPRA)
+# ?SystemCapacity
+```
+
+# Package index
+
+## All functions
+
+- [`JoeModel_Run()`](https://essatech.github.io/CEMPRA/reference/JoeModel_Run.md)
+  : Joe Model Run
+- [`JoeModel_Run_Batch()`](https://essatech.github.io/CEMPRA/reference/JoeModel_Run_Batch.md)
+  : Batch Joe Model Run
+- [`PopulationModel_Run()`](https://essatech.github.io/CEMPRA/reference/PopulationModel_Run.md)
+  : Population Model Run
+- [`Projection_DD()`](https://essatech.github.io/CEMPRA/reference/Projection_DD.md)
+  : Project matrix with Density Dependence
+- [`SocioEconomicRun()`](https://essatech.github.io/CEMPRA/reference/SocioEconomicRun.md)
+  : Run SocioEconomic Cost Calculations
+- [`SocioEconomicWorkbook()`](https://essatech.github.io/CEMPRA/reference/SocioEconomicWorkbook.md)
+  : Get Socio Economic Data from Excel Workbook
+- [`StressorMagnitudeWorkbook()`](https://essatech.github.io/CEMPRA/reference/StressorMagnitudeWorkbook.md)
+  : Get Stressor Magnitude Data from Excel Workbook
+- [`StressorResponseWorkbook()`](https://essatech.github.io/CEMPRA/reference/StressorResponseWorkbook.md)
+  : Get Stressor Response Data from Excel Workbook
+- [`SystemCapacity()`](https://essatech.github.io/CEMPRA/reference/SystemCapacity.md)
+  : System Capacity
+- [`beta_param()`](https://essatech.github.io/CEMPRA/reference/beta_param.md)
+  : Estimate Beta Parameter
+- [`interaction_matrix_load()`](https://essatech.github.io/CEMPRA/reference/interaction_matrix_load.md)
+  : Load Interaction Matrices
+- [`interaction_matrix_sys_cap()`](https://essatech.github.io/CEMPRA/reference/interaction_matrix_sys_cap.md)
+  : Interaction Matrix System Capacity
+- [`mean_Response()`](https://essatech.github.io/CEMPRA/reference/mean_Response.md)
+  : Mean Response Function
+- [`pop_model_K_adj()`](https://essatech.github.io/CEMPRA/reference/pop_model_K_adj.md)
+  : K_adj
+- [`pop_model_ce_apply()`](https://essatech.github.io/CEMPRA/reference/pop_model_ce_apply.md)
+  : Population Model CE Application to Vital Rates
+- [`pop_model_ce_apply_year()`](https://essatech.github.io/CEMPRA/reference/pop_model_ce_apply_year.md)
+  : Population Model CE Application to Vital Rates Year-Specific
+- [`pop_model_get_spawners()`](https://essatech.github.io/CEMPRA/reference/pop_model_get_spawners.md)
+  : Population Model Get Spawners
+- [`pop_model_ltre()`](https://essatech.github.io/CEMPRA/reference/pop_model_ltre.md)
+  : Population Model LTRE
+- [`pop_model_matrix_elements()`](https://essatech.github.io/CEMPRA/reference/pop_model_matrix_elements.md)
+  : Population Model Matrix Elements
+- [`pop_model_matrix_elements_anadromous()`](https://essatech.github.io/CEMPRA/reference/pop_model_matrix_elements_anadromous.md)
+  : Population Model Matrix Elements for Anadromous Fish
+- [`pop_model_setup()`](https://essatech.github.io/CEMPRA/reference/pop_model_setup.md)
+  : Population Model Setup
+- [`pop_model_setup_anadromous()`](https://essatech.github.io/CEMPRA/reference/pop_model_setup_anadromous.md)
+  : Population Model Setup for Anadromous Species
+
+# Articles
+
+### All vignettes
+
+- [1. Joe Model
+  Overview](https://essatech.github.io/CEMPRA/articles/a01-joe-model.md):
+- [2. Joe Model Batch
+  Run](https://essatech.github.io/CEMPRA/articles/a02-joe-model-batch-run.md):
+- [3. Population Model
+  Overview](https://essatech.github.io/CEMPRA/articles/a03-population-model.md):
+- [4. Population Model Batch
+  Run](https://essatech.github.io/CEMPRA/articles/a04-population-model-batch-run.md):
+- [5. BC CEF Data
+  Import](https://essatech.github.io/CEMPRA/articles/a05-bc-cef.md):
+- [6. Population Model
+  Evaluation](https://essatech.github.io/CEMPRA/articles/a06-population-model-sensitivity.md):

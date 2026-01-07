@@ -11,8 +11,8 @@
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Cumulative Effects Model for Prioritizing Recovery Actions (CEMPRA)">
-<meta name="description" content="Cumulative Effects Model for Prioritizing Recovery Actions.">
-<meta property="og:description" content="Cumulative Effects Model for Prioritizing Recovery Actions.">
+<meta name="description" content="Cumulative Effects Model for Prioritizing Recovery Actions. Links environmental stressors to system capacity and population productivity to help prioritize recovery actions for data-limited and at-risk species.">
+<meta property="og:description" content="Cumulative Effects Model for Prioritizing Recovery Actions. Links environmental stressors to system capacity and population productivity to help prioritize recovery actions for data-limited and at-risk species.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">CEMPRA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -48,6 +48,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/essatech/CEMPRA/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -59,45 +60,149 @@
 <div class="page-header"><h1 id="cempra-">CEMPRA <img src="reference/figures/CEMPRA_small.png" align="right" style="max-width: 120px;"><a class="anchor" aria-label="anchor" href="#cempra-"></a>
 </h1></div>
 <!-- badges: start -->
-<!-- badges: end -->
-<p>The Cumulative Effects Model for Prioritizing Recovery Actions (CEMPRA) is a cumulative effects modelling framework. The CEMPRA tool uses a series of standardized stressor-response functions to link environmental attributes to the system capacity and productivity of a target species/system. This framework design is as generalizable, simple, and versatile as possible so that users can apply the model to various geographic regions, contexts, systems, and species. As the name suggests, the CEMPRA tool helps prioritize recovery actions for data-limited species and species-at-risk, with the flexibility to accommodate both data-rich and data-poor study systems. The CEMPRA tool is accessible as an open-source R package (<a href="https://github.com/essatech/CEMPRA" class="external-link uri">https://github.com/essatech/CEMPRA</a>) and R Shiny interactive web application (<a href="https://github.com/essatech/CEMPRAShiny" class="external-link uri">https://github.com/essatech/CEMPRAShiny</a>).</p>
+
+<p>The Cumulative Effects Model for Prioritizing Recovery Actions (CEMPRA) is a cumulative effects modelling framework. The CEMPRA tool uses a series of standardized stressor-response functions to link environmental attributes to the system capacity and productivity of a target species or system.</p>
+<p>The framework is designed to be generalizable, simple, and versatile so that users can apply the model to various geographic regions, contexts, systems, and species. As the name suggests, the CEMPRA tool helps prioritize recovery actions for data-limited species and species-at-risk, with the flexibility to accommodate both data-rich and data-poor study systems.</p>
+<p>The CEMPRA tool is accessible as an open-source R package and R Shiny interactive web application.</p>
+<div class="section level2">
+<h2 id="key-features">Key Features<a class="anchor" aria-label="anchor" href="#key-features"></a>
+</h2>
+<ul>
+<li>
+<strong>Stressor-Response Framework</strong>: Link environmental stressors to system capacity using customizable dose-response relationships</li>
+<li>
+<strong>Joe Model</strong>: Calculate cumulative system capacity across multiple stressors and locations</li>
+<li>
+<strong>Stage-Structured Population Model</strong>: Project population dynamics with life-stage-specific vital rates</li>
+<li>
+<strong>Density-Dependence Options</strong>: Support for Beverton-Holt and Hockey-Stick density-dependent constraints at any life stage</li>
+<li>
+<strong>Anadromous &amp; Resident Life Histories</strong>: Model both anadromous (salmon) and non-anadromous (resident) populations</li>
+<li>
+<strong>Batch Processing</strong>: Run scenarios across multiple locations and stressor combinations</li>
+<li>
+<strong>Sensitivity Analysis</strong>: Evaluate parameter uncertainty and identify key drivers</li>
+</ul>
+</div>
 <div class="section level2">
 <h2 id="project-components">Project Components<a class="anchor" aria-label="anchor" href="#project-components"></a>
 </h2>
 <ul>
-<li>GitHub Repository for R-Package (<a href="https://github.com/essatech/CEMPRA" class="external-link uri">https://github.com/essatech/CEMPRA</a>)</li>
-<li>GitHub Repository for R-Shiny Application (<a href="https://github.com/essatech/CEMPRAShiny" class="external-link uri">https://github.com/essatech/CEMPRAShiny</a>)</li>
-<li>LIVE (online R-Shiny Application) (<a href="https://essa.shinyapps.io/CEMPRAShiny/" class="external-link uri">https://essa.shinyapps.io/CEMPRAShiny/</a>)</li>
-<li>R-Package Tutorials (<a href="https://essatech.github.io/CEMPRA/index.html" class="uri">https://essatech.github.io/CEMPRA/index.html</a>)</li>
-<li>Guidance Document (Realtime Updates): (<a href="https://mattjbayly.github.io/CEMPRA_documentation/" class="external-link uri">https://mattjbayly.github.io/CEMPRA_documentation/</a>)</li>
-<li>Guidance Document (2024 pdf): (<a href="https://www.essa.com/wp-content/uploads/2024/05/Guideline_Documentation_Report-2024.03.14.pdf" class="external-link uri">https://www.essa.com/wp-content/uploads/2024/05/Guideline_Documentation_Report-2024.03.14.pdf</a>)</li>
+<li>GitHub Repository for R-Package: <a href="https://github.com/essatech/CEMPRA" class="external-link uri">https://github.com/essatech/CEMPRA</a>
+</li>
+<li>GitHub Repository for R-Shiny Application: <a href="https://github.com/essatech/CEMPRAShiny" class="external-link uri">https://github.com/essatech/CEMPRAShiny</a>
+</li>
+<li>LIVE Online R-Shiny Application: <a href="https://essa.shinyapps.io/CEMPRAShiny/" class="external-link uri">https://essa.shinyapps.io/CEMPRAShiny/</a>
+</li>
+<li>R-Package Tutorials: <a href="https://essatech.github.io/CEMPRA/index.html" class="uri">https://essatech.github.io/CEMPRA/index.html</a>
+</li>
+<li>Guidance Document (Realtime Updates): <a href="https://mattjbayly.github.io/CEMPRA_documentation/" class="external-link uri">https://mattjbayly.github.io/CEMPRA_documentation/</a>
+</li>
+<li>Guidance Document (2024 pdf): <a href="https://www.essa.com/wp-content/uploads/2024/05/Guideline_Documentation_Report-2024.03.14.pdf" class="external-link uri">https://www.essa.com/wp-content/uploads/2024/05/Guideline_Documentation_Report-2024.03.14.pdf</a>
+</li>
 </ul>
-<p><strong><a href="https://youtu.be/Ln9EYi_NVPo" class="external-link">Shiny App Tutorial Video</a></strong> <a href="https://essa.shinyapps.io/CEMPRAShiny" class="external-link">access the tool</a></p>
-<p><a href="https://youtu.be/Ln9EYi_NVPo" class="external-link"><img src="./reference/figures/shiny_app_cover.png" alt="Tutorial Video"></a></p>
 </div>
 <div class="section level2">
-<h2 id="package-contributors">Package Contributors:<a class="anchor" aria-label="anchor" href="#package-contributors"></a>
+<h2 id="shiny-app">Shiny App<a class="anchor" aria-label="anchor" href="#shiny-app"></a>
 </h2>
-<p>This is a broad collaboration between Fisheries and Oceans Canada (DFO), B.C. Ministry of Environment and Climate Change Strategy (ECCS), Alberta Environment and Parks (AEP), and Simon Fraser University (SFU).</p>
-<p>Contributors include: - <a href="https://github.com/mattjbayly" class="external-link">Matthew Bayly</a>: MJBA, Core application development. - Alexandra Tekatch: ESSA, Core application development. - <a href="http://www.aferu.ca/rosenfeld-lab" class="external-link">Jordan Rosenfeld</a>: Project design and coordination; ECCS Aquatic Ecologist - <a href="https://github.com/andrewpaul68" class="external-link">Lauren Jarvis</a>: Collaborator; AEP Research Scientist - <a href="https://github.com/andrewpaul68" class="external-link">Andrew Paul</a>: Collaborator; AEP Research Scientist - <a href="https://profils-profiles.science.gc.ca/en/profile/eva-enders" class="external-link">Eva Enders</a>: Project Lead; DFO Research Scientist - <a href="https://github.com/klwilson23" class="external-link">Kyle Wilson</a>: Population model development. - <a href="https://www.linkedin.com/in/isuru-dharmasena-90269895/?originalSubdomain=ca" class="external-link">Isuru Dharmasena</a>: Core Shiny app development (<a href="https://github.com/julianheavyside" class="external-link uri">https://github.com/julianheavyside</a>) from <a href="https://essa.com/" class="external-link">ESSA Technologies Ltd</a>: R package and Shiny app development support. - Alejandra Urcelay - Pedro Gonzalez - Marc Porter - Julian Heavyside</p>
+<p><strong><a href="https://youtu.be/Ln9EYi_NVPo" class="external-link">Shiny App Tutorial Video</a></strong> | <a href="https://essa.shinyapps.io/CEMPRAShiny" class="external-link">Access the tool</a></p>
+<p><a href="https://youtu.be/Ln9EYi_NVPo" class="external-link"><img src="./reference/figures/shiny_app_cover.png" alt="Tutorial Video"></a></p>
 </div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>The easiest way to install the <code>CEMPRA</code> package is from within the <a href="https://www.rstudio.com/products/rstudio/download/" class="external-link">RStudio IDE</a> using <code><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">remotes::install_github()</a></code>. At this time the package has not been published to CRAN so the default <code><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages()</a></code> will not work. Instead use remotes (or devtools) to install the packge directly from GitHub:</p>
+<p>The easiest way to install the <code>CEMPRA</code> package is from within the <a href="https://www.rstudio.com/products/rstudio/download/" class="external-link">RStudio IDE</a> using <code><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">remotes::install_github()</a></code>. At this time the package has not been published to CRAN so the default <code><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages()</a></code> will not work. Instead use remotes (or devtools) to install the package directly from GitHub:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># You may need to install remotes</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://remotes.r-lib.org" class="external-link">remotes</a></span><span class="op">)</span></span>
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"essatech/CEMPRA"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
+<h2 id="tutorials">Tutorials<a class="anchor" aria-label="anchor" href="#tutorials"></a>
 </h2>
-<p>There are several vignettes available that provide detailed guidance for <code>CEMPRA</code> usage and common workflows. See articles availabe in the guidance document <a href="https://mattjbayly.github.io/CEMPRA_documentation/" class="external-link">CEMPRA project page</a>:</p>
+<p>Detailed tutorials are available as package vignettes:</p>
+<table class="table">
+<colgroup>
+<col width="43%">
+<col width="56%">
+</colgroup>
+<thead><tr class="header">
+<th>Tutorial</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><a href="https://essatech.github.io/CEMPRA/articles/a01-joe-model.html">1. Joe Model Overview</a></td>
+<td>Introduction to the Joe Model for cumulative effects assessment</td>
+</tr>
+<tr class="even">
+<td><a href="https://essatech.github.io/CEMPRA/articles/a02-joe-model-batch-run.html">2. Joe Model Batch Run</a></td>
+<td>Running the Joe Model across multiple locations</td>
+</tr>
+<tr class="odd">
+<td><a href="https://essatech.github.io/CEMPRA/articles/a03-population-model.html">3. Population Model Overview</a></td>
+<td>Introduction to stage-structured population modeling</td>
+</tr>
+<tr class="even">
+<td><a href="https://essatech.github.io/CEMPRA/articles/a04-population-model-batch-run.html">4. Population Model Batch Run</a></td>
+<td>Running population projections across multiple scenarios</td>
+</tr>
+<tr class="odd">
+<td><a href="https://essatech.github.io/CEMPRA/articles/a05-bc-cef.html">5. BC CEF Data Import</a></td>
+<td>Importing data from BC Cumulative Effects Framework</td>
+</tr>
+<tr class="even">
+<td><a href="https://essatech.github.io/CEMPRA/articles/a06-population-model-sensitivity.html">6. Population Model Evaluation</a></td>
+<td>Sensitivity analysis and model evaluation</td>
+</tr>
+</tbody>
+</table>
+<p>Additional guidance is available in the <a href="https://mattjbayly.github.io/CEMPRA_documentation/" class="external-link">CEMPRA Documentation</a>:</p>
 <ul>
-<li><a href="https://mattjbayly.github.io/CEMPRA_documentation/04_initial_setup.html" class="external-link">Setup and installation</a></li>
-<li><a href="https://mattjbayly.github.io/CEMPRA_documentation/05_data_inputs.html" class="external-link">Data inputs</a></li>
+<li><a href="https://mattjbayly.github.io/CEMPRA_documentation/04_initial_setup.html" class="external-link">Setup and Installation</a></li>
+<li><a href="https://mattjbayly.github.io/CEMPRA_documentation/05_data_inputs.html" class="external-link">Data Inputs</a></li>
 </ul>
+</div>
+<div class="section level2">
+<h2 id="package-contributors">Package Contributors<a class="anchor" aria-label="anchor" href="#package-contributors"></a>
+</h2>
+<p>This is a broad collaboration between Fisheries and Oceans Canada (DFO), B.C. Ministry of Environment and Climate Change Strategy (ECCS), Alberta Environment and Parks (AEP), and Simon Fraser University (SFU).</p>
+<p>Contributors include:</p>
+<ul>
+<li>
+<a href="https://github.com/mattjbayly" class="external-link">Matthew Bayly</a>: MJBA, Core application development</li>
+<li>
+<a href="https://github.com/alextekatch" class="external-link">Alexandra Tekatch</a>: ESSA, Application development</li>
+<li>
+<a href="http://www.aferu.ca/rosenfeld-lab" class="external-link">Jordan Rosenfeld</a>: Project design and coordination; ECC Aquatic Ecologist</li>
+<li>
+<a href="https://github.com/andrewpaul68" class="external-link">Andrew Paul</a>: Collaborator; AEP Research Scientist</li>
+<li>Lauren Jarvis: Collaborator; AEP Research Scientist</li>
+<li>
+<a href="https://profils-profiles.science.gc.ca/en/profile/eva-enders" class="external-link">Eva Enders</a>: Project Lead; DFO Research Scientist</li>
+<li>
+<a href="https://github.com/klwilson23" class="external-link">Kyle Wilson</a>: Population model development</li>
+<li>
+<a href="https://www.linkedin.com/in/isuru-dharmasena-90269895/" class="external-link">Isuru Dharmasena</a>: Core Shiny app development</li>
+<li>
+<a href="https://github.com/julianheavyside" class="external-link">Julian Heavyside</a>: <a href="https://essa.com/" class="external-link">ESSA Technologies Ltd</a>, R package and Shiny app development support</li>
+<li>Alejandra Urcelay</li>
+<li>Pedro Gonzalez</li>
+<li>Marc Porter</li>
+</ul>
+</div>
+<div class="section level2">
+<h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
+</h2>
+<p>If you use CEMPRA in your research, please cite it as:</p>
+<pre><code>Bayly, M., Tekatch, A., Rosenfeld, J., Paul, A., Jarvis, L., Enders, E., &amp; Wilson, K. (2024).
+CEMPRA: Cumulative Effects Model for Prioritizing Recovery Actions.
+R package. https://github.com/essatech/CEMPRA</code></pre>
+</div>
+<div class="section level2">
+<h2 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>
+</h2>
+<p>This project is licensed under the MIT License - see the <a href="LICENSE">LICENSE</a> file for details.</p>
 </div>
 <div class="section level2">
 <h2 id="code-of-conduct">Code of Conduct<a class="anchor" aria-label="anchor" href="#code-of-conduct"></a>
@@ -105,12 +210,14 @@
 <p>Please note that the <code>CEMPRA</code> package is released with a <a href="https://pkgs.rstudio.com/rmarkdown/CODE_OF_CONDUCT.html" class="external-link">Contributor Code of Conduct</a>. By contributing to this project, you agree to abide by its terms.</p>
 </div>
 <div class="section level2">
-<h2 id="contributing">Contributing<a class="anchor" aria-label="anchor" href="#contributing"></a>
+<h2 id="reporting-bugs-and-issues">Reporting Bugs and Issues<a class="anchor" aria-label="anchor" href="#reporting-bugs-and-issues"></a>
 </h2>
-<p>If you want to contribute to the project you can use the <code>git</code> “fork and pull request” workflow.</p>
-<p>Rebuilding R-package locally</p>
-<p>Helpful commands to run to reploy package locally</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<p>To report bugs or request features, please open an issue at: <a href="https://github.com/essatech/CEMPRA/issues" class="external-link uri">https://github.com/essatech/CEMPRA/issues</a></p>
+<div class="section level3">
+<h3 id="rebuilding-r-package-locally">Rebuilding R-package locally<a class="anchor" aria-label="anchor" href="#rebuilding-r-package-locally"></a>
+</h3>
+<p>Helpful commands to run to deploy package locally:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Build and test package</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://testthat.r-lib.org" class="external-link">testthat</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://devtools.r-lib.org/" class="external-link">devtools</a></span><span class="op">)</span></span>
@@ -119,16 +226,28 @@
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/document.html" class="external-link">document</a></span><span class="op">(</span><span class="op">)</span> <span class="co"># Update documentation</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/test.html" class="external-link">test</a></span><span class="op">(</span><span class="op">)</span>     <span class="co"># Run tests</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/check.html" class="external-link">check</a></span><span class="op">(</span><span class="op">)</span>    <span class="co"># Operating system test</span></span></code></pre></div>
-<p>Re-install R-package locally</p>
-<p>Helpful commands to install package from source</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+</div>
+<div class="section level3">
+<h3 id="re-install-r-package-locally">Re-install R-package locally<a class="anchor" aria-label="anchor" href="#re-install-r-package-locally"></a>
+</h3>
+<p>Helpful commands to install package from source:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/remove.packages.html" class="external-link">remove.packages</a></span><span class="op">(</span><span class="st">"CEMPRA"</span><span class="op">)</span> <span class="co"># Remove local installation</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>, repos <span class="op">=</span> <span class="cn">NULL</span>, type <span class="op">=</span> <span class="st">"source"</span><span class="op">)</span></span>
 <span><span class="co"># library(CEMPRA)</span></span>
 <span><span class="co"># ?SystemCapacity</span></span></code></pre></div>
 </div>
 </div>
-  </main><aside class="col-md-3"><div class="license">
+</div>
+  </main><aside class="col-md-3"><div class="links">
+<h2 data-toc-skip>Links</h2>
+<ul class="list-unstyled">
+<li><a href="https://github.com/essatech/CEMPRA/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/essatech/CEMPRA/issues" class="external-link">Report a bug</a></li>
+</ul>
+</div>
+
+<div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
 <li>
@@ -148,22 +267,32 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Matthew Bayly <br><small class="roles"> Maintainer </small>   </li>
+<li>Matthew Bayly <br><small class="roles"> Author, maintainer </small>   </li>
+<li>Kyle Wilson <br><small class="roles"> Author </small>   </li>
+<li>Andrew Paul <br><small class="roles"> Author </small>   </li>
+<li>Jordan Rosenfeld <br><small class="roles"> Author </small>   </li>
+<li><a href="authors.html">More about authors...</a></li>
 </ul>
 </div>
 
-
+<div class="dev-status">
+<h2 data-toc-skip>Dev status</h2>
+<ul class="list-unstyled">
+<li><a href="https://opensource.org/licenses/MIT" class="external-link"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a></li>
+<li><a href="https://github.com/essatech/CEMPRA/actions" class="external-link"><img src="https://github.com/essatech/CEMPRA/workflows/R-CMD-check/badge.svg" alt="R-CMD-check"></a></li>
+</ul>
+</div>
 
   </aside>
 </div>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Matthew Bayly.</p>
+  <p>Developed by Matthew Bayly, Kyle Wilson, Andrew Paul, Jordan Rosenfeld.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.2.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

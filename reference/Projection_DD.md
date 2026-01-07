@@ -1,0 +1,127 @@
+# Project matrix with Density Dependence
+
+Project the matrix model forward in time with density dependence.
+
+## Usage
+
+``` r
+Projection_DD(
+  M.mx = NA,
+  D.mx = NULL,
+  H.mx = NULL,
+  dat = NA,
+  Nyears = 100,
+  K = NA,
+  p.cat = NA,
+  CE_df = NULL,
+  K_adj = FALSE,
+  stage_k_override = NULL,
+  bh_dd_stages = NULL,
+  anadromous = FALSE,
+  alt_return = NULL
+)
+```
+
+## Arguments
+
+- M.mx:
+
+  A projection matrix expression
+
+- D.mx:
+
+  A matrix of density-dependence effect
+
+- H.mx:
+
+  A harm projection matrix
+
+- dat:
+
+  Life history data
+
+- Nyears:
+
+  Years to run simulation
+
+- K:
+
+  The population carrying Capacity of adults (mature individuals). Used
+  for back-calculating stage-specific carrying capacities with
+  compensation ratios. Also used in anadromous model for setting K of
+  adult spawners (across all age classes).
+
+- p.cat:
+
+  Probability of catastrophic event.
+
+- CE_df:
+
+  Cumulative effect data frame. Data frame identifying cumulative
+  effects stressors targets system capacity or population parameter, or
+  both, and target life stages.
+
+- K_adj:
+
+  Boolean. Should K_adj be run. Defaults to false.
+
+- stage_k_override:
+
+  Vector of K values for egg fry (age-0), fry (age-0) to stage_1,
+  stage_1 to stage_2, etc. Defaults to NULL for compensation ratios. If
+  set, values will override adult K value for density dependence with
+  Beverton-Holt. NA values should be used in stages with no constraints.
+  For example, if a fry to stage_1 bottle neck was set to 3000, the
+  resulting vector should look like this c(NA, 3000, NA):
+
+  - 1\. Egg to fry (K), NA - no constraint
+
+  - 2\. Fry to stage_1 (K), constrained to 3000 fry entering stage_1
+
+  - 3\. stage_1 to stage_2 (K), NA - no constraint
+
+  For anadromous species with a spawner capacity constraint, create a
+  vector of NAs equal number of stages + 1 and then set the spawner
+  capacity in the K input parameter of this function.
+
+- bh_dd_stages:
+
+  Optional Character vector of life stages c("dd_hs_0", "bh_stage_1",
+  "bh_stage_2", "bh_stage_3", ...) to apply classical Beverton-Holt
+  density-dependence. To be used in place of compensation ratios if set.
+  Use "dd_hs_0" for egg-to-fry k, "bh_stage_1" for fry to stage_1 k and
+  "bh_stage_2" for stage_1 to stage_2 k etc. Densities are the capped
+  value for the transition stage.
+
+- anadromous:
+
+  Boolean. If true, the model will apply anadromous life history
+  parameters. Defaults to false.
+
+- alt_return:
+
+  Character. Alternative return objects for internal use.
+
+## Value
+
+A list object with projected years, population size, lambda, fecundity,
+survival, catastrophic events.
+
+## Details
+
+The function runs the population projections forward through time. It is
+better to use PopulationModel_Run (a higher-level function) to ensure
+everything is input correctly for anadromous and non-anadromous runs.
+Life-cycle specific stressors (if set) will be applied based on values
+in the `CE_df` table. There are several ways to implement density
+dependence. deterministic projection matrix using
+[`popbio::stable.stage`](https://rdrr.io/pkg/popbio/man/stable.stage.html)
+with initial parameters based on arguments provided. Applies CE
+stressors to appropriate targets based on `CE_df`. All population
+modeling components are contained within this function. Users define a
+projection matrix, density-dependence matrix, harm projection matrix,
+life history parameters, years to simulate, carrying capacity,
+catastrophic event probabilities and a cumulative effects data frame
+(CE_df). When run this function will project the population forward in
+time. See the vignette tutorial Population Model Overview for details
+and instructions.

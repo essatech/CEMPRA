@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">CEMPRA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,6 +46,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/essatech/CEMPRA/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -61,9 +62,9 @@
 
       <h1>1. Joe Model Overview</h1>
             
-            <h4 data-toc-skip class="date">2025-05-09</h4>
+            <h4 data-toc-skip class="date">2026-01-07</h4>
       
-
+      <small class="dont-index">Source: <a href="https://github.com/essatech/CEMPRA/blob/main/vignettes/a01-joe-model.Rmd" class="external-link"><code>vignettes/a01-joe-model.Rmd</code></a></small>
       <div class="d-none name"><code>a01-joe-model.Rmd</code></div>
     </div>
 
@@ -357,7 +358,7 @@ capacity…</li>
 capacity…</li>
 </ol>
 <div class="figure" style="text-align: center">
-<img src="a01-joe-model_files/figure-html/dr_sample-1.png" alt="Example Stressor-Response Curve" width="576"><p class="caption">
+<img src="a01-joe-model_files/figure-html/dr_sample-1.png" class="r-plt" alt="Example Stressor-Response Curve" width="576"><p class="caption">
 Example Stressor-Response Curve
 </p>
 </div>
@@ -631,7 +632,7 @@ stressor….</li>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">sys_cap</span>, xlab <span class="op">=</span> <span class="st">"Mean System Capacity (%)"</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="a01-joe-model_files/figure-html/tmsc_plot-1.png" alt="Mean System Capacity for temperature for a hypothetical watershed" width="576"><p class="caption">
+<img src="a01-joe-model_files/figure-html/tmsc_plot-1.png" class="r-plt" alt="Mean System Capacity for temperature for a hypothetical watershed" width="576"><p class="caption">
 Mean System Capacity for temperature for a hypothetical watershed
 </p>
 </div>
@@ -663,7 +664,7 @@ Model…</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">msc</span>, xlab <span class="op">=</span> <span class="st">"Mean System Capacity (%)"</span>, main <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="a01-joe-model_files/figure-html/msc_plot-1.png" alt="Mean System Capacity for all stressors and all watersheds across all simulations" width="576"><p class="caption">
+<img src="a01-joe-model_files/figure-html/msc_plot-1.png" class="r-plt" alt="Mean System Capacity for all stressors and all watersheds across all simulations" width="576"><p class="caption">
 Mean System Capacity for all stressors and all watersheds across all
 simulations
 </p>
@@ -676,11 +677,11 @@ simulations
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Matthew Bayly.</p>
+  <p>Developed by Matthew Bayly, Kyle Wilson, Andrew Paul, Jordan Rosenfeld.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.2.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>
