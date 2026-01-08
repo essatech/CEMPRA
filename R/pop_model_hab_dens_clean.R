@@ -1,7 +1,7 @@
 #' pop_model_hab_dens_clean
 #' @details Cleans input parameters from csv.
 #'
-#' @keywords internal
+#' @export
 pop_model_hab_dens_clean <- function(hab_dens = NA) {
   # Find capacity columns
   cap_col_filter <- which(grepl("^k_", colnames(hab_dens), ignore.case = TRUE))

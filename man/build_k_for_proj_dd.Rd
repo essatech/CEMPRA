@@ -33,4 +33,3 @@ use in Projection_DD(). It also identifies which life stages are subject
 to density dependence based on the life cycle parameters. The function will
 return an empty list of there is no location-based DD.
 }
-\keyword{internal}

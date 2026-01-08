@@ -36,6 +36,8 @@
 pop_model_matrix_elements_anadromous <- function(pop_mod_setup = NA) {
 
 
+
+
   life_histories <- pop_mod_setup$life_histories
   life_stages_symbolic <- pop_mod_setup$life_stages_symbolic
   life_pars <- pop_mod_setup$life_pars
@@ -98,7 +100,6 @@ pop_model_matrix_elements_anadromous <- function(pop_mod_setup = NA) {
   )
 
   s0_optim_min <- gets0
-
 
   # s0_optim_min <-
   #   stats::optimize(

@@ -1,7 +1,7 @@
 #' pop_model_dat_clean
 #' @details Cleans input parameters from csv.
 #'
-#' @keywords internal
+#' @export
 pop_model_dat_clean <- function(dat, nstage_fill = NULL) {
 
   # ===========================================

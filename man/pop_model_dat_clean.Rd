@@ -12,4 +12,3 @@ pop_model_dat_clean
 \details{
 Cleans input parameters from csv.
 }
-\keyword{internal}

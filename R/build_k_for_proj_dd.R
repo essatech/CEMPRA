@@ -20,7 +20,7 @@
 #'
 #'
 #'
-#' @keywords internal
+#' @export
 build_k_for_proj_dd <- function(habitat_dd_k,
                                 HUC_ID,
                                 life_histories,
@@ -43,6 +43,11 @@ build_k_for_proj_dd <- function(habitat_dd_k,
     fixnms <- gsub("_PB_", "_Pb_", fixnms)
     fixnms <- gsub("_b_", "_B_", fixnms)
     fixnms <- gsub("_Stage_", "_stage_", fixnms)
+
+    # Fix spawner column name convention
+    fixnms <- gsub("k_stage_b_mean", "k_stage_B_mean", fixnms)
+    fixnms <- gsub("k_spawners_mean", "k_stage_B_mean", fixnms)
+    fixnms <- gsub("k_spawner_mean", "k_stage_B_mean", fixnms)
 
     colnames(hab_dd_k) <- fixnms
 

@@ -12,4 +12,3 @@ pop_model_hab_dens_clean
 \details{
 Cleans input parameters from csv.
 }
-\keyword{internal}

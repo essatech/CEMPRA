@@ -47,7 +47,6 @@ Projection_DD <- function(M.mx = NA,
                           alt_return = NULL
                           ) {
 
-
   life_stages_symbolic <- density_stage_symbolic <- NULL
 
   if(is.null(alt_return)) {
