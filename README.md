@@ -2,7 +2,6 @@
 
 <!-- badges: start -->
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![R-CMD-check](https://github.com/essatech/CEMPRA/workflows/R-CMD-check/badge.svg)](https://github.com/essatech/CEMPRA/actions)
 <!-- badges: end -->
 
 The Cumulative Effects Model for Prioritizing Recovery Actions (CEMPRA) is a cumulative effects modelling framework. The CEMPRA tool uses a series of standardized stressor-response functions to link environmental attributes to the system capacity and productivity of a target species or system.
@@ -17,10 +16,10 @@ The CEMPRA tool is accessible as an open-source R package and R Shiny interactiv
 - **Stressor-Response Framework**: Link environmental stressors to system capacity using customizable dose-response relationships
 - **Joe Model**: Calculate cumulative system capacity across multiple stressors and locations
 - **Stage-Structured Population Model**: Project population dynamics with life-stage-specific vital rates
-- **Density-Dependence Options**: Support for Beverton-Holt and Hockey-Stick density-dependent constraints at any life stage
-- **Anadromous & Resident Life Histories**: Model both anadromous (salmon) and non-anadromous (resident) populations
-- **Batch Processing**: Run scenarios across multiple locations and stressor combinations
-- **Sensitivity Analysis**: Evaluate parameter uncertainty and identify key drivers
+	- **Density-Dependence Options**: Support for Beverton-Holt and Hockey-Stick density-dependent constraints at any life stage
+	- **Anadromous & Resident Life Histories**: Model both anadromous (salmon) and non-anadromous (resident) populations
+	- **Batch Processing**: Run scenarios across multiple locations and stressor combinations
+	- **Sensitivity Analysis**: Evaluate parameter uncertainty and identify key drivers
 
 
 ## Project Components

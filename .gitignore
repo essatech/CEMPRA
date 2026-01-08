@@ -9,6 +9,7 @@ inst/doc
 inst/doc**
 # build pages from docs
 # docs
+doc
 
 # History files
 .Rhistory
@@ -61,3 +62,5 @@ rsconnect/
 
 # Prefix for temporary Microsoft Office files
 ~$*
+/doc/
+/Meta/

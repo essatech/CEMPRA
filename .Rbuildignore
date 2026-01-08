@@ -8,3 +8,6 @@
 ^\.Rhistory$
 ^vignettes/file.*\.html$
 ^\.claude$
+^LICENSE\.md$
+^doc$
+^Meta$
