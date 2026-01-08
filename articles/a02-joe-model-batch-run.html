@@ -62,7 +62,7 @@
 
       <h1>2. Joe Model Batch Run</h1>
             
-            <h4 data-toc-skip class="date">2026-01-07</h4>
+            <h4 data-toc-skip class="date">2026-01-08</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/essatech/CEMPRA/blob/main/vignettes/a02-joe-model-batch-run.Rmd" class="external-link"><code>vignettes/a02-joe-model-batch-run.Rmd</code></a></small>
       <div class="d-none name"><code>a02-joe-model-batch-run.Rmd</code></div>
@@ -73,170 +73,668 @@
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>It can be helpful to perform batch replicate runs with the Joe Model
-by changing the stressor magnitude values by a fixed percentage. For a
-hypothetical scenario that represents climate change we can either
-create a whole new stressor magnitude file that is derived from
-empirical data and contains values for the projected stressors into the
-future and rerun the model. Alternatively, we may simply just want a
-scenario where number of stressors are increased or decreased by a given
-fraction. The Joe model scenario batch run function allows us to do
-this.</p>
-<p>The Joe model batch run function is very similar to the default Joe
-model function; however, it includes the addition of a special scenario
-file. The scenario file specifies scenario names along with series of
-stressors that each scenario will modify. The code loops through each
-scenario and then each stressor within each scenario and adjusts values
-according to a specified multiplier. For example, a multiplier of 1.2
-would change the values of Temperature_adult from 18C to 21.6C. The
-image below shows a sample hypothetical scenarios file with four
-hypothetical scenarios.</p>
-<p><img src="../reference/figures/scenarios_table.png" align="center"></p>
+<p>This tutorial demonstrates how to run the <strong>Joe Model in batch
+mode</strong> to evaluate multiple management or climate scenarios
+simultaneously. Building on <a href="a01-joe-model.html">Tutorial 1: Joe
+Model Overview</a>, you will learn how to: - Create and structure a
+scenarios file - Run the Joe Model across multiple scenarios in a single
+function call - Visualize and compare results across scenarios and
+locations</p>
+<div class="section level3">
+<h3 id="prerequisites">Prerequisites<a class="anchor" aria-label="anchor" href="#prerequisites"></a>
+</h3>
+<p>Before starting this tutorial, you should: - Complete <a href="a01-joe-model.html">Tutorial 1: Joe Model Overview</a> -
+Understand how stressor-response and stressor-magnitude workbooks are
+structured - Have basic familiarity with <code>ggplot2</code> for
+visualization</p>
+</div>
+<div class="section level3">
+<h3 id="why-use-batch-runs">Why Use Batch Runs?<a class="anchor" aria-label="anchor" href="#why-use-batch-runs"></a>
+</h3>
+<p>In real-world applications, you often need to compare
+<strong>multiple scenarios</strong> to inform management decisions.
+Common use cases include:</p>
+<table class="table">
+<colgroup>
+<col width="52%">
+<col width="47%">
+</colgroup>
+<thead><tr class="header">
+<th>Use Case</th>
+<th>Example</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><strong>Climate projections</strong></td>
+<td>Compare current conditions vs. 2050 vs. 2080 climate scenarios</td>
+</tr>
+<tr class="even">
+<td><strong>Recovery actions</strong></td>
+<td>Evaluate the benefits of different restoration strategies</td>
+</tr>
+<tr class="odd">
+<td><strong>Sensitivity analysis</strong></td>
+<td>Test how changes in specific stressors affect outcomes</td>
+</tr>
+<tr class="even">
+<td><strong>Risk assessment</strong></td>
+<td>Compare best-case, expected, and worst-case scenarios</td>
+</tr>
+</tbody>
+</table>
+<p>Rather than running the Joe Model separately for each scenario and
+manually combining results, the batch function automates this process
+and returns a consolidated dataset ready for analysis.</p>
+</div>
+<div class="section level3">
+<h3 id="how-batch-runs-work">How Batch Runs Work<a class="anchor" aria-label="anchor" href="#how-batch-runs-work"></a>
+</h3>
+<p>The batch run function works by <strong>modifying stressor
+magnitudes</strong> according to multipliers you specify in a scenarios
+file:</p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Base condition</strong>: The original stressor-magnitude
+values serve as your baseline</li>
+<li>
+<strong>Scenario multipliers</strong>: Each scenario specifies which
+stressors to modify and by how much</li>
+<li>
+<strong>Automatic iteration</strong>: The function loops through all
+scenarios, adjusting stressor values and running the Joe Model</li>
+<li>
+<strong>Consolidated output</strong>: Results from all scenarios are
+combined into a single data frame</li>
+</ol>
+<p>For example, a multiplier of <code>1.2</code> increases a stressor by
+20%, while <code>0.8</code> decreases it by 20%.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="setup-and-installation">Setup and Installation<a class="anchor" aria-label="anchor" href="#setup-and-installation"></a>
 </h2>
-<p>At this time the Joe Model R package is hosted on GitHub and can be
-installed using devtools. Hopefully in the near future the near future
-the package will be available on R-CRAN for standard installation and
-loading.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># library(devtools)</span></span>
+<code class="sourceCode R"><span><span class="co"># Install CEMPRA from GitHub (if not already installed)</span></span>
+<span><span class="co"># library(devtools)</span></span>
 <span><span class="co"># install_github("essatech/CEMPRA")</span></span>
+<span></span>
+<span><span class="co"># Load required packages</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://essatech.github.io/CEMPRA/">CEMPRA</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="understanding-the-scenarios-file">Understanding the Scenarios File<a class="anchor" aria-label="anchor" href="#understanding-the-scenarios-file"></a>
+</h2>
+<p>The scenarios file is a simple Excel workbook (or data frame) that
+defines what changes to apply in each scenario. Here’s an example
+structure:</p>
+<p><img src="../reference/figures/scenarios_table.png" align="center"></p>
+<div class="section level3">
+<h3 id="scenarios-file-structure">Scenarios File Structure<a class="anchor" aria-label="anchor" href="#scenarios-file-structure"></a>
+</h3>
+<p>The scenarios file has a specific format:</p>
+<table class="table">
+<colgroup>
+<col width="38%">
+<col width="61%">
+</colgroup>
+<thead><tr class="header">
+<th>Column</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><strong>Scenario</strong></td>
+<td>Unique name for the scenario (e.g., “climate_2050”,
+“restore_riparian”)</td>
+</tr>
+<tr class="even">
+<td><strong>Stressor columns</strong></td>
+<td>One column per stressor you want to modify, containing the
+multiplier values</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key points:</strong> - Each row represents one scenario -
+Stressor column names must <strong>exactly match</strong> the names in
+your stressor-magnitude workbook - Values are
+<strong>multipliers</strong>: <code>1.0</code> = no change,
+<code>1.2</code> = +20%, <code>0.5</code> = -50% - Leave cells blank or
+use <code>1.0</code> for stressors that shouldn’t change in that
+scenario - You only need to include columns for stressors you want to
+modify</p>
+</div>
+<div class="section level3">
+<h3 id="example-scenarios">Example Scenarios<a class="anchor" aria-label="anchor" href="#example-scenarios"></a>
+</h3>
+<p>Here are some example scenario configurations:</p>
+<table class="table">
+<colgroup>
+<col width="15%">
+<col width="19%">
+<col width="15%">
+<col width="25%">
+<col width="24%">
+</colgroup>
+<thead><tr class="header">
+<th>Scenario</th>
+<th>Temperature</th>
+<th>Sediment</th>
+<th>Flow_alteration</th>
+<th>Interpretation</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>baseline</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>Current conditions (no changes)</td>
+</tr>
+<tr class="even">
+<td>climate_moderate</td>
+<td>1.1</td>
+<td>1.0</td>
+<td>0.9</td>
+<td>10% warmer, 10% less flow</td>
+</tr>
+<tr class="odd">
+<td>climate_severe</td>
+<td>1.25</td>
+<td>1.2</td>
+<td>0.7</td>
+<td>25% warmer, 20% more sediment, 30% less flow</td>
+</tr>
+<tr class="even">
+<td>restoration</td>
+<td>0.9</td>
+<td>0.6</td>
+<td>1.0</td>
+<td>Riparian restoration reduces temp and sediment</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section level2">
 <h2 id="import-data">Import Data<a class="anchor" aria-label="anchor" href="#import-data"></a>
 </h2>
-<p>In the next step well import the data for the Joe Model. Recall the
-Joe Model needs a stressor magnitude Excel file and a stressor response
-Excel file. in this special case (for batch runs) we will also include a
-<code>scenarios</code> file which can be imported as a dataframe. The
-following file paths (below) are loading sample datasets from within the
-R-package. For your application, please update the file paths to other
-excel workbooks on your computer. Take special care to ensure the
-formatting of the data is correct. Also ensure that the spelling of the
-stressor labels is consistent across all three input files (e.g.,
-temperature_adults).</p>
+<p>The batch run requires three input files:</p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Stressor-magnitude workbook</strong>: Baseline stressor
+values at each location</li>
+<li>
+<strong>Stressor-response workbook</strong>: Dose-response
+relationships for each stressor</li>
+<li>
+<strong>Scenarios file</strong>: Multipliers defining each scenario
+(see above)</li>
+</ol>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="co"># 1. Import stressor-magnitude workbook</span></span>
+<span><span class="co">#    This contains the baseline stressor values at each location</span></span>
+<span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="va">filename_sm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"stressor_magnitude_unc_ARTR.xlsx"</span>, package <span class="op">=</span> <span class="st">"CEMPRA"</span><span class="op">)</span></span>
+<span><span class="va">stressor_magnitude</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StressorMagnitudeWorkbook.html">StressorMagnitudeWorkbook</a></span><span class="op">(</span></span>
+<span>  filename <span class="op">=</span> <span class="va">filename_sm</span>,</span>
+<span>  scenario_worksheet <span class="op">=</span> <span class="st">"natural_unc"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="co"># 2. Import stressor-response workbook</span></span>
+<span><span class="co">#    This defines how each stressor affects system capacity</span></span>
+<span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="va">filename_sr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"stressor_response_fixed_ARTR.xlsx"</span>, package <span class="op">=</span> <span class="st">"CEMPRA"</span><span class="op">)</span></span>
+<span><span class="va">stressor_response</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StressorResponseWorkbook.html">StressorResponseWorkbook</a></span><span class="op">(</span>filename <span class="op">=</span> <span class="va">filename_sr</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="co"># 3. Import the scenarios file</span></span>
+<span><span class="co">#    This defines the multipliers for each scenario</span></span>
+<span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="va">filename_sc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"scenario_batch_joe.xlsx"</span>, package <span class="op">=</span> <span class="st">"CEMPRA"</span><span class="op">)</span></span>
+<span><span class="va">scenarios</span> <span class="op">&lt;-</span> <span class="fu">readxl</span><span class="fu">::</span><span class="fu"><a href="https://readxl.tidyverse.org/reference/read_excel.html" class="external-link">read_excel</a></span><span class="op">(</span><span class="va">filename_sc</span><span class="op">)</span></span></code></pre></div>
+<p>Let’s examine the scenarios file to understand what scenarios we’re
+comparing:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># View the scenarios configuration</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">scenarios</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 4</span></span></span>
+<span><span class="co">#&gt;   Scenario   Stressor          Metric Multiplier</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scenario_1 Temperature_adult Mean          1.2</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> scenario_1 Temperature_adult SD            1.1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> scenario_2 Aug_flow          Mean          0.7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> scenario_2 Aug_flow          SD            1.1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> scenario_3 Nat_lim_other     Mean          0.5</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> scenario_4 Temperature_adult Mean          0.8</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> scenario_4 Nat_lim_other     Mean          0.8</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> scenario_4 Aug_flow          Mean          0.8</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="run-the-joe-model-in-batch-mode">Run the Joe Model in Batch Mode<a class="anchor" aria-label="anchor" href="#run-the-joe-model-in-batch-mode"></a>
 </h2>
-<p>We will run the Joe Model in batch model across scenarios and have
-outputs into a single consolidated dataframe called
-<code>exp_dat</code>. In this tutorials <code>MC_sims</code> Monte Carlo
-replicates is only set to 3 to save time (please increase this for your
-application).</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="co"># ?JoeModel_Run_Batch -- see help</span></span>
-<span></span>
-<span><span class="co"># Run the Joe Model with batch scenarios</span></span>
-<span><span class="va">exp_dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/JoeModel_Run_Batch.html">JoeModel_Run_Batch</a></span><span class="op">(</span>scenarios <span class="op">=</span> <span class="va">scenarios</span>,</span>
-<span>                              dose <span class="op">=</span> <span class="va">stressor_magnitude</span>,</span>
-<span>                              sr_wb_dat <span class="op">=</span> <span class="va">stressor_response</span>,</span>
-<span>                              MC_sims <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">exp_dat</span>, <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 3 × 4</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># Groups:   HUC, simulation [3]</span></span></span>
+<p>Now we run the Joe Model across all scenarios. The
+<code><a href="../reference/JoeModel_Run_Batch.html">JoeModel_Run_Batch()</a></code> function:</p>
+<ol style="list-style-type: decimal">
+<li>Reads the baseline stressor magnitudes</li>
+<li>For each scenario, applies the specified multipliers to adjust
+stressor values</li>
+<li>Runs the Joe Model with Monte Carlo simulation</li>
+<li>Combines all results into a single data frame</li>
+</ol>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Run the Joe Model in batch mode across all scenarios</span></span>
+<span><span class="co"># Note: MC_sims is set low (3) for this tutorial - use higher values (100+)</span></span>
+<span><span class="co"># for real applications to get stable uncertainty estimates</span></span>
+<span><span class="va">exp_dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/JoeModel_Run_Batch.html">JoeModel_Run_Batch</a></span><span class="op">(</span></span>
+<span>  scenarios <span class="op">=</span> <span class="va">scenarios</span>,           <span class="co"># Scenario definitions with multipliers</span></span>
+<span>  dose <span class="op">=</span> <span class="va">stressor_magnitude</span>,       <span class="co"># Baseline stressor magnitudes</span></span>
+<span>  sr_wb_dat <span class="op">=</span> <span class="va">stressor_response</span>,   <span class="co"># Stressor-response relationships</span></span>
+<span>  MC_sims <span class="op">=</span> <span class="fl">3</span>                      <span class="co"># Number of Monte Carlo simulations per scenario</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="understanding-the-output">Understanding the Output<a class="anchor" aria-label="anchor" href="#understanding-the-output"></a>
+</h3>
+<p>The output <code>exp_dat</code> is a data frame with one row per
+location × scenario × Monte Carlo replicate:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># View the first few rows of results</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">exp_dat</span>, <span class="fl">6</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 4</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># Groups:   HUC, simulation [6]</span></span></span>
 <span><span class="co">#&gt;          HUC simulation    CE Scenario  </span></span>
 <span><span class="co">#&gt;        <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> <span style="text-decoration: underline;">1</span>701<span style="text-decoration: underline;">010</span>201          1     0 scenario_1</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> <span style="text-decoration: underline;">1</span>701<span style="text-decoration: underline;">010</span>201          2     0 scenario_1</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> <span style="text-decoration: underline;">1</span>701<span style="text-decoration: underline;">010</span>201          3     0 scenario_1</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="plot-results-by-huc-watershed">Plot Results By HUC (watershed)<a class="anchor" aria-label="anchor" href="#plot-results-by-huc-watershed"></a>
-</h2>
-<p>In the next code block we show how results can be plotted across
-scenarios for a given watershed. the code to generate this plot could be
-put into a loop such that separate plots are generated for each
-watershed, printed to your file system and saved as PNG files.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="co"># Add mean and error bars (SD)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> <span style="text-decoration: underline;">1</span>701<span style="text-decoration: underline;">010</span>201          1 0     scenario_1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> <span style="text-decoration: underline;">1</span>701<span style="text-decoration: underline;">010</span>201          2 0     scenario_1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> <span style="text-decoration: underline;">1</span>701<span style="text-decoration: underline;">010</span>201          3 0     scenario_1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> <span style="text-decoration: underline;">1</span>701<span style="text-decoration: underline;">010</span>202          1 0.582 scenario_1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> <span style="text-decoration: underline;">1</span>701<span style="text-decoration: underline;">010</span>202          2 0.584 scenario_1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> <span style="text-decoration: underline;">1</span>701<span style="text-decoration: underline;">010</span>202          3 0.436 scenario_1</span></span>
 <span></span>
-<span><span class="co">#-----------------------------------------------------</span></span>
-<span><span class="co"># Plot result for single HUC - filter by name or ID</span></span>
-<span><span class="va">hub_sub</span> <span class="op">&lt;-</span> <span class="va">exp_dat</span><span class="op">[</span><span class="va">exp_dat</span><span class="op">$</span><span class="va">HUC</span> <span class="op">==</span> <span class="fl">1701010204</span>,<span class="op">]</span></span>
-<span><span class="va">plot_title</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Watershed Name - "</span>, <span class="fl">1701010204</span><span class="op">)</span></span>
-<span></span>
-<span></span>
-<span><span class="va">hub_sb</span> <span class="op">&lt;-</span> <span class="va">hub_sub</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">Scenario</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span>mean <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">CE</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
-<span>          sd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">CE</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">hub_sb</span><span class="op">$</span><span class="va">lower</span> <span class="op">&lt;-</span> <span class="va">hub_sb</span><span class="op">$</span><span class="va">mean</span> <span class="op">-</span> <span class="va">hub_sb</span><span class="op">$</span><span class="va">sd</span></span>
-<span><span class="va">hub_sb</span><span class="op">$</span><span class="va">upper</span> <span class="op">&lt;-</span> <span class="va">hub_sb</span><span class="op">$</span><span class="va">mean</span> <span class="op">+</span> <span class="va">hub_sb</span><span class="op">$</span><span class="va">sd</span></span>
-<span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">hub_sb</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">mean</span>, y <span class="op">=</span> <span class="va">Scenario</span>, xmin <span class="op">=</span> <span class="va">lower</span>, xmax <span class="op">=</span> <span class="va">upper</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_rect</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="fl">0</span>, xmax <span class="op">=</span> <span class="fl">0.2</span>, ymin <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, ymax <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span>,</span>
-<span>          fill <span class="op">=</span> <span class="st">"pink"</span>, alpha <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span> <span class="op">+</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_rect</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="fl">0.2</span>, xmax <span class="op">=</span> <span class="fl">0.5</span>, ymin <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, ymax <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span>,</span>
-<span>          fill <span class="op">=</span> <span class="st">"orange"</span>, alpha <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span> <span class="op">+</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_rect</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="fl">0.5</span>, xmax <span class="op">=</span> <span class="fl">0.75</span>, ymin <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, ymax <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span>,</span>
-<span>          fill <span class="op">=</span> <span class="st">"yellow"</span>, alpha <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span> <span class="op">+</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_rect</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="fl">0.75</span>, xmax <span class="op">=</span> <span class="fl">1</span>, ymin <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, ymax <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span>,</span>
-<span>          fill <span class="op">=</span> <span class="st">"green"</span>, alpha <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span> <span class="op">+</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_linerange.html" class="external-link">geom_errorbarh</a></span><span class="op">(</span>height<span class="op">=</span><span class="fl">.2</span><span class="op">)</span> <span class="op">+</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="va">plot_title</span><span class="op">)</span> <span class="op">+</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">xlab</a></span><span class="op">(</span><span class="st">"System Capacity (0 - 1)"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ylab</a></span><span class="op">(</span><span class="st">"Recovery Scenario"</span><span class="op">)</span> <span class="op">+</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<div class="figure" style="text-align: center">
-<img src="a02-joe-model-batch-run_files/figure-html/format_demo88-1.png" class="r-plt" alt="Results across scenario by HUC" width="384"><p class="caption">
-Results across scenario by HUC
-</p>
+<span><span class="co"># Check the dimensions</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"\nTotal rows:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">exp_dat</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Total rows: 1236</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Unique scenarios:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">exp_dat</span><span class="op">$</span><span class="va">Scenario</span><span class="op">)</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Unique scenarios: 4</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Unique locations (HUCs):"</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">exp_dat</span><span class="op">$</span><span class="va">HUC</span><span class="op">)</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Unique locations (HUCs): 103</span></span></code></pre></div>
+<table class="table">
+<thead><tr class="header">
+<th>Column</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><strong>HUC</strong></td>
+<td>Location identifier (Hydrologic Unit Code or custom ID)</td>
+</tr>
+<tr class="even">
+<td><strong>Scenario</strong></td>
+<td>Which scenario this result belongs to</td>
+</tr>
+<tr class="odd">
+<td><strong>simulation</strong></td>
+<td>Monte Carlo replicate number</td>
+</tr>
+<tr class="even">
+<td><strong>CE</strong></td>
+<td>Cumulative Effects score (System Capacity, 0-1 scale)</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 <div class="section level2">
-<h2 id="plot-results-by-scenario">Plot Results By Scenario<a class="anchor" aria-label="anchor" href="#plot-results-by-scenario"></a>
+<h2 id="visualizing-results">Visualizing Results<a class="anchor" aria-label="anchor" href="#visualizing-results"></a>
 </h2>
-<p>In the second example we show how all watersheds can be plotted for
-an individual scenario. The watersheds are filtered here for convenience
-but additional styling and customization is necessary for your
-application.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
+<p>With batch results, there are two natural ways to visualize the
+data:</p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>By location</strong>: Compare all scenarios for a single
+watershed</li>
+<li>
+<strong>By scenario</strong>: Compare all watersheds within a single
+scenario</li>
+</ol>
+<div class="section level3">
+<h3 id="interpreting-system-capacity-scores">Interpreting System Capacity Scores<a class="anchor" aria-label="anchor" href="#interpreting-system-capacity-scores"></a>
+</h3>
+<p>Before plotting, it’s helpful to understand how to interpret system
+capacity values:</p>
+<table class="table">
+<colgroup>
+<col width="31%">
+<col width="39%">
+<col width="29%">
+</colgroup>
+<thead><tr class="header">
+<th>Score Range</th>
+<th>Interpretation</th>
+<th>Color Code</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>0.75 - 1.00</td>
+<td>
+<strong>Good</strong>: High habitat capacity, minimal cumulative
+stress</td>
+<td>Green</td>
+</tr>
+<tr class="even">
+<td>0.50 - 0.75</td>
+<td>
+<strong>Moderate</strong>: Some degradation, recovery actions may
+help</td>
+<td>Yellow</td>
+</tr>
+<tr class="odd">
+<td>0.20 - 0.50</td>
+<td>
+<strong>Poor</strong>: Significant stress, likely population
+impacts</td>
+<td>Orange</td>
+</tr>
+<tr class="even">
+<td>0.00 - 0.20</td>
+<td>
+<strong>Critical</strong>: Severe degradation, urgent action
+needed</td>
+<td>Pink/Red</td>
+</tr>
+</tbody>
+</table>
+<p>These thresholds are general guidelines; appropriate thresholds may
+vary by species and system.</p>
+</div>
+<div class="section level3">
+<h3 id="plot-1-compare-scenarios-for-a-single-location">Plot 1: Compare Scenarios for a Single Location<a class="anchor" aria-label="anchor" href="#plot-1-compare-scenarios-for-a-single-location"></a>
+</h3>
+<p>This visualization answers: <em>“How do different scenarios affect
+system capacity at a specific watershed?”</em></p>
+<p>This is useful for: - Presenting results to local stakeholders -
+Evaluating which recovery actions would benefit a priority watershed -
+Comparing climate impact projections for a specific location</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="co"># Select a single watershed to visualize</span></span>
+<span><span class="co"># Replace this HUC with one relevant to your study area</span></span>
+<span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="va">target_huc</span> <span class="op">&lt;-</span> <span class="fl">1701010204</span></span>
+<span><span class="va">huc_subset</span> <span class="op">&lt;-</span> <span class="va">exp_dat</span><span class="op">[</span><span class="va">exp_dat</span><span class="op">$</span><span class="va">HUC</span> <span class="op">==</span> <span class="va">target_huc</span>, <span class="op">]</span></span>
 <span></span>
-<span><span class="co">#-----------------------------------------------------</span></span>
-<span><span class="co"># Plot result for single scenario</span></span>
-<span><span class="va">sen_sub</span> <span class="op">&lt;-</span> <span class="va">exp_dat</span><span class="op">[</span><span class="va">exp_dat</span><span class="op">$</span><span class="va">Scenario</span> <span class="op">==</span> <span class="st">"scenario_1"</span>,<span class="op">]</span></span>
-<span><span class="va">plot_title</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Scenario 1 ..."</span><span class="op">)</span></span>
+<span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="co"># Calculate summary statistics across Monte Carlo replicates</span></span>
+<span><span class="co"># Mean gives the central estimate; SD shows uncertainty</span></span>
+<span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="va">huc_summary</span> <span class="op">&lt;-</span> <span class="va">huc_subset</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">Scenario</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span></span>
+<span>    mean <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">CE</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    sd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">CE</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    .groups <span class="op">=</span> <span class="st">"drop"</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    lower <span class="op">=</span> <span class="va">mean</span> <span class="op">-</span> <span class="va">sd</span>,</span>
+<span>    upper <span class="op">=</span> <span class="va">mean</span> <span class="op">+</span> <span class="va">sd</span></span>
+<span>  <span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Add mean and error bars (SD)</span></span>
-<span><span class="va">sen_sb</span> <span class="op">&lt;-</span> <span class="va">sen_sub</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">HUC</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span>mean <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">CE</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
-<span>          sd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">CE</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">sen_sb</span><span class="op">$</span><span class="va">lower</span> <span class="op">&lt;-</span> <span class="va">sen_sb</span><span class="op">$</span><span class="va">mean</span> <span class="op">-</span> <span class="va">sen_sb</span><span class="op">$</span><span class="va">sd</span></span>
-<span><span class="va">sen_sb</span><span class="op">$</span><span class="va">upper</span> <span class="op">&lt;-</span> <span class="va">sen_sb</span><span class="op">$</span><span class="va">mean</span> <span class="op">+</span> <span class="va">sen_sb</span><span class="op">$</span><span class="va">sd</span></span>
-<span></span>
-<span><span class="va">sen_sb</span><span class="op">$</span><span class="va">HUC</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">sen_sb</span><span class="op">$</span><span class="va">HUC</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sen_sb</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">mean</span>, y <span class="op">=</span> <span class="va">HUC</span>, xmin <span class="op">=</span> <span class="va">lower</span>, xmax <span class="op">=</span> <span class="va">upper</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_rect</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="fl">0</span>, xmax <span class="op">=</span> <span class="fl">0.2</span>, ymin <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, ymax <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span>,</span>
-<span>          fill <span class="op">=</span> <span class="st">"pink"</span>, alpha <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span> <span class="op">+</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_rect</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="fl">0.2</span>, xmax <span class="op">=</span> <span class="fl">0.5</span>, ymin <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, ymax <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span>,</span>
-<span>          fill <span class="op">=</span> <span class="st">"orange"</span>, alpha <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span> <span class="op">+</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_rect</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="fl">0.5</span>, xmax <span class="op">=</span> <span class="fl">0.75</span>, ymin <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, ymax <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span>,</span>
-<span>          fill <span class="op">=</span> <span class="st">"yellow"</span>, alpha <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span> <span class="op">+</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_rect</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="fl">0.75</span>, xmax <span class="op">=</span> <span class="fl">1</span>, ymin <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, ymax <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span>,</span>
-<span>          fill <span class="op">=</span> <span class="st">"green"</span>, alpha <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span> <span class="op">+</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_linerange.html" class="external-link">geom_errorbarh</a></span><span class="op">(</span>height<span class="op">=</span><span class="fl">.2</span><span class="op">)</span> <span class="op">+</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="va">plot_title</span><span class="op">)</span> <span class="op">+</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">xlab</a></span><span class="op">(</span><span class="st">"System Capacity (0 - 1)"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ylab</a></span><span class="op">(</span><span class="st">"Recovery Scenario"</span><span class="op">)</span> <span class="op">+</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="co"># Create the plot with color-coded capacity zones</span></span>
+<span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">huc_summary</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">mean</span>, y <span class="op">=</span> <span class="va">Scenario</span>, xmin <span class="op">=</span> <span class="va">lower</span>, xmax <span class="op">=</span> <span class="va">upper</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="co"># Add background zones for capacity interpretation</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_rect</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="fl">0</span>, xmax <span class="op">=</span> <span class="fl">0.2</span>, ymin <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, ymax <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span>,</span>
+<span>            fill <span class="op">=</span> <span class="st">"pink"</span>, alpha <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_rect</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="fl">0.2</span>, xmax <span class="op">=</span> <span class="fl">0.5</span>, ymin <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, ymax <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span>,</span>
+<span>            fill <span class="op">=</span> <span class="st">"orange"</span>, alpha <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_rect</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="fl">0.5</span>, xmax <span class="op">=</span> <span class="fl">0.75</span>, ymin <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, ymax <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span>,</span>
+<span>            fill <span class="op">=</span> <span class="st">"yellow"</span>, alpha <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_rect</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="fl">0.75</span>, xmax <span class="op">=</span> <span class="fl">1</span>, ymin <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, ymax <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span>,</span>
+<span>            fill <span class="op">=</span> <span class="st">"green"</span>, alpha <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="co"># Add points and error bars</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_linerange.html" class="external-link">geom_errorbarh</a></span><span class="op">(</span>height <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="co"># Labels and styling</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"Watershed:"</span>, <span class="va">target_huc</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">xlab</a></span><span class="op">(</span><span class="st">"System Capacity (0 - 1)"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ylab</a></span><span class="op">(</span><span class="st">"Scenario"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_continuous</a></span><span class="op">(</span>limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
+<span>    plot.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>hjust <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>,</span>
+<span>    panel.grid.minor <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="a02-joe-model-batch-run_files/figure-html/format_demo99-1.png" class="r-plt" alt="Results across HUC by scenario" width="384"><p class="caption">
-Results across HUC by scenario
+<img src="a02-joe-model-batch-run_files/figure-html/plot_by_huc-1.png" class="r-plt" alt="System capacity across scenarios for a single watershed. Error bars show standard deviation from Monte Carlo simulations." width="480"><p class="caption">
+System capacity across scenarios for a single watershed. Error bars show
+standard deviation from Monte Carlo simulations.
 </p>
 </div>
+<p><strong>Reading this plot:</strong> - Each point shows the mean
+system capacity for that scenario - Error bars indicate uncertainty (±1
+standard deviation from Monte Carlo simulation) - Background colors
+indicate capacity zones (green = good, pink = critical) - Scenarios can
+be compared by their horizontal position and overlap</p>
+</div>
+<div class="section level3">
+<h3 id="plot-2-compare-locations-within-a-single-scenario">Plot 2: Compare Locations Within a Single Scenario<a class="anchor" aria-label="anchor" href="#plot-2-compare-locations-within-a-single-scenario"></a>
+</h3>
+<p>This visualization answers: <em>“Which watersheds are most/least
+affected under a given scenario?”</em></p>
+<p>This is useful for: - Prioritizing locations for management action -
+Identifying spatial patterns of vulnerability - Reporting landscape-wide
+results for a specific scenario</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="co"># Select a single scenario to visualize</span></span>
+<span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="va">target_scenario</span> <span class="op">&lt;-</span> <span class="st">"scenario_1"</span></span>
+<span><span class="va">scenario_subset</span> <span class="op">&lt;-</span> <span class="va">exp_dat</span><span class="op">[</span><span class="va">exp_dat</span><span class="op">$</span><span class="va">Scenario</span> <span class="op">==</span> <span class="va">target_scenario</span>, <span class="op">]</span></span>
+<span></span>
+<span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="co"># Calculate summary statistics for each watershed</span></span>
+<span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="va">scenario_summary</span> <span class="op">&lt;-</span> <span class="va">scenario_subset</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">HUC</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span></span>
+<span>    mean <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">CE</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    sd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">CE</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    .groups <span class="op">=</span> <span class="st">"drop"</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    lower <span class="op">=</span> <span class="va">mean</span> <span class="op">-</span> <span class="va">sd</span>,</span>
+<span>    upper <span class="op">=</span> <span class="va">mean</span> <span class="op">+</span> <span class="va">sd</span>,</span>
+<span>    HUC <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">HUC</span><span class="op">)</span>  <span class="co"># Convert to character for proper y-axis display</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="co"># Sort by mean capacity for easier interpretation</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">mean</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Reorder factor levels for sorted display</span></span>
+<span><span class="va">scenario_summary</span><span class="op">$</span><span class="va">HUC</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">scenario_summary</span><span class="op">$</span><span class="va">HUC</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rev.html" class="external-link">rev</a></span><span class="op">(</span><span class="va">scenario_summary</span><span class="op">$</span><span class="va">HUC</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="co"># Create the plot</span></span>
+<span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">scenario_summary</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">mean</span>, y <span class="op">=</span> <span class="va">HUC</span>, xmin <span class="op">=</span> <span class="va">lower</span>, xmax <span class="op">=</span> <span class="va">upper</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="co"># Add background zones</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_rect</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="fl">0</span>, xmax <span class="op">=</span> <span class="fl">0.2</span>, ymin <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, ymax <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span>,</span>
+<span>            fill <span class="op">=</span> <span class="st">"pink"</span>, alpha <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_rect</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="fl">0.2</span>, xmax <span class="op">=</span> <span class="fl">0.5</span>, ymin <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, ymax <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span>,</span>
+<span>            fill <span class="op">=</span> <span class="st">"orange"</span>, alpha <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_rect</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="fl">0.5</span>, xmax <span class="op">=</span> <span class="fl">0.75</span>, ymin <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, ymax <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span>,</span>
+<span>            fill <span class="op">=</span> <span class="st">"yellow"</span>, alpha <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_rect</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="fl">0.75</span>, xmax <span class="op">=</span> <span class="fl">1</span>, ymin <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, ymax <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span>,</span>
+<span>            fill <span class="op">=</span> <span class="st">"green"</span>, alpha <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="co"># Add points and error bars</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_linerange.html" class="external-link">geom_errorbarh</a></span><span class="op">(</span>height <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="co"># Labels and styling</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"Scenario:"</span>, <span class="va">target_scenario</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">xlab</a></span><span class="op">(</span><span class="st">"System Capacity (0 - 1)"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ylab</a></span><span class="op">(</span><span class="st">"Watershed (HUC)"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_continuous</a></span><span class="op">(</span>limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
+<span>    plot.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>hjust <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>,</span>
+<span>    panel.grid.minor <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>    axis.text.y <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">7</span><span class="op">)</span>  <span class="co"># Smaller text for many watersheds</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<div class="figure" style="text-align: center">
+<img src="a02-joe-model-batch-run_files/figure-html/plot_by_scenario-1.png" class="r-plt" alt="System capacity across all watersheds for a single scenario. This view helps identify which locations are most vulnerable." width="480"><p class="caption">
+System capacity across all watersheds for a single scenario. This view
+helps identify which locations are most vulnerable.
+</p>
+</div>
+<p><strong>Reading this plot:</strong> - Watersheds are sorted from
+highest to lowest capacity (top to bottom) - Watersheds in the
+pink/orange zones may be priorities for restoration - Wide error bars
+indicate high uncertainty, possibly due to variable stressor data</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="advanced-comparing-scenario-differences">Advanced: Comparing Scenario Differences<a class="anchor" aria-label="anchor" href="#advanced-comparing-scenario-differences"></a>
+</h2>
+<p>Beyond visualizing raw scores, you may want to quantify <strong>how
+much each scenario changes</strong> capacity relative to baseline. This
+helps identify which scenarios have the largest positive or negative
+impact.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="co"># Calculate mean capacity per scenario (across all locations)</span></span>
+<span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="va">scenario_means</span> <span class="op">&lt;-</span> <span class="va">exp_dat</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">Scenario</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span></span>
+<span>    mean_capacity <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">CE</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    sd_capacity <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">CE</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    min_capacity <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">CE</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    max_capacity <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">CE</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    .groups <span class="op">=</span> <span class="st">"drop"</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">mean_capacity</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">scenario_means</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 5</span></span></span>
+<span><span class="co">#&gt;   Scenario   mean_capacity sd_capacity min_capacity max_capacity</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> scenario_1         0.335       0.281            0        0.916</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> scenario_2         0.327       0.214            0        0.753</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> scenario_4         0.299       0.223            0        0.811</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> scenario_3         0.204       0.170            0        0.739</span></span></code></pre></div>
+<p>This summary table shows: - <strong>mean_capacity</strong>: Average
+system capacity across all locations and Monte Carlo runs -
+<strong>sd_capacity</strong>: Variability in capacity scores -
+<strong>min/max_capacity</strong>: The range of outcomes observed</p>
+</div>
+<div class="section level2">
+<h2 id="saving-results-for-further-analysis">Saving Results for Further Analysis<a class="anchor" aria-label="anchor" href="#saving-results-for-further-analysis"></a>
+</h2>
+<p>You can export the batch results for use in other analyses or
+reporting:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="co"># Export full results to CSV</span></span>
+<span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.csv</a></span><span class="op">(</span><span class="va">exp_dat</span>, <span class="st">"joe_model_batch_results.csv"</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="co"># Export scenario summary statistics</span></span>
+<span><span class="co"># ---------------------------------------------------------</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.csv</a></span><span class="op">(</span><span class="va">scenario_means</span>, <span class="st">"scenario_summary.csv"</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="tips-for-your-application">Tips for Your Application<a class="anchor" aria-label="anchor" href="#tips-for-your-application"></a>
+</h2>
+<div class="section level3">
+<h3 id="choosing-multiplier-values">Choosing Multiplier Values<a class="anchor" aria-label="anchor" href="#choosing-multiplier-values"></a>
+</h3>
+<p>When creating your scenarios file, consider:</p>
+<ul>
+<li>
+<strong>Use empirical data when available</strong>: Climate
+projections, monitoring data, or modeled outputs provide defensible
+multipliers</li>
+<li>
+<strong>Document your assumptions</strong>: Record the rationale for
+each multiplier value</li>
+<li>
+<strong>Test sensitivity</strong>: Try a range of multipliers to
+understand how sensitive results are to your assumptions</li>
+<li>
+<strong>Consider interactions</strong>: A scenario with multiple
+stressor changes may have non-linear cumulative effects</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="increasing-monte-carlo-simulations">Increasing Monte Carlo Simulations<a class="anchor" aria-label="anchor" href="#increasing-monte-carlo-simulations"></a>
+</h3>
+<p>For publication or decision-making, increase <code>MC_sims</code> to
+get stable estimates:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Recommended: 100+ simulations for stable uncertainty estimates</span></span>
+<span><span class="va">exp_dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/JoeModel_Run_Batch.html">JoeModel_Run_Batch</a></span><span class="op">(</span></span>
+<span>  scenarios <span class="op">=</span> <span class="va">scenarios</span>,</span>
+<span>  dose <span class="op">=</span> <span class="va">stressor_magnitude</span>,</span>
+<span>  sr_wb_dat <span class="op">=</span> <span class="va">stressor_response</span>,</span>
+<span>  MC_sims <span class="op">=</span> <span class="fl">100</span>  <span class="co"># Increase for real applications</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="automating-plot-generation">Automating Plot Generation<a class="anchor" aria-label="anchor" href="#automating-plot-generation"></a>
+</h3>
+<p>To generate plots for all watersheds or scenarios automatically:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Example: Generate a PDF with plots for each watershed</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/grDevices/pdf.html" class="external-link">pdf</a></span><span class="op">(</span><span class="st">"watershed_scenario_plots.pdf"</span>, width <span class="op">=</span> <span class="fl">6</span>, height <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">huc</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">exp_dat</span><span class="op">$</span><span class="va">HUC</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># ... plotting code for each HUC ...</span></span>
+<span><span class="op">}</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/grDevices/dev.html" class="external-link">dev.off</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
+</h2>
+<p>Now that you can run batch scenarios with the Joe Model,
+consider:</p>
+<table class="table">
+<colgroup>
+<col width="43%">
+<col width="56%">
+</colgroup>
+<thead><tr class="header">
+<th>Tutorial</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><a href="a03-population-model.html">3. Population Model
+Overview</a></td>
+<td>Link system capacity to population dynamics</td>
+</tr>
+<tr class="even">
+<td><a href="a04-population-model-batch-run.html">4. Population Model
+Batch Run</a></td>
+<td>Run population projections across scenarios</td>
+</tr>
+<tr class="odd">
+<td><a href="a05-bc-cef.html">5. BC CEF Data Import</a></td>
+<td>Import data from BC Cumulative Effects Framework</td>
+</tr>
+<tr class="even">
+<td><a href="a06-population-model-sensitivity.html">6. Population Model
+Evaluation</a></td>
+<td>Sensitivity analysis and model evaluation</td>
+</tr>
+</tbody>
+</table>
+<p>For additional guidance, see the <a href="https://mattjbayly.github.io/CEMPRA_documentation/" class="external-link">CEMPRA
+Documentation</a>.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

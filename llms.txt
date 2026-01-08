@@ -24,14 +24,14 @@ interactive web application.
   stressors and locations
 - **Stage-Structured Population Model**: Project population dynamics
   with life-stage-specific vital rates
-- **Density-Dependence Options**: Support for Beverton-Holt and
-  Hockey-Stick density-dependent constraints at any life stage
-- **Anadromous & Resident Life Histories**: Model both anadromous
-  (salmon) and non-anadromous (resident) populations
-- **Batch Processing**: Run scenarios across multiple locations and
-  stressor combinations
-- **Sensitivity Analysis**: Evaluate parameter uncertainty and identify
-  key drivers
+  - **Density-Dependence Options**: Support for Beverton-Holt and
+    Hockey-Stick density-dependent constraints at any life stage
+  - **Anadromous & Resident Life Histories**: Model both anadromous
+    (salmon) and non-anadromous (resident) populations
+  - **Batch Processing**: Run scenarios across multiple locations and
+    stressor combinations
+  - **Sensitivity Analysis**: Evaluate parameter uncertainty and
+    identify key drivers
 
 ## Project Components
 
