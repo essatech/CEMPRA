@@ -6,6 +6,11 @@
 \usage{
 pop_model_dat_clean(dat, nstage_fill = NULL)
 }
+\arguments{
+\item{dat}{Data frame of life history parameters.}
+
+\item{nstage_fill}{Numeric. Number of stages to fill out to.}
+}
 \description{
 pop_model_dat_clean
 }

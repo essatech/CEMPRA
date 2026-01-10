@@ -4,10 +4,12 @@
 \alias{ce.func}
 \title{Apply CSC Across dataframe}
 \usage{
-ce.func(df)
+ce.func(df, strict_na = FALSE)
 }
 \arguments{
 \item{df}{A dataframe}
+
+\item{strict_na}{Logical. If TRUE, NA values in system capacity will propagate to the final CE score. If FALSE (default), NA values are ignored in the product calculation.}
 }
 \description{
 Apply CSC Across dataframe

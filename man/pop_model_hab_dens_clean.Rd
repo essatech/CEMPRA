@@ -6,6 +6,9 @@
 \usage{
 pop_model_hab_dens_clean(hab_dens = NA)
 }
+\arguments{
+\item{hab_dens}{A data frame. Habitat density data frame with capacity columns.}
+}
 \description{
 pop_model_hab_dens_clean
 }

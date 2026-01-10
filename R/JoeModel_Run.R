@@ -11,6 +11,7 @@
 #' @param stressors (optional) character vector of stressor names to include in the Joe Model. Leave the default value as NA if you wish to include all stressors applicable to the adult life stage or provide a character vector of stressors if you only want to run the model on a subset of the stressors.
 #' @param adult_sys_cap Should the Joe Model be run only with variables identified for `adult` system capacity.
 #' @param socioeconomic_inputs (optional) list object. Socioeconomic inputs returned from SocioEconomicWorkbook().
+#' @param strict_na Logical. Controls how NA and missing stressor values affect the final CE score. If FALSE (default), missing stressor rows are assigned system capacity of 1 (no effect) and NA values are ignored in the cumulative product. If TRUE, missing stressor rows result in NA system capacity and any NA values propagate to the final CE score (CE becomes NA).
 #'
 #' @returns A list object with the following components:
 #' \item{ce.df}{dataframe. Cumulative effects data frame with columns for HUC, simulation, and CE (cumulative effect).}
@@ -52,7 +53,8 @@ JoeModel_Run <- function(dose = NA,
                          MC_sims = 100,
                          stressors = NA,
                          adult_sys_cap = FALSE,
-                         socioeconomic_inputs = NULL) {
+                         socioeconomic_inputs = NULL,
+                         strict_na = FALSE) {
 
   # Define variables in function as null
   .data <- HUC <- simulation <- NULL
@@ -277,9 +279,11 @@ JoeModel_Run <- function(dose = NA,
         pnt.dose <- which(dose$HUC_ID == hucs[j] & dose$Stressor == stressors[j])
       }
 
-      # If nothing set - assume system capacity is 100%
+      # If nothing set - handle based on strict_na argument
       if (length(pnt.dose) == 0) {
-        sys.capacity[i, j,] <- 1 # System capacity is 1 if mssing
+        # If strict_na = TRUE, set to NA so final CE becomes NA
+        # If strict_na = FALSE (default), assume system capacity is 100%
+        sys.capacity[i, j,] <- ifelse(strict_na, NA, 1)
         dose.values[i, j,] <- NA
         dose.values.list[i, j][[1]] <- NA
         next
@@ -423,7 +427,7 @@ JoeModel_Run <- function(dose = NA,
 
   ce_df_raw <- sc.df %>%
     dplyr::group_by(HUC, simulation) %>%
-    dplyr::group_modify( ~ ce.func(.x))
+    dplyr::group_modify( ~ ce.func(.x, strict_na = strict_na))
 
   ce.df <- ce_df_raw
 

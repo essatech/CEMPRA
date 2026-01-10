@@ -10,7 +10,8 @@ JoeModel_Run(
   MC_sims = 100,
   stressors = NA,
   adult_sys_cap = FALSE,
-  socioeconomic_inputs = NULL
+  socioeconomic_inputs = NULL,
+  strict_na = FALSE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ JoeModel_Run(
 \item{adult_sys_cap}{Should the Joe Model be run only with variables identified for \code{adult} system capacity.}
 
 \item{socioeconomic_inputs}{(optional) list object. Socioeconomic inputs returned from SocioEconomicWorkbook().}
+
+\item{strict_na}{Logical. Controls how NA and missing stressor values affect the final CE score. If FALSE (default), missing stressor rows are assigned system capacity of 1 (no effect) and NA values are ignored in the cumulative product. If TRUE, missing stressor rows result in NA system capacity and any NA values propagate to the final CE score (CE becomes NA).}
 }
 \value{
 A list object with the following components:

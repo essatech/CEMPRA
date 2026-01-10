@@ -1,6 +1,9 @@
 #' pop_model_dat_clean
 #' @details Cleans input parameters from csv.
 #'
+#' @param dat Data frame of life history parameters.
+#' @param nstage_fill Numeric. Number of stages to fill out to.
+#'
 #' @export
 pop_model_dat_clean <- function(dat, nstage_fill = NULL) {
 

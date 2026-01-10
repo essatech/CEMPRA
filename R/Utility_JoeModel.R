@@ -78,8 +78,9 @@ mn.sd.huc <- function(df) {
 #' @details ddply function to calculate cumulative system capacity, the df contains system capacity for each stressor for a given HUC and simulation
 #'
 #' @param df A dataframe
+#' @param strict_na Logical. If TRUE, NA values in system capacity will propagate to the final CE score. If FALSE (default), NA values are ignored in the product calculation.
 #' @keywords internal
-ce.func <- function(df) {
+ce.func <- function(df, strict_na = FALSE) {
 
   # separate stressors without a minimum interaction
   # MJB added for NA error
@@ -128,9 +129,14 @@ ce.func <- function(df) {
   # NOTE - Total mortality is addressed prior to calculation of system capacity
   # Calculate the product across all cumulative effects
   # accounting for interactions
-  # MJB fix Nov 9 2023: prod() returns NA if any of the values are NA
+  # If strict_na = TRUE, NA values propagate to final CE
+  # If strict_na = FALSE (default), NA values are ignored (na.rm = TRUE)
 
-  ce.df <- data.frame(CE = prod(c(sys.cap.no.int, sys.cap.min, sys.cap.max), na.rm = TRUE))
+  if (strict_na) {
+    ce.df <- data.frame(CE = prod(c(sys.cap.no.int, sys.cap.min, sys.cap.max)))
+  } else {
+    ce.df <- data.frame(CE = prod(c(sys.cap.no.int, sys.cap.min, sys.cap.max), na.rm = TRUE))
+  }
 
   return(ce.df)
 }

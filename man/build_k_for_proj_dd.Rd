@@ -7,6 +7,10 @@
 build_k_for_proj_dd(habitat_dd_k, HUC_ID, life_histories, life_cycle_params)
 }
 \arguments{
+\item{habitat_dd_k}{Data frame. Habitat carrying capacity (K) values for each HUC_ID.}
+
+\item{HUC_ID}{Target HUC_ID for location-based density dependence.}
+
 \item{life_histories}{Object returned from pop_model_matrix_elements()$life_histories}
 
 \item{life_cycle_params}{Object returned from pop_model_dat_clean() without any further editing}

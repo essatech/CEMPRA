@@ -1,5 +1,6 @@
 #' pop_model_hab_dens_clean
 #' @details Cleans input parameters from csv.
+#' @param hab_dens A data frame. Habitat density data frame with capacity columns.
 #'
 #' @export
 pop_model_hab_dens_clean <- function(hab_dens = NA) {

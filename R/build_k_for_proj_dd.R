@@ -1,7 +1,10 @@
 #' build_k_for_proj_dd
 #' @description Build build_habitat_dd_k object and bh_dd_stages from PopulationModel_Run for Projection_DD.
+#'
 #' @param life_histories Object returned from pop_model_matrix_elements()$life_histories
 #' @param life_cycle_params Object returned from pop_model_dat_clean() without any further editing
+#' @param HUC_ID Target HUC_ID for location-based density dependence.
+#' @param habitat_dd_k Data frame. Habitat carrying capacity (K) values for each HUC_ID.
 #'
 #' @details This function builds the habitat carrying capacity (K) vector for
 #' use in density dependent projections. It extracts K values from the
