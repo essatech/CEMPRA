@@ -201,6 +201,7 @@ Projection_DD <- function(M.mx = NA,
 
   # evaluate whether we are quantifying the initial carrying capacities correctly
   if(anadromous) {
+
     # For anadromous use stage names to reference adult spawners
     mat_stage_n <- as.numeric(gsub("mat", "", names(mat_stage)))
     mat_stage_index <- match(paste0("stage_B_", mat_stage_n), dat$stage_names)
@@ -278,14 +279,18 @@ Projection_DD <- function(M.mx = NA,
 
     # For older stages - update adult vector
     k_stage_mod <- stage_k_override[2:(Nstage + 1)]
+
+    # Do not rely on stable stage distribution
+    # assume other stages are unconstrained
     k_stage <- ifelse(is.na(k_stage_mod), k_stage, k_stage_mod)
+
     names(k_stage) <- paste("K", 1:Nstage, sep = "")
     dat$K <- k_stage
 
     # Override K and Ka if set
     last_stage <- stage_k_override[(Nstage + 1)]
 
-    # Remember we can define spawners seperatly as their own entity
+    # Remember we can define spawners separately as their own entity
     Ka <- ifelse(is.na(last_stage), Ka, last_stage)
     K <- ifelse(is.na(last_stage), K, last_stage)
 
@@ -356,7 +361,6 @@ Projection_DD <- function(M.mx = NA,
   Ke_list <- replicate((Nyears + 1), dat$Ke, simplify = FALSE)
   K0_list <- replicate((Nyears + 1), dat$K0, simplify = FALSE)
   Kspawners_list <- replicate((Nyears + 1), dat$stage_k_spawners, simplify = FALSE)
-
 
   # ===========================================
   # Apply CE stressors (if any) to vital rates
@@ -430,6 +434,11 @@ Projection_DD <- function(M.mx = NA,
   # MJB: Otherwise set starting vector to custom k
   if (!(is.null(stage_k_override))) {
     N <- dat$K
+  }
+
+  # If all zeros then start with 1 in each stage class
+  if (all(N == 0)) {
+    N <- rep(1, length(N))
   }
 
   # number of Egg produced
@@ -526,7 +535,6 @@ Projection_DD <- function(M.mx = NA,
 
     # Allow for stage-specific DD effects
     # Constrain using Beverton-Holt functions
-
     if (is.null(bh_dd_stages) == FALSE) {
       if(!(all(is.na(N)))) {
 

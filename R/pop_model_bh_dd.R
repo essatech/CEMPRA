@@ -161,14 +161,16 @@ dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages
     N_stage_0 <- N_stage_0_BH
   }
 
-
-
   # ----------------------------------------------
   # Calculate max stage 1 abundance
   # given fry (s0) abundance using BH-DD
   # (stage 1 abundance) / (fry surv)
   # Capacity for stage 1
   k_stage_1 <- dat$K[[1]]
+
+  # Functionality for stage 1 is the same as anadromous vs non anadromous so adjust here
+  bh_dd_stages <- ifelse(bh_dd_stages == "bh_stage_pb_1", "bh_stage_1", bh_dd_stages)
+  bh_dd_stages <- ifelse(bh_dd_stages == "bh_stage_Pb_1", "bh_stage_1", bh_dd_stages)
 
   # Should BH-DD constraint be applied to
   # stage_0 to stage_1 transition?
@@ -214,6 +216,7 @@ dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages
   # Special bh_spawners (all classes)
   # If bh_spawners is present adjust K for spawners in proportion to
   # relative abundance in each spawning class
+
   if("bh_spawners" %in% bh_dd_stages) {
 
     # Get spawner cap

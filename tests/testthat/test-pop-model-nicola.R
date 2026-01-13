@@ -162,8 +162,4 @@ test_that("test-pop-model-nicola", {
 
 
 
-
-
-
-
 })

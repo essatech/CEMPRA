@@ -1,0 +1,89 @@
+"Parameters","Name","Value"
+"Number of life stages","Nstage",5
+"Anadromous","anadromous",1
+"Adult capacity","k",5
+"Spawn events per female","events",1
+"Eggs per age-3 female spawn","eps_3",3000
+"Eggs per age-4 female spawn","eps_4",4000
+"Eggs per age-5 female spawn","eps_5",4810
+"spawning interval","int",1
+"egg survival","SE",0.2
+"Fry survival to first Aug","S0",0.3
+"sex ratio","SR",0.5
+"Stage 1 to Stage 2 Fry/parr overwinter survival to pre-smolt (0.3)","surv_1",0.35
+"Stage 2 to Stage 3 Smolt out-migration survival (0.4) * first full year at sea (0.6) (assume no Jimmies)","surv_2",0.24
+"Stage 3 to Stage 4 full year at sea (0.05)","surv_3",0.7
+"Stage 4 to Stage 5 full year at sea (0.05)","surv_4",0.8
+"Terminal spawner surv age-5 to age-6 is zero","surv_5",0
+"Pre-spawn mortality of Age-3 spawners","u_3",0.95
+"Pre-spawn mortality of Age-4 spawners","u_4",0.95
+"Pre-spawn mortality of Age-5 spawners","u_5",0.95
+"Migration survival of Age-3 spawners","smig_3",0.9
+"Migration survival of Age-4 spawners","smig_4",0.9
+"Migration survival of Age-5 spawners","smig_5",0.9
+"egg survival compensation ratio","cr_E",1
+"yoy survival compensation ratio","cr_0",1
+"fry survival compensation ratio","cr_1",1
+"parr NR survival compensation ratio","cr_2",1
+"smolt NR survival compensation ratio","cr_3",1
+"ocean adult survival compensation ratio","cr_4",1
+"spawner survival compensation ratio","cr_5",1
+"maturity as adult","mat_3",0.03
+"maturity as adult","mat_4",0.85
+"maturity as adult","mat_5",1
+"variance in eggs per female","eps_sd",500
+"correlation in egg fecundity through time","egg_rho",0.1
+"coefficient of variation in stage-specific mortality","M.cv",0.2
+"correlation in mortality through time","M.rho",0.1
+"p.cat","p.cat",0
+"surv_6","surv_6",0
+"surv_7","surv_7",0
+"surv_8","surv_8",0
+"surv_9","surv_9",0
+"surv_10","surv_10",0
+"mat_1","mat_1",0
+"mat_2","mat_2",0
+"mat_6","mat_6",0
+"mat_7","mat_7",0
+"mat_8","mat_8",0
+"mat_9","mat_9",0
+"mat_10","mat_10",0
+"year_1","year_1",1
+"year_2","year_2",1
+"year_3","year_3",1
+"year_4","year_4",1
+"year_5","year_5",1
+"year_6","year_6",1
+"year_7","year_7",1
+"year_8","year_8",1
+"year_9","year_9",1
+"year_10","year_10",1
+"eps_1","eps_1",0
+"eps_2","eps_2",0
+"eps_6","eps_6",0
+"eps_7","eps_7",0
+"eps_8","eps_8",0
+"eps_9","eps_9",0
+"eps_10","eps_10",0
+"u_1","u_1",1
+"u_2","u_2",1
+"u_6","u_6",1
+"u_7","u_7",1
+"u_8","u_8",1
+"u_9","u_9",1
+"u_10","u_10",1
+"smig_1","smig_1",1
+"smig_2","smig_2",1
+"smig_6","smig_6",1
+"smig_7","smig_7",1
+"smig_8","smig_8",1
+"smig_9","smig_9",1
+"smig_10","smig_10",1
+"cr_6","cr_6",1
+"cr_7","cr_7",1
+"cr_8","cr_8",1
+"cr_9","cr_9",1
+"cr_10","cr_10",1
+"density_dependence","bh_stage_0",1
+"density_dependence","bh_stage_pb_1",1
+"density_dependence","bh_spawners",1

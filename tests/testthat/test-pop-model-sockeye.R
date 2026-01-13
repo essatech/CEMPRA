@@ -143,6 +143,118 @@ test_that("test-pop-model-sockeye", {
 
   (mean_both <- median(spawners))
 
+
+
+
+
+  # --------------------------------------------------------------------
+  # What if spawner capacity K is zero
+  # but spawner cap is not listed as a DD constraint in
+  # the life cycle parameters file
+  # --------------------------------------------------------------------
+  n_years <- 500
+  spawner_capacity <- 0 # set to zero
+  fry_capacity <- 9000000
+
+  stage_k_override <- rep(NA, dat$Nstage + 1)
+  stage_k_override[1] <- fry_capacity
+
+  baseline <-
+    Projection_DD(
+      M.mx = M.mx,
+      D.mx = D.mx,
+      dat = dat,
+      K = spawner_capacity,
+      Nyears = n_years,
+      anadromous = pop_mod_setup$anadromous,
+      bh_dd_stages = c("bh_stage_0"), # should be no spawner cap limits
+      stage_k_override = stage_k_override,
+    )
+
+  dat$stage_names
+
+  spawn_cols <- which(grepl("_B_", dat$stage_names))
+  spawners <- baseline$N[1:n_years,c(spawn_cols)]
+  spawners <- rowSums(as.data.frame(spawners))
+  spawners <- spawners[50:n_years]
+  plot(50:n_years, spawners, type = 'l')
+
+  expect_true(median(spawners) > 100)
+
+  # --------------------------------------------------------------------
+  # Ok and what if we also introduce a parr capacity
+  # --------------------------------------------------------------------
+
+  n_years <- 500
+  spawner_capacity <- 0 # set to zero
+  # Set this to some super high value so that its meaningless
+  fry_capacity <- 9999999999999999999999
+  parr_capacity <- 100000
+
+  stage_k_override <- rep(NA, dat$Nstage + 1)
+  stage_k_override[1] <- fry_capacity
+  stage_k_override[1+1] <- parr_capacity
+
+  baseline <-
+    Projection_DD(
+      M.mx = M.mx,
+      D.mx = D.mx,
+      dat = dat,
+      K = spawner_capacity,
+      Nyears = n_years,
+      anadromous = pop_mod_setup$anadromous,
+      bh_dd_stages = c("bh_stage_0", "bh_stage_1"), # should be no spawner cap limits
+      stage_k_override = stage_k_override,
+    )
+
+  spawn_cols <- which(grepl("_B_", dat$stage_names))
+  spawners <- baseline$N[1:n_years,c(spawn_cols)]
+  spawners <- rowSums(as.data.frame(spawners))
+  spawners_fry_parr <- spawners[100:n_years]
+  plot(100:n_years, spawners_fry_parr, type = 'l')
+
+  expect_true(median(spawners_fry_parr) > 100)
+  expect_true(median(spawners_fry_parr) < 500)
+
+  # --------------------------------------------------------------------
+  # Ok - now take away the fry cap
+  # we should get the same value as above
+  # --------------------------------------------------------------------
+
+  n_years <- 500
+  spawner_capacity <- 0 # set to zero
+  # Set this to some super high value so that its meaningless
+  fry_capacity <- 9999999999999999999999
+  parr_capacity <- 100000
+
+  stage_k_override <- rep(NA, dat$Nstage + 1)
+  # stage_k_override[1] <- fry_capacity
+  stage_k_override[1+1] <- parr_capacity
+
+  baseline <-
+    Projection_DD(
+      M.mx = M.mx,
+      D.mx = D.mx,
+      dat = dat,
+      K = spawner_capacity,
+      Nyears = n_years,
+      anadromous = pop_mod_setup$anadromous,
+      # bh_dd_stages = c("bh_stage_0", "bh_stage_1"), #
+      bh_dd_stages = c("bh_stage_1"),
+      stage_k_override = stage_k_override,
+    )
+
+  spawn_cols <- which(grepl("_B_", dat$stage_names))
+  spawners <- baseline$N[1:n_years,c(spawn_cols)]
+  spawners <- rowSums(as.data.frame(spawners))
+  spawners_parr <- spawners[100:n_years]
+  plot(100:n_years, spawners_parr, type = 'l')
+
+  expect_true(median(spawners_parr) > 100)
+  expect_true(median(spawners_parr) < 500)
+
+
+
   # --------------------------------------------------------------------
   # Setup Automated Run with PopulationModel_Run()
   # --------------------------------------------------------------------
@@ -287,6 +399,25 @@ test_that("test-pop-model-sockeye", {
 
   # non-nonsensical... falls back defaults from compensation ratio
   expect_true(round(mean(spawners), 0) < 50000 && round(mean(spawners), 0) > 5000)
+
+
+
+  # Test explainer function
+  explanation <- explain_dd_settings(life_cycles = life_cycles_simple,
+                      habitat_dd_k = habk,
+                      HUC_ID = 30007,
+                      verbose = FALSE)
+
+  names(explanation)
+  # explanation$explanation
+  # explanation$s0_details
+  # explanation$summary
+  # explanation$compensation_ratios
+  # explanation$bh_dd_stages
+  # explanation$k_values
+  # explanation$warnings
+
+
 
 
 

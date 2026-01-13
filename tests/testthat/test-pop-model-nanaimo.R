@@ -252,5 +252,21 @@ test_that("test-pop-model-nanaimo", {
   plot(spawners, type = 'l')
 
 
+  explanation <- explain_dd_settings(life_cycles = life_cycles,
+                                     habitat_dd_k = habk,
+                                     HUC_ID = 2,
+                                     verbose = FALSE)
+
+
+  names(explanation)
+  # explanation$explanation
+  # explanation$s0_details
+  # explanation$summary
+  # explanation$compensation_ratios
+  # explanation$bh_dd_stages
+  # explanation$k_values
+  # explanation$warnings
+
+
 })
 
