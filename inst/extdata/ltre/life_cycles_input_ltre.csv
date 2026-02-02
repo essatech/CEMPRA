@@ -1,0 +1,37 @@
+Parameters,Name,Value,Notes,Test_Parameter,Distribution,SD,Low_Limit,Up_Limit
+Number of life stages,Nstage,5,,FALSE,,,,
+Anadromous,anadromous,TRUE,,FALSE,,,,
+Adult capacity,k,5000,,FALSE,,,,
+Spawn events per female,events,1,,FALSE,,,,
+Eggs per age-3 female spawn,eps_3,3000,From Sprombery and Meador 2006,TRUE,normal,250,500,5000
+Eggs per age-4 female spawn,eps_4,4000,"(5,122 McIsaac, D.O., PhD thesis U of W)",TRUE,normal,500,1000,6000
+Eggs per age-5 female spawn,eps_5,4810,"(5,122 McIsaac, D.O., PhD thesis U of W)",TRUE,normal,600,1000,7000
+spawning interval,int,1,,FALSE,,,,
+egg survival,SE,0.2,"(65.3% McIsaac, D.O., PhD thesis U of W)",TRUE,beta,0.3,0.02,0.4
+Fry survival to first Aug,S0,0.3,"Beechie et al., 2021 (0.894 * 0.5 to 0.894 * 0.29",TRUE,pert,,0.02,0.4
+sex ratio,SR,0.5,,TRUE,pert,,0.45,0.55
+Stage 1 to Stage 2 Fry/parr overwinter survival to pre-smolt (0.3),surv_1,0.35,,TRUE,beta,0.2,0,1
+Stage 2 to Stage 3 Smolt out-migration survival (0.4) * first full year at sea (0.6) (assume no Jimmies),surv_2,0.24,,TRUE,beta,0.5,0.05,0.95
+Stage 3 to Stage 4 full year at sea (0.05),surv_3,0.7,,TRUE,beta,0.2,0.4,0.95
+Stage 4 to Stage 5 full year at sea (0.05),surv_4,0.8,,TRUE,beta,0.2,0.6,0.9
+Terminal spawner surv age-5 to age-6 is zero,surv_5,0,,FALSE,,,,
+Pre-spawn mortality of Age-3 spawners,u_3,0.95,,TRUE,beta,0.2,0.5,1
+Pre-spawn mortality of Age-4 spawners,u_4,0.95,,TRUE,beta,0.2,0.5,1
+Pre-spawn mortality of Age-5 spawners,u_5,0.95,,TRUE,beta,0.2,0.5,1
+Migration survival of Age-3 spawners,smig_3,0.9,"Beechie et al., 2021",TRUE,beta,0.2,0.5,1
+Migration survival of Age-4 spawners,smig_4,0.9,"Beechie et al., 2021",TRUE,beta,0.2,0.5,1
+Migration survival of Age-5 spawners,smig_5,0.9,"Beechie et al., 2021",TRUE,beta,0.2,0.5,1
+egg survival compensation ratio,cr_E,1,,FALSE,,,,
+yoy survival compensation ratio,cr_0,1,,FALSE,,,,
+fry survival compensation ratio,cr_1,1,,FALSE,,,,
+parr NR survival compensation ratio,cr_2,1,,FALSE,,,,
+smolt NR survival compensation ratio,cr_3,1,,FALSE,,,,
+ocean adult survival compensation ratio,cr_4,1,,FALSE,,,,
+spawner survival compensation ratio,cr_5,1,,FALSE,,,,
+maturity as adult,mat_3,0.03,From Sprombery and Meador 2006,TRUE,beta,0.03,0,0.1
+maturity as adult,mat_4,0.85,From Sprombery and Meador 2006,TRUE,beta,0.2,0.5,1
+maturity as adult,mat_5,1,From Sprombery and Meador 2006,FALSE,,,,
+variance in eggs per female,eps_sd,5.00E+02,,FALSE,,,,
+correlation in egg fecundity through time,egg_rho,1.00E-01,,FALSE,,,,
+coefficient of variation in stage-specific mortality,M.cv,2.00E-02,,FALSE,,,,
+correlation in mortality through time,M.rho,1.00E-01,,FALSE,,,,
