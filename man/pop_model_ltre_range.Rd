@@ -96,13 +96,13 @@ ggplot(prcc_data, aes(x = abs_prcc, y = parameter, fill = significant)) +
   geom_col(width = 0.7) +
   scale_fill_manual(
     values = c("TRUE" = "steelblue", "FALSE" = "coral"),
-    labels = c("TRUE" = "Significant (p < 0.01)", "FALSE" = "Non-significant"),
+    labels = c("TRUE" = "(p < 0.01)", "FALSE" = "(p > 0.01)"),
     name = "Statistical Significance"
   ) +
   scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.25)) +
   labs(
-    x = "Absolute PRCC",
-    y = "Parameter",
+    x = "Absolute PRCC with Lambda",
+    y = "Model Parameter",
     title = "Parameter Sensitivity Rankings",
     subtitle = paste0("Based on ", result$metadata$n_samples, " Monte Carlo samples")
   ) +
