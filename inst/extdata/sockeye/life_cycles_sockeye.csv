@@ -1,0 +1,42 @@
+Parameters,Name,Value,Species,Model,source _id,note
+Number of life stages,Nstage,5,Sockeye - anadromous,COQ,,
+Anadromous,anadromous,TRUE,Sockeye - anadromous,COQ,,
+Adult capacity,k,,Sockeye - anadromous,COQ,,not used
+Spawn events per female,events,1,Sockeye - anadromous,COQ,,
+Eggs per female spawn year3,eps_4,2876,Sockeye - anadromous,COQ,KLLKQ2QJ,mean of triangular distribution 
+Eggs per female spawn year4,eps_5,3537,Sockeye - anadromous,COQ,KLLKQ2QJ,eps_4 multiplied by 1.23 (the increment in fecundity for 5 year olds defined in the lcm code of the source)
+spawning interval,int,1,Sockeye - anadromous,COQ,,
+spawner migration survivorship year4-spawner,smig_4,1,Sockeye - anadromous,COQ,,TODO: implement upstream passage SR for this
+spawner migration survivorship year5-spawner,smig_5,1,Sockeye - anadromous,COQ,,TODO: implement upstream passage SR for this
+prespawn survivorship Year4-spawner,u_4,0.9,Sockeye - anadromous,COQ,NEWHWLUM,TODO: implement temp SR curve for this
+prespawn survivorship Year5-spawner,u_5,0.9,Sockeye - anadromous,COQ,NEWHWLUM,TODO: implement temp SR curve for this
+egg survival,SE,1,Sockeye - anadromous,COQ,KLLKQ2QJ,Set to 1 because source does not differentiate surv_0 into SE and S0
+yoy survival,S0,0.104,Sockeye - anadromous,COQ,KLLKQ2QJ,formula 3 using mean of triangular distribution for egg-smolt survival
+sex ratio,SR,0.5,Sockeye - anadromous,COQ,KLLKQ2QJ,
+Stage 1 to Stage 2,surv_1,0.141,Sockeye - anadromous,COQ,KLLKQ2QJ,formula 5 using mean of triangular distribution for egg-smolt and smolt-adult survival
+Stage 2 to Stage 3,surv_2,0.216,Sockeye - anadromous,COQ,KLLKQ2QJ,formula 7 using mean of triangular distribution for smolt-adult survival
+Stage 3 to Stage 4,surv_3,0.216,Sockeye - anadromous,COQ,KLLKQ2QJ,formula 9 using mean of triangular distribution for smolt-adult survival
+Stage 4 to Stage 5,surv_4,0.216,Sockeye - anadromous,COQ,KLLKQ2QJ,formula 13 using mean of triangular distribution for smolt-adult survival
+Stage 5 to Stage 6,surv_5,0,Sockeye - anadromous,COQ,,terminal stage
+egg survival compensation ratio,cr_E,1,Sockeye - anadromous,COQ,,omitting use of CR
+yoy survival compensation ratio,cr_0,1,Sockeye - anadromous,COQ,,omitting use of CR
+stage 1 compensation ratio,cr_1,1,Sockeye - anadromous,COQ,,omitting use of CR
+stage 2 compensation ratio,cr_2,1,Sockeye - anadromous,COQ,,omitting use of CR
+stage 3 compensation ratio,cr_3,1,Sockeye - anadromous,COQ,,omitting use of CR
+stage 4 compensation ratio,cr_4,1,Sockeye - anadromous,COQ,,omitting use of CR
+stage 5 compensation ratio,cr_5,1,Sockeye - anadromous,COQ,,omitting use of CR
+maturity as year0,mat_1,0,Sockeye - anadromous,COQ,,
+maturity as year1,mat_2,0,Sockeye - anadromous,COQ,,
+maturity as year2,mat_3,0,Sockeye - anadromous,COQ,,
+maturity as year3,mat_4,0.8,Sockeye - anadromous,COQ,KLLKQ2QJ,value given in lcm code of source
+maturity as year5,mat_5,1,Sockeye - anadromous,COQ,,
+variance in eggs per female,eps_sd,163.46,Sockeye - anadromous,COQ,KLLKQ2QJ,SD of triangular distribution
+correlation in egg fecundity through time,egg_rho,0.1,Sockeye - anadromous,COQ,,TODO
+coefficient of variation in stage-specific mortality,M.cv,0.1,Sockeye - anadromous,COQ,,TODO
+correlation in mortality through time,M.rho,0.2,Sockeye - anadromous,COQ,,2023 ESSA report
+BH DD 0,bh_stage_0,TRUE,Sockeye - anadromous,COQ,,Beverton-Holt (but set to inf)
+BH DD 1,bh_stage_pb_1,TRUE,Sockeye - anadromous,COQ,,Beverton-Holt (but set to inf)
+BH DD 2,bh_stage_pb_2,TRUE,Sockeye - anadromous,COQ,,Beverton-Holt (but set to inf)
+BH DD 3,bh_stage_pb_3,TRUE,Sockeye - anadromous,COQ,,Beverton-Holt (but set to inf)
+BH DD 4,bh_stage_pb_4,TRUE,Sockeye - anadromous,COQ,,Beverton-Holt (but set to inf)
+BH DD 5,bh_spawners,TRUE,Sockeye - anadromous,COQ,,Beverton-Holt

@@ -1,0 +1,31 @@
+HUC,Stressor,dose,sys.cap,life_stage,parameter,Stressor_cat
+1,stressor,123,0.66,eps,fecundity,stressor
+1,stressor,123,0.67,eps3,fecundity,stressor
+1,stressor,123,0.68,eps4,fecundity,stressor
+1,stressor,123,0.69,eps5,fecundity,stressor
+1,stressor,123,0.7,"eps_5, eps_3",fecundity,stressor
+1,stressor,123,0.71,s1,survival,stressor
+1,stressor,123,0.72,surv_1,survival,stressor
+1,stressor,123,0.73,surv1,survival,stressor
+1,stressor,123,0.74,"surv_2,surv_4",survival,stressor
+1,stressor,123,0.75,"s1,s2, s3",survival,stressor
+1,stressor,123,0.76,s0,survival,stressor
+1,stressor,123,0.77,surv_0,survival,stressor
+1,stressor,123,0.78,surv_e,survival,stressor
+1,stressor,123,0.79,sE,survival,stressor
+1,stressor,123,0.8,"SE,S0",survival,stressor
+1,stressor,123,0.81,"u3,u4",survival,stressor
+1,stressor,123,0.82,"u4, u_4",survival,stressor
+1,stressor,123,0.83,u,survival,stressor
+1,stressor,123,0.84,smig,survival,stressor
+1,stressor,123,0.85,"smig_3, smig5",survival,stressor
+1,stressor,123,0.86,stage_1,capacity,stressor
+1,stressor,123,0.87,stage3,capacity,stressor
+1,stressor,123,0.88,"stage3,stage4,stage5",capacity,stressor
+1,stressor,123,0.89,spawners,capacity,stressor
+1,stressor,123,0.9,spawn3,capacity,stressor
+1,stressor,123,0.91,spawners3,capacity,stressor
+1,stressor,123,0.9,b3,capacity,stressor
+1,stressor,123,0.91,b3,capacity,stressor
+1,stressor,123,0.92,spawners,capacity,stressor
+1,stressor,123,0.93,spawners,survival,stressor

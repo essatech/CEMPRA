@@ -1,0 +1,29 @@
+Parameters,Name,Value,SD,Note
+Number of life stages,Nstage,3,,source Gibeau and Palen 2021
+Adult capacity,k,500,,to be changed per location
+Spawn events per female,events,1,,
+Eggs per female spawn,eps,2597,386,
+spawning interval,int,1,,
+Egg and fry transition until the end of the first fall,SE,0.223,0.032,
+Part of SE (set S0 to 1.0),S0,1,,"Freshwater density-dependent survival density of smolts capped at 1,702 smolts/km of stream"
+sex ratio,SR,0.452,0.09,
+a21 - transition from parr to smolt (survival from end of first fall through leaving freshwater as smolts to first six months in ocean),surv_1,0.0604,0.00227,
+a23 - three year old adult in the ocean until migration and spawning in freshwater,surv_2,0.0604,0.00227,
+a33 - anadromous spawners die,surv_3,0,,
+stage 1 years,year_1,1,,
+stage 2 years,year_2,1,,
+stage 3 years,year_3,1,,
+egg survival compensation ratio,cr_E,1,,
+yoy survival compensation ratio,cr_0,3,,
+hatchling survival compensation ratio,cr_1,1,,
+juvenile survival compensation ratio,cr_2,1,,
+subadult survival compensation ratio,cr_3,1,,
+maturity as hatchling,mat_1,0,,
+maturity as juvenile,mat_2,0,,
+maturity as subadult,mat_3,1,,
+variance in eggs per female,eps_sd,1000,,
+correlation in egg fecundity through time,egg_rho,0.1,,
+coefficient of variation in stage-specific mortality,M.cv,0.1,,
+correlation in mortality through time,M.rho,0.6,,"We included a temporal autocorrelation of 0.6 from the previous year to reflect the long-term trends observed in ocean survival due to large-scale climatic events like the El Nino Southern Oscillation and Paci ˜ fic Decadal Oscillation (Bradford et al.
+2005). The ocean survival rate was then split for each brood year between the six months of ocean survival in Year 2 (?oceY2)
+and 12 months in the ocean of Year 3 (?oceY3)"

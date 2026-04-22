@@ -1,0 +1,13 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.github$
+^\.RData$
+^\.Rhistory$
+^vignettes/file.*\.html$
+^\.claude$
+^LICENSE\.md$
+^doc$
+^Meta$

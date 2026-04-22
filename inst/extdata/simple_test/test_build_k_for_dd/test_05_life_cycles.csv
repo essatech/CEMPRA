@@ -1,0 +1,41 @@
+Parameters,Name,Value,Notes
+Number of life stages,Nstage,5,Max possible spawner age is 6
+Anadromous,anadromous,TRUE,
+Adult capacity,k,5000,Not used
+Spawn events per female,events,1,
+Eggs per age-3 female spawner,eps_3,1953,Avg. from Walters and Korman 2024
+Eggs per age-4 female spawner,eps_4,4000,Fix at 4000 from RAMS 2021
+Eggs per age-5 female spawner,eps_5,5200,Avg. from Walters and Korman 2024
+Spawning interval,int,1,Spanwing events occur every year.
+Egg survival,SE,0.4,Avg. upper lim from RAMs & Walters and Korman (2024)
+Fry survival,S0,0.4,Avg. upper lim from RAMs & Walters and Korman (2024)
+Sex ratio male to female,SR,0.5,Equal portions male/female
+Stage 1 to Stage 2,surv_1,0.064,"from Walters and Korman et al., 2024; Assume 60% surv first year at sea 0.6*0.083 = 0.0498 smolt surv; Adjusted to 0.064 to account for (1.286 estuary effect)"
+Stage 2 to Stage 3,surv_2,0.7,"From Beechie et al., 2021 & W&K 2024"
+Stage 3 to Stage 4,surv_3,0.8,"From Beechie et al., 2021 & W&K 2024"
+Stage 4 to Stage 5,surv_4,0.9,"From Beechie et al., 2021 & W&K 2024"
+Stage 5 to Stage 6,surv_5,0,Terminal stage
+Pre-spawn mortality of Age-3 spawners,u_3,1,
+Pre-spawn mortality of Age-4 spawners,u_4,1,
+Pre-spawn mortality of Age-5 spawners,u_5,1,
+Pre-spawn mortality of Age-6 spawners,u_6,1,
+Migration survival of Age-3 spawners,smig_3,0.9,
+Migration survival of Age-4 spawners,smig_4,0.9,
+Migration survival of Age-5 spawners,smig_5,0.9,
+compensation ratios - not used,cr_E,1,
+compensation ratios - not used,cr_0,1,
+compensation ratios - not used,cr_1,1,
+compensation ratios - not used,cr_2,1,
+compensation ratios - not used,cr_3,1,
+compensation ratios - not used,cr_4,1,
+compensation ratios - not used,cr_5,1,
+probability of maturity at age-3,mat_3,0.2,Assume 20% from Walters and Korman avg. of East Coast VI Chin Pops.
+probability of maturity at age-4,mat_4,0.6,Assume 20% from Walters and Korman avg. of East Coast VI Chin Pops.
+probability of maturity at age-5,mat_5,1,Assume 100% remaining spawn at age-5
+variance in eggs per female,eps_sd,500,
+correlation in egg fecundity through time,egg_rho,0.1,
+coefficient of variation in stage-specific mortality,M.cv,0.2,Previouslly 0.02
+correlation in mortality through time,M.rho,0.1,
+DD constraint on fry colonization in river,bh_stage_0,TRUE,Beverton-Holt
+DD constraint on fry rearing in estuary,bh_stage_pb_1,TRUE,Beverton-Holt (but set to inf)
+Density-dependent constraint on fry colonization,bh_spawners,TRUE,Beverton-Holt

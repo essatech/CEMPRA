@@ -1,0 +1,46 @@
+Parameters,Name,Value,Notes
+Number of life stages,Nstage,6,Max possible spawner age is 6
+Anadromous,anadromous,TRUE,
+Adult capacity,k,5000,Not used
+Spawn events per female,events,1,
+Eggs per age-3 female spawner,eps_3,5400,update for age-based fec.
+Eggs per age-4 female spawner,eps_4,5400,update for age-based fec.
+Eggs per age-5 female spawner,eps_5,5400,update for age-based fec.
+Eggs per age-6 female spawner,eps_6,5400,update for age-based fec.
+Spawning interval,int,1,Spanwing events occur every year.
+Egg survival,SE,1,SR function linked to sediment
+Fry survival,S0,0.259,0.894*0.29 (fry colonization * rearing)
+Sex ratio male to female,SR,0.5,Equal portions male/female
+Stage 1 to Stage 2,surv_1,0.036,0.06 (0.01-0.06) * 0.6 
+Stage 2 to Stage 3,surv_2,0.7,
+Stage 3 to Stage 4,surv_3,0.8,
+Stage 4 to Stage 5,surv_4,0.9,
+Stage 5 to Stage 6,surv_5,0.9,
+Stage 6 to Stage 7,surv_6,0,(irrelevant since 100% will spawn)
+Pre-spawn mortality of Age-3 spawners,u_3,1,
+Pre-spawn mortality of Age-4 spawners,u_4,1,
+Pre-spawn mortality of Age-5 spawners,u_5,1,
+Pre-spawn mortality of Age-6 spawners,u_6,1,
+Migration survival of Age-3 spawners,smig_3,0.9,
+Migration survival of Age-4 spawners,smig_4,0.9,
+Migration survival of Age-5 spawners,smig_5,0.9,
+Migration survival of Age-6 spawners,smig_6,0.9,
+compensation ratios - not used,cr_E,1,
+compensation ratios - not used,cr_0,1,
+compensation ratios - not used,cr_1,1,
+compensation ratios - not used,cr_2,1,
+compensation ratios - not used,cr_3,1,
+compensation ratios - not used,cr_4,1,
+compensation ratios - not used,cr_5,1,
+compensation ratios - not used,cr_6,1,
+probability of maturity at age-3,mat_3,0.097,
+probability of maturity at age-4,mat_4,0.6,
+probability of maturity at age-5,mat_5,0.8,
+probability of maturity at age-6,mat_6,1,
+variance in eggs per female,eps_sd,500,
+correlation in egg fecundity through time,egg_rho,0.1,
+coefficient of variation in stage-specific mortality,M.cv,0.2,Previouslly 0.02
+correlation in mortality through time,M.rho,0.1,
+DD constraint on fry colonization in river,bh_stage_0,TRUE,Beverton-Holt
+DD constraint on fry rearing in estuary,bh_stage_pb_1,TRUE,Beverton-Holt (but set to inf)
+Density-dependent constraint on fry colonization,hs_spawners,TRUE,Hockey-stick
