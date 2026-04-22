@@ -22,8 +22,7 @@
     <li><a class="dropdown-item" href="../articles/a02-joe-model-batch-run.html">2. Joe Model Batch Run</a></li>
     <li><a class="dropdown-item" href="../articles/a03-population-model.html">3. Population Model Overview</a></li>
     <li><a class="dropdown-item" href="../articles/a04-population-model-batch-run.html">4. Population Model Batch Run</a></li>
-    <li><a class="dropdown-item" href="../articles/a05-bc-cef.html">5. BC CEF Data Import</a></li>
-    <li><a class="dropdown-item" href="../articles/a06-population-model-sensitivity.html">6. Population Model Evaluation</a></li>
+    <li><a class="dropdown-item" href="../articles/a06-population-model-sensitivity.html">5. Population Model Evaluation</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -53,7 +52,8 @@
 <span>  MC_sims <span class="op">=</span> <span class="fl">100</span>,</span>
 <span>  stressors <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  adult_sys_cap <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  socioeconomic_inputs <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  socioeconomic_inputs <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  strict_na <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -83,6 +83,10 @@
 
 <dt id="arg-socioeconomic-inputs">socioeconomic_inputs<a class="anchor" aria-label="anchor" href="#arg-socioeconomic-inputs"></a></dt>
 <dd><p>(optional) list object. Socioeconomic inputs returned from SocioEconomicWorkbook().</p></dd>
+
+
+<dt id="arg-strict-na">strict_na<a class="anchor" aria-label="anchor" href="#arg-strict-na"></a></dt>
+<dd><p>Logical. Controls how NA and missing stressor values affect the final CE score. If FALSE (default), missing stressor rows are assigned system capacity of 1 (no effect) and NA values are ignored in the cumulative product. If TRUE, missing stressor rows result in NA system capacity and any NA values propagate to the final CE score (CE becomes NA).</p></dd>
 
 </dl></div>
     <div class="section level2">

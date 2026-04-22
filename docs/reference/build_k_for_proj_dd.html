@@ -22,8 +22,7 @@
     <li><a class="dropdown-item" href="../articles/a02-joe-model-batch-run.html">2. Joe Model Batch Run</a></li>
     <li><a class="dropdown-item" href="../articles/a03-population-model.html">3. Population Model Overview</a></li>
     <li><a class="dropdown-item" href="../articles/a04-population-model-batch-run.html">4. Population Model Batch Run</a></li>
-    <li><a class="dropdown-item" href="../articles/a05-bc-cef.html">5. BC CEF Data Import</a></li>
-    <li><a class="dropdown-item" href="../articles/a06-population-model-sensitivity.html">6. Population Model Evaluation</a></li>
+    <li><a class="dropdown-item" href="../articles/a06-population-model-sensitivity.html">5. Population Model Evaluation</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -54,7 +53,15 @@
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-life-histories">life_histories<a class="anchor" aria-label="anchor" href="#arg-life-histories"></a></dt>
+<dl><dt id="arg-habitat-dd-k">habitat_dd_k<a class="anchor" aria-label="anchor" href="#arg-habitat-dd-k"></a></dt>
+<dd><p>Data frame. Habitat carrying capacity (K) values for each HUC_ID.</p></dd>
+
+
+<dt id="arg-huc-id">HUC_ID<a class="anchor" aria-label="anchor" href="#arg-huc-id"></a></dt>
+<dd><p>Target HUC_ID for location-based density dependence.</p></dd>
+
+
+<dt id="arg-life-histories">life_histories<a class="anchor" aria-label="anchor" href="#arg-life-histories"></a></dt>
 <dd><p>Object returned from pop_model_matrix_elements()$life_histories</p></dd>
 
 
