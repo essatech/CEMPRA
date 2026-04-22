@@ -32,6 +32,6 @@ distribution where:
 \item alpha = 1 + shape * (mode - min) / (max - min)
 \item beta = 1 + shape * (max - mode) / (max - min)
 }
-Samples are then scaled from \link{0,1} to \link{min, max}.
+Samples are then scaled from [0,1] to [min, max].
 }
 \keyword{internal}

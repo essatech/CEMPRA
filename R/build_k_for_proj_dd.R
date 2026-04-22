@@ -33,6 +33,7 @@ build_k_for_proj_dd <- function(habitat_dd_k,
   stage_k_override <- NULL
   bh_dd_stages <- NULL
   total_anadromous_spawners <- NULL
+  total_spawners <- NULL
 
   # Filter for target watershed
   if (is.null(habitat_dd_k) == FALSE) {
@@ -330,6 +331,17 @@ build_k_for_proj_dd <- function(habitat_dd_k,
             }
           }
 
+          # hs_stage_0 is equivalent to dd_hs_0
+          egg_fry_hs <- life_cycle_params$Value[life_cycle_params$Name == "hs_stage_0"]
+
+          if (length(egg_fry_hs) > 0) {
+            if (!(is.na(egg_fry_hs))) {
+              if (egg_fry_hs == 1 | egg_fry_hs == "TRUE" | egg_fry_hs == TRUE) {
+                bh_dd_stages_set[[1]] <- "hs_stage_0"
+              }
+            }
+          }
+
           egg_fry <- life_cycle_params$Value[life_cycle_params$Name == "bh_stage_0"]
 
           if (length(egg_fry) > 0) {
@@ -342,12 +354,57 @@ build_k_for_proj_dd <- function(habitat_dd_k,
 
 
         } else {
-          dd_stage <- life_histories$Value[life_cycle_params$Name == paste0("bh_stage_", s)]
+          # Check for BH stage DD
+          dd_stage <- life_cycle_params$Value[life_cycle_params$Name == paste0("bh_stage_", s)]
           if (length(dd_stage) > 0) {
             if (!(is.na(dd_stage))) {
-              if (dd_stage == 1) {
+              if (dd_stage == 1 | dd_stage == "TRUE" | dd_stage == TRUE) {
                 bh_dd_stages_set[[1 + s]] <- paste0("bh_stage_", s)
               }
+            }
+          }
+
+          # Check for HS stage DD
+          hs_stage <- life_cycle_params$Value[life_cycle_params$Name == paste0("hs_stage_", s)]
+          if (length(hs_stage) > 0) {
+            if (!(is.na(hs_stage))) {
+              if (hs_stage == 1 | hs_stage == "TRUE" | hs_stage == TRUE) {
+                bh_dd_stages_set[[1 + s]] <- paste0("hs_stage_", s)
+              }
+            }
+          }
+        }
+      }
+
+      # ---------------------------------------------------------
+      # Spawner capacity for non-anadromous populations
+      # Check for k_stage_B_mean column (total spawner cap)
+      # ---------------------------------------------------------
+      check_spawner <- "k_stage_B_mean"
+      if (check_spawner %in% colnames(hab_dd_k)) {
+        mean_k <- hab_dd_k[1, check_spawner]
+        if (!is.na(mean_k)) {
+          if (class(mean_k)[1] == "numeric" |
+              class(mean_k)[1] == "integer" |
+              class(mean_k)[1] == "character") {
+            total_spawners <- as.numeric(mean_k)
+          } else {
+            total_spawners <- as.numeric(mean_k[1, 1])
+          }
+          total_anadromous_spawners <- total_spawners
+
+          # Check for bh_spawners or hs_spawners flag
+          indx1 <- which(life_cycle_params$Name == "bh_spawners")
+          indx2 <- which(life_cycle_params$Name == "hs_spawners")
+          if (length(indx1) > 0) {
+            dd_val <- life_cycle_params$Value[indx1[1]]
+            if (!is.na(dd_val) && (dd_val == 1 | dd_val == "TRUE" | dd_val == TRUE)) {
+              bh_dd_stages_set[[length(bh_dd_stages_set) + 1]] <- "bh_spawners"
+            }
+          } else if (length(indx2) > 0) {
+            dd_val <- life_cycle_params$Value[indx2[1]]
+            if (!is.na(dd_val) && (dd_val == 1 | dd_val == "TRUE" | dd_val == TRUE)) {
+              bh_dd_stages_set[[length(bh_dd_stages_set) + 1]] <- "hs_spawners"
             }
           }
         }
@@ -372,7 +429,9 @@ build_k_for_proj_dd <- function(habitat_dd_k,
   ret_obj <- list()
   ret_obj$ret_stage_k_override <- stage_k_override
   ret_obj$ret_bh_dd_stages <- bh_dd_stages
+  # Backward-compatible alias
   ret_obj$ret_total_anadromous_spawners <- total_anadromous_spawners
+  ret_obj$ret_total_spawners <- total_anadromous_spawners
 
 
   return(ret_obj)

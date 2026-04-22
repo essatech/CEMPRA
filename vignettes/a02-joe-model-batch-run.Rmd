@@ -19,6 +19,7 @@ library(kableExtra)
 # Overview
 
 This tutorial demonstrates how to run the **Joe Model in batch mode** to evaluate multiple management or climate scenarios simultaneously. Building on [Tutorial 1: Joe Model Overview](a01-joe-model.html), you will learn how to:
+
 - Create and structure a scenarios file
 - Run the Joe Model across multiple scenarios in a single function call
 - Visualize and compare results across scenarios and locations
@@ -26,8 +27,9 @@ This tutorial demonstrates how to run the **Joe Model in batch mode** to evaluat
 ## Prerequisites
 
 Before starting this tutorial, you should:
+
 - Complete [Tutorial 1: Joe Model Overview](a01-joe-model.html)
-- Understand how stressor-response and stressor-magnitude workbooks are structured
+- Understand how stressor-response and stressor-magnitude workbooks are structured (see the [Data Inputs](https://mattjbayly.github.io/CEMPRA_documentation/05_data_inputs.html) chapter for detailed format requirements)
 - Have basic familiarity with `ggplot2` for visualization
 
 ## Why Use Batch Runs?
@@ -71,44 +73,89 @@ library(dplyr)
 
 # Understanding the Scenarios File
 
-The scenarios file is a simple Excel workbook (or data frame) that defines what changes to apply in each scenario. Here's an example structure:
-
-<img src="../man/figures/scenarios_table.png" align="center" />
+The scenarios file is a simple Excel workbook (or data frame) that defines what changes to apply in each scenario. It uses a **long format** where each row specifies a single adjustment — one stressor metric modified by one multiplier within one scenario.
 
 ## Scenarios File Structure
 
-The scenarios file has a specific format:
+The scenarios file has four columns:
 
 | Column | Description |
 |--------|-------------|
 | **Scenario** | Unique name for the scenario (e.g., "climate_2050", "restore_riparian") |
-| **Stressor columns** | One column per stressor you want to modify, containing the multiplier values |
+| **Stressor** | The stressor to modify (must **exactly match** a name in the stressor-magnitude workbook) |
+| **Metric** | Which property of the stressor to adjust: `Mean`, `SD`, `Low_Limit`, or `Up_Limit` |
+| **Multiplier** | A numeric multiplier applied to the metric: `1.0` = no change, `1.2` = +20%, `0.5` = -50% |
 
 **Key points:**
-- Each row represents one scenario
-- Stressor column names must **exactly match** the names in your stressor-magnitude workbook
-- Values are **multipliers**: `1.0` = no change, `1.2` = +20%, `0.5` = -50%
-- Leave cells blank or use `1.0` for stressors that shouldn't change in that scenario
-- You only need to include columns for stressors you want to modify
 
-## Example Scenarios
+- Each row represents **one adjustment** to one stressor metric within one scenario
+- A single scenario can have **multiple rows** (adjusting several stressors or metrics)
+- You can modify different properties of the same stressor independently — for example, increase the `Mean` of a stressor while also widening its uncertainty by increasing `SD`
+- Only stressors you want to change need to appear; all others retain their baseline values
+- Stressor names must **exactly match** the names in your stressor-magnitude workbook
 
-Here are some example scenario configurations:
+Here is an example of what the scenarios file looks like in Excel:
 
-| Scenario | Temperature | Sediment | Flow_alteration | Interpretation |
-|----------|-------------|----------|-----------------|----------------|
-| baseline | 1.0 | 1.0 | 1.0 | Current conditions (no changes) |
-| climate_moderate | 1.1 | 1.0 | 0.9 | 10% warmer, 10% less flow |
-| climate_severe | 1.25 | 1.2 | 0.7 | 25% warmer, 20% more sediment, 30% less flow |
-| restoration | 0.9 | 0.6 | 1.0 | Riparian restoration reduces temp and sediment |
+```{r, view_scenarios_format, echo = FALSE, message = FALSE, warning = FALSE}
+example_scenarios <- data.frame(
+  Scenario = c("climate_moderate", "climate_moderate", "climate_severe",
+               "climate_severe", "climate_severe", "restoration", "restoration"),
+  Stressor = c("Temperature_adult", "Aug_flow", "Temperature_adult",
+               "Sediment", "Aug_flow", "Temperature_adult", "Sediment"),
+  Metric   = c("Mean", "Mean", "Mean", "Mean", "Mean", "Mean", "Mean"),
+  Multiplier = c(1.1, 0.9, 1.25, 1.2, 0.7, 0.9, 0.6)
+)
+example_scenarios %>%
+  kbl(caption = "Example scenarios file structure (long format)") %>%
+  kable_classic(full_width = FALSE, html_font = "Cambria")
+```
+
+## Reading the Example
+
+The table above defines three scenarios:
+
+| Scenario | What it does |
+|----------|-------------|
+| **climate_moderate** | Increases temperature mean by 10% and reduces flow mean by 10% |
+| **climate_severe** | Increases temperature by 25%, sediment by 20%, and reduces flow by 30% |
+| **restoration** | Reduces temperature mean by 10% and sediment mean by 40% (riparian restoration) |
+
+Notice how `climate_severe` has three rows — one per stressor adjustment — while `restoration` has two.
+
+## Using the Metric Column
+
+The examples above only modify `Mean` values, but the `Metric` column gives you fine-grained control over how each stressor's sampling distribution is altered. Recall that in the stressor-magnitude workbook, each stressor at each location is defined by a `Mean`, `SD`, `Low_Limit`, and `Up_Limit`. The `Metric` column lets you target any of these independently:
+
+| Metric | What it controls | When to use it |
+|--------|-----------------|----------------|
+| **Mean** | Central estimate of the stressor value | Shifting baseline conditions (e.g., warming temperatures, reduced flow) |
+| **SD** | Standard deviation of the sampling distribution | Increasing or decreasing uncertainty (e.g., more variable climate) |
+| **Low_Limit** | Lower bound for sampled stressor values | Adjusting the floor of plausible values |
+| **Up_Limit** | Upper bound for sampled stressor values | Adjusting the ceiling of plausible values |
+
+For example, a climate scenario might both increase the mean temperature **and** widen its variability:
+
+```{r, metric_example, echo = FALSE, message = FALSE, warning = FALSE}
+metric_example <- data.frame(
+  Scenario = c("climate_variable", "climate_variable"),
+  Stressor = c("Temperature_adult", "Temperature_adult"),
+  Metric   = c("Mean", "SD"),
+  Multiplier = c(1.15, 1.5)
+)
+metric_example %>%
+  kbl(caption = "Example: adjusting both mean and variability for a single stressor") %>%
+  kable_classic(full_width = FALSE, html_font = "Cambria")
+```
+
+In this scenario, the mean temperature at every location is increased by 15%, **and** the standard deviation is increased by 50% — reflecting both a warmer and more unpredictable climate. Since each metric is a separate row, you can mix and match freely within the same scenario.
 
 
 # Import Data
 
 The batch run requires three input files:
 
-1. **Stressor-magnitude workbook**: Baseline stressor values at each location
-2. **Stressor-response workbook**: Dose-response relationships for each stressor
+1. **Stressor-magnitude workbook**: Baseline stressor values at each location (see [Data Inputs](https://mattjbayly.github.io/CEMPRA_documentation/05_data_inputs.html) for format details)
+2. **Stressor-response workbook**: Dose-response relationships for each stressor (see [Stressor-Response Functions](https://mattjbayly.github.io/CEMPRA_documentation/02_stressor_response.html) for guidance on developing these)
 3. **Scenarios file**: Multipliers defining each scenario (see above)
 
 ```{r import_data, message=FALSE, warning=FALSE}
@@ -154,7 +201,12 @@ Now we run the Joe Model across all scenarios. The `JoeModel_Run_Batch()` functi
 3. Runs the Joe Model with Monte Carlo simulation
 4. Combines all results into a single data frame
 
+**A note on reproducibility:** Batch runs involve Monte Carlo simulation for every scenario, so results will differ between runs. Setting a random seed ensures your results are reproducible — useful for debugging, reporting, or verifying that your setup produces the expected output.
+
 ```{r run_batch, message=FALSE, warning=FALSE}
+# Set seed for reproducible results across all scenarios
+set.seed(42)
+
 # Run the Joe Model in batch mode across all scenarios
 # Note: MC_sims is set low (3) for this tutorial - use higher values (100+)
 # for real applications to get stable uncertainty estimates
@@ -197,7 +249,7 @@ With batch results, there are two natural ways to visualize the data:
 
 ## Interpreting System Capacity Scores
 
-Before plotting, it's helpful to understand how to interpret system capacity values:
+Before plotting, it's helpful to understand how to interpret system capacity values. Change these for your own study stystem:
 
 | Score Range | Interpretation | Color Code |
 |-------------|----------------|------------|
@@ -214,6 +266,7 @@ These thresholds are general guidelines; appropriate thresholds may vary by spec
 This visualization answers: *"How do different scenarios affect system capacity at a specific watershed?"*
 
 This is useful for:
+
 - Presenting results to local stakeholders
 - Evaluating which recovery actions would benefit a priority watershed
 - Comparing climate impact projections for a specific location
@@ -282,6 +335,7 @@ ggplot(huc_summary, aes(x = mean, y = Scenario, xmin = lower, xmax = upper)) +
 This visualization answers: *"Which watersheds are most/least affected under a given scenario?"*
 
 This is useful for:
+
 - Prioritizing locations for management action
 - Identifying spatial patterns of vulnerability
 - Reporting landscape-wide results for a specific scenario
@@ -372,6 +426,7 @@ print(scenario_means)
 ```
 
 This summary table shows:
+
 - **mean_capacity**: Average system capacity across all locations and Monte Carlo runs
 - **sd_capacity**: Variability in capacity scores
 - **min/max_capacity**: The range of outcomes observed
@@ -441,7 +496,9 @@ Now that you can run batch scenarios with the Joe Model, consider:
 |----------|-------------|
 | [3. Population Model Overview](a03-population-model.html) | Link system capacity to population dynamics |
 | [4. Population Model Batch Run](a04-population-model-batch-run.html) | Run population projections across scenarios |
-| [5. BC CEF Data Import](a05-bc-cef.html) | Import data from BC Cumulative Effects Framework |
-| [6. Population Model Evaluation](a06-population-model-sensitivity.html) | Sensitivity analysis and model evaluation |
+| [5. Population Model Evaluation](a06-population-model-sensitivity.html) | Sensitivity analysis and model evaluation |
 
-For additional guidance, see the [CEMPRA Documentation](https://mattjbayly.github.io/CEMPRA_documentation/).
+For additional guidance, see the [CEMPRA Documentation](https://mattjbayly.github.io/CEMPRA_documentation/), including:
+
+- [Case Study Applications](https://mattjbayly.github.io/CEMPRA_documentation/09_case_study_applications.html) — real-world examples with scenario comparisons for species like Athabasca Rainbow Trout and Nooksack Dace
+- [R Shiny App Guide](https://mattjbayly.github.io/CEMPRA_documentation/06_r_shiny_app.html) — interactive scenario exploration without writing R code

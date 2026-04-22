@@ -94,13 +94,11 @@ Projection_DD <- function(M.mx = NA,
       message(bh_dd_stages)
       stop("bh_dd_stages not set correctly...")
     }
-    if (anadromous) {
-      if(any(c("hs_spawners", "dd_hs_spawners", "bh_spawners") %in% bh_dd_stages)) {
-        # Set total spawner adult capacity to K
-        dat$stage_k_spawners <- K
-        if(is.null(stage_k_override)) {
-          stop("stage_k_override should be set...")
-        }
+    if(any(c("hs_spawners", "dd_hs_spawners", "bh_spawners") %in% bh_dd_stages)) {
+      # Set total spawner adult capacity to K
+      dat$stage_k_spawners <- K
+      if(is.null(stage_k_override)) {
+        stop("stage_k_override should be set...")
       }
     }
   }

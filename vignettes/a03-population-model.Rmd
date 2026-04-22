@@ -19,6 +19,7 @@ library(kableExtra)
 # Overview
 
 This tutorial covers the **Population Model** component of the CEMPRA framework. Building on the Joe Model's system capacity scores, the population model translates cumulative effects into **demographic impacts** on a target species. By the end of this tutorial, you will understand how to:
+
 - Configure life cycle parameters for a target species
 - Run stage-structured matrix population projections
 - Incorporate density-dependent constraints on population growth
@@ -41,6 +42,7 @@ This allows you to understand **which life stages are most limiting** and **how 
 | Use Case | Benefit |
 |----------|---------|
 | **Identify demographic bottlenecks** | Understand which life stages limit population growth |
+| **Untangle quantitative trade-offs** | Sometimes there will be complex quanitative tradeoffs between stressors and life stages, these can be evaluated here. |
 | **Compare recovery scenarios** | Evaluate which stressor reductions have the largest population benefit |
 | **Assess cumulative effects** | See how multiple stressors combine to affect population trajectories |
 | **Spatial prioritization** | Compare population dynamics across locations |
@@ -76,16 +78,16 @@ The population model requires several input files:
 | **Life Cycle Profile** (CSV) | Species-specific vital rates: survival, fecundity, maturity schedules |
 | **Stressor-Response Workbook** (Excel) | Dose-response curves linking stressors to system capacity |
 | **Stressor-Magnitude Workbook** (Excel) | Location-specific stressor values |
-| **Habitat Capacities File** (Excel or CSV, optional) | Location and stage-specific carrying capacities |
+| **Habitat Capacities File** (CSV or Excel) | Location and stage-specific carrying capacities |
 
-The stressor-response and stressor-magnitude workbooks are the same files used in the Joe Model. The life cycle profile and habitat capacity files are new and specific to population modeling.
+The stressor-response and stressor-magnitude workbooks are the EXACT same files used in the Joe Model. The life cycle profile and habitat capacity files are new and specific to population modeling. The population model references the stressor-response and stressor-magnitude, we just have to be explicit about exactly how stressors are linked to different life stages.
 
 
 ---
 
 # Linking Stressors to Vital Rates
 
-A key feature of the population model is the ability to link environmental stressors directly to **life-stage-specific vital rates**. This is configured in the **Stressor-Response Excel Workbook** through the `Life_stages` and `Parameters` columns on the Main worksheet.
+A key feature of the population model is the ability to link environmental stressors directly to **life-stage-specific vital rates**. This is configured in the **Stressor-Response Excel Workbook** through the `Life_stages` and `Parameters` columns on the Main worksheet. See the [Linking Stressor-Response Relationships to Vital Rates](https://mattjbayly.github.io/CEMPRA_documentation/07_life_cycle_model.html#linking-stressor-response-relationships-to-vital-rates-in-the-population-model) section of the guidance document for additional details.
 
 ## Stressor-Response Workbook Structure
 
@@ -101,7 +103,10 @@ kbl(sr_display, row.names = FALSE,
   kable_classic(full_width = FALSE)
 ```
 
-By carefully defining these columns we can effecively link stressor-response relationships to specific vital rates. Each stressor-response relationship can be linked to only one vital rate. If multiple linkages are desired then duplicate the stressor & stressor-response relationship accordingly in the Stressor Magnitude and Stressor-Response workbook (e.g., SummerStreamTemp_Parr, SummerStreamTemp_Prespawn). 
+By carefully defining these columns we can effecively link stressor-response relationships to specific vital rates. Each stressor-response relationship can be linked to only one vital rate. If multiple linkages are desired then duplicate the stressor & stressor-response relationship accordingly in the Stressor Magnitude and Stressor-Response workbook (e.g., SummerStreamTemp_Parr, SummerStreamTemp_Prespawn).
+
+Alternatively, you can use a comma separated list of life stages in the `Life_stages` column to link a single stressor-response relationship to multiple vital rates (e.g., `stage_1, stage_2`). This will duplicate the stressor-response relationship for each life stage specified. See the [Life_stages Column](#the-life_stages-column) section below for more details on how to specify life stages. However, this functionality is only supported in the R package component of the CEMPRA tool and not in the R-Shiny application. For simplicity and reproducability, if a given stressor is linked to two or more vital rates, we reccomend duplicating the stressor in the stressor mangitude and stressor-response file, rather than using a comma separator (e.g., SummerStreamTemp_Parr, SummerStreamTemp_Prespawn).
+
 
 ## The Parameters Column
 
@@ -151,7 +156,7 @@ For clarity and precision, we recommend using explicit stage numbers:
 
 ### Anadromous-Specific Tags
 
-For anadromous species, additional tags target pre-breeder (Pb) and spawner (Breeder - B) classes:
+For anadromous species, additional tags target pre-breeder (Pb) and spawner (Breeder - B) classes. This naming convention comes from Davison & Satterthwaite (2016). Use of age and stage structured matrix models to predict life history schedules for semelparous populations. Natural Resource Modeling:
 
 **Pre-breeder Survival (Pb):**
 
@@ -224,7 +229,7 @@ print(life_cycles)
 
 ## 1.2 Understanding the Life Cycle Profile
 
-The life cycle profile is a CSV file with three columns:
+The life cycle profile is a CSV file with three columns (see the [Data Input: Life Cycle Profiles](https://mattjbayly.github.io/CEMPRA_documentation/07_life_cycle_model.html#data-input-life-cycle-profiles) section of the guidance document for a detailed description of each parameter):
 
 | Column | Description |
 |--------|-------------|
@@ -380,21 +385,32 @@ Real populations don't grow exponentially forever - they experience **density-de
 ### Basic Projection (No Stressors)
 
 ```{r projection_baseline, fig.width=7, fig.height=4}
+# Set seed for reproducibility — the population model includes stochastic
+# variation in survival and fecundity, so set.seed() ensures results are
+# consistent across runs. Remove or change the seed to explore different
+# random trajectories.
+set.seed(123)
+
 # Extract the components needed for projection
 life_histories <- pop_mod_mat$life_histories
 life_stages_symbolic <- pop_mod_mat$life_stages_symbolic
 density_stage_symbolic <- pop_mod_mat$density_stage_symbolic
 
 # Run population projection for 100 years
+# life_histories$Ka is the adult carrying capacity (from `k` in life_cycles.csv)
 baseline <- Projection_DD(
   M.mx = life_stages_symbolic,       # Transition matrix (symbolic)
   D.mx = density_stage_symbolic,     # Density-dependence matrix
-  H.mx = NULL,                       # Harvest matrix (not used)
+  H.mx = NULL,                       # Harvest matrix (not used here)
   dat = life_histories,              # Life history parameters
-  K = life_histories$Ka,             # Adult carrying capacity
   Nyears = 100,                      # Years to simulate
-  p.cat = 0,                         # Probability of catastrophe
-  CE_df = NULL                       # No cumulative effect stressors
+  K = life_histories$Ka,             # Adult carrying capacity (from life cycle profile)
+  p.cat = 0,                         # Probability of catastrophe (0 = disabled)
+  CE_df = NULL,                      # Cumulative effect stressors (NULL = baseline)
+  K_adj = FALSE,                     # Do not adjust K based on CE stressors
+  stage_k_override = NULL,           # No location-specific habitat capacities
+  bh_dd_stages = NULL,               # No BH/HS flags (use compensation ratios)
+  anadromous = FALSE                 # Non-anadromous (resident) life history
 )
 
 # View the output components
@@ -408,19 +424,6 @@ plot(baseline$pop$year, baseline$pop$N,
 ```
 
 The population fluctuates around the carrying capacity due to stochastic variation in survival and fecundity.
-
-### Understanding Density Dependence
-
-The model uses **Beverton-Holt** density dependence by default. This creates a compensatory relationship where survival decreases as population density approaches carrying capacity:
-
-$$N_{t+1} = \frac{S \cdot N_t}{1 + \frac{(S-1) \cdot N_t}{K}}$$
-
-Where:
-- $S$ = density-independent survival rate
-- $N_t$ = current population size
-- $K$ = carrying capacity
-
-The model also supports **Hockey-Stick** density dependence, which imposes a hard cap at carrying capacity.
 
 
 ## 1.6 Adding Cumulative Effect Stressors
@@ -439,7 +442,7 @@ CE_df1 <- data.frame(
   HUC = 123,
   Stressor = "Temperature",
   dose = 20,              # Stressor magnitude (e.g., 20 deg C)
-  sys.cap = 0.42,         # 42% of baseline capacity remains
+  sys.cap = 0.22,         # 42% of baseline capacity remains
   life_stage = "stage_0",
   parameter = "capacity",
   Stressor_cat = "Temperature"
@@ -450,7 +453,7 @@ CE_df2 <- data.frame(
   HUC = 123,
   Stressor = "Sediment",
   dose = 30,              # Stressor magnitude (e.g., 30% fines)
-  sys.cap = 0.80,         # 80% of baseline survival remains
+  sys.cap = 0.40,         # 80% of baseline survival remains
   life_stage = "stage_1",
   parameter = "survival",
   Stressor_cat = "Sediment"
@@ -506,7 +509,7 @@ The red line shows population suppression when environmental stressors are appli
 
 ## 1.8 Using Location-Specific Habitat Capacities
 
-For more realistic modeling, you can specify **location and stage-specific carrying capacities** instead of (or in addition to) using compensation ratios.
+For more realistic modeling, you can specify **location and stage-specific carrying capacities** instead of (or in addition to) using compensation ratios. See the [Location and Stage-Specific Carrying Capacities](https://mattjbayly.github.io/CEMPRA_documentation/07_life_cycle_model.html#location-and-stage-specific-carrying-capacities) section of the guidance document for a full description of how K values map to life stages.
 
 ### Habitat Capacity File Format
 
@@ -514,7 +517,7 @@ For more realistic modeling, you can specify **location and stage-specific carry
 # View the example habitat capacity file structure
 filename_dd <- system.file("extdata", "habitat_dd_k.xlsx", package = "CEMPRA")
 habitat_dd_k <- readxl::read_excel(filename_dd)
-print(as.data.frame(habitat_dd_k[1:3, ]))
+print(as.data.frame(habitat_dd_k[1:3, 1:7]))
 ```
 
 The habitat capacity file has columns:
@@ -526,7 +529,6 @@ The habitat capacity file has columns:
 | `k_stage_0_mean` | Carrying capacity for fry (stage 0) |
 | `k_stage_1_mean` | Carrying capacity for stage 1 |
 | `k_stage_2_mean`, etc. | Carrying capacity for subsequent stages |
-| `k_stage_X_cv` | (Optional) Coefficient of variation for interannual variability |
 
 **Important**: Only include columns for stages with density-dependent bottlenecks. Leave cells blank or omit columns for stages without capacity constraints.
 
@@ -540,6 +542,49 @@ To use stage-specific capacities, you must add density-dependence flags to your 
 # bh_stage_0   TRUE    # Beverton-Holt for egg-to-fry transition
 # bh_stage_1   TRUE    # Beverton-Holt for fry-to-parr transition
 # hs_stage_2   TRUE    # Hockey-Stick for stage 2 (hard cap)
+
+# Lets turn off compensation ratios by setting them to 1
+life_cycles$Value[grepl("cr_", life_cycles$Name)] <- 1
+
+# Append the density-dependent bottlenecks we want to use
+add_to_life_cycles <- data.frame(
+  Parameters = c("Beverton-Holt for egg-to-fry transition",
+                 "Beverton-Holt for fry-to-parr transition",
+                 "Hockey-Stick for stage 2 (hard cap)"),
+  Name = c("bh_stage_0", "bh_stage_1", "hs_stage_2"),
+  Value = c(TRUE, TRUE, TRUE)
+)
+
+life_cycles_2 <- rbind(life_cycles, add_to_life_cycles)
+
+# Step 1: Initialize population model parameters
+pop_mod_setup <- pop_model_setup(life_cycles = life_cycles_2)
+# Step 2: Build matrix elements
+pop_mod_mat <- pop_model_matrix_elements(pop_mod_setup = pop_mod_setup)
+
+
+# Run projection WITH cumulative effect stressors
+ce_proj_dd <- Projection_DD(
+  M.mx = pop_mod_mat$life_stages_symbolic,
+  D.mx = pop_mod_mat$density_stage_symbolic,
+  dat = pop_mod_mat$life_histories,
+  K = 0, # Can be any number (not used)
+  Nyears = 100,
+  p.cat = 0,
+  CE_df = CE_df,
+  # Egg to Fry (Stage 0 = 9M); Fry to Stage 1 = 500000; Stage 1 to Stage 2 = 30,000
+  # Stage 2 to 3 and stage 3 to 4 are both NA (or can be any number because no DD constraint)
+  stage_k_override = c(9000000, 500000, 30000, NA, NA),
+  # Specify where to apply the DD constraints
+  bh_dd_stages = c("bh_stage_0", "bh_stage_1", "hs_stage_2")
+)
+
+names(ce_proj_dd)
+plot(ce_proj_dd$N[50:100, 4],
+     type = 'l', lwd = 2, col = "darkblue",
+     xlab = "Year", ylab = "Total Population (N)",
+     main = "Baseline Population Projection (No Stressors)")
+
 ```
 
 | Flag | Function | Description |
@@ -639,6 +684,7 @@ kbl(mat_params, row.names = FALSE) %>%
 ```
 
 In this example:
+
 - 20% of surviving fish spawn at age 3
 - 60% of surviving fish spawn at age 4
 - 100% of remaining fish spawn at age 5 (maximum age)
@@ -725,6 +771,9 @@ cat("\nRelative capacity:", round(ce_spawners / baseline_spawners * 100, 1), "%\
 ### Visualizing Anadromous Population Projections
 
 ```{r plot_anad, fig.width=7, fig.height=5}
+# Drop the intial model burn-in period
+results_anad <- results_anad[results_anad$year > 20, ]
+
 # Plot the results
 ggplot(results_anad, aes(x = year, y = N, color = group)) +
   stat_smooth(method = "loess", span = 0.2, se = TRUE,
@@ -795,6 +844,17 @@ The `PopulationModel_Run()` function provides a convenient wrapper that:
 3. Runs population projections with and without stressors
 4. Returns comparative results
 
+### Choosing an Output Type
+
+The `output_type` parameter controls how much detail is returned:
+
+| `output_type` | Returns | Use when... |
+|---------------|---------|-------------|
+| `"adults"` | A single data frame with columns `year`, `N` (adult abundance), `MC_sim`, and `group` (`"ce"` or `"baseline"`) | You want a clean summary for plotting or comparing scenarios — this is the most common choice |
+| `"full"` (default) | A nested list with the complete `Projection_DD()` output for every Monte Carlo simulation, including stage-specific abundances, survival matrices, and capacity vectors | You need stage-level diagnostics, lambda values, or custom post-processing beyond adult counts |
+
+In the examples below we use `output_type = "adults"` for simplicity.
+
 ```{r full_popmodel, fig.width=7, fig.height=5}
 # Load all required data
 filename_sr <- system.file("extdata", "stressor_response_fixed_ARTR.xlsx", package = "CEMPRA")
@@ -853,26 +913,33 @@ Control population variability through these parameters:
 | `M.cv` | CV in stage-specific mortality | 0.1-0.2 |
 | `M.rho` | Correlation in mortality between years | 0.1-0.5 |
 
-Higher correlation values (`egg_rho`, `M.rho`) create more synchronized good/bad years across cohorts, increasing population volatility.
+Higher correlation values (`egg_rho`, `M.rho`) create more synchronized good/bad years across cohorts, increasing population volatility. See the [Stochastic Simulations](https://mattjbayly.github.io/CEMPRA_documentation/07_life_cycle_model.html#stochastic-simulations) section of the guidance document for detailed descriptions of each parameter.
 
 ## Compensation Ratios
 
-Compensation ratios are an alternative way to parameterize density dependence. They modify survival based on how far the population is from carrying capacity:
+Compensation ratios (`cr_1`, `cr_2`, ...) are the **default** method for density dependence in the population model. They work in two steps:
 
-$$S_{adjusted} = \frac{S_{baseline} \cdot K}{K + (CR - 1) \cdot N_t}$$
+1. **Back-calculate stage-specific K values**: The model takes the user-supplied adult carrying capacity (`k`) and the stable-stage distribution to derive K for each life stage. This ensures internal consistency — stage capacities are proportional to where individuals naturally accumulate in the life cycle.
 
-Where `CR` is the compensation ratio. Higher CR values create stronger density dependence.
+2. **Apply a density-dependent multiplier to survival**: At each time step, survival for each stage is scaled by a multiplier:
 
-**Note**: We recommend using stage-specific habitat capacities instead of compensation ratios for most applications, as they are more intuitive and directly linked to habitat data.
+$$d_i = \frac{CR_i}{1 + (CR_i - 1) \cdot \frac{N_i}{K_i}}$$
+
+The realized survival is then $S_{realized} = S_{baseline} \times d_i$. When $N_i \ll K_i$, the multiplier approaches $CR_i$, boosting survival above baseline (compensatory response). When $N_i = K_i$, the multiplier equals 1 and survival returns to the baseline rate. Values of `cr` must satisfy `cr * survival < 1` to remain biologically valid.
+
+As an **alternative**, you can bypass compensation ratios entirely by specifying stage-specific Beverton-Holt or Hockey-Stick density dependence with explicit habitat capacities (see the [Density-Dependent Constraints](https://mattjbayly.github.io/CEMPRA_documentation/07_life_cycle_model.html#density-dependent-constraints-on-growth) section of the documentation). This approach is more intuitive when you have direct estimates of habitat capacity at specific life stages.
 
 ## Probability of Catastrophe
 
-The `p.cat` parameter models the probability of a catastrophic event (e.g., disease outbreak, extreme flood) that dramatically reduces population:
+The `p.cat` parameter models the probability of a catastrophic event (e.g., disease outbreak, extreme flood) that dramatically reduces the population in a given year. It is set in the life cycle CSV file:
 
-```{r catastrophe, eval=FALSE}
-# Add to life cycle profile:
-# p.cat    0.05    # 5% probability of catastrophe per generation
-```
+| Parameters | Name | Value |
+|------------|------|-------|
+| Probability of catastrophe per generation | p.cat | 0.05 |
+
+The value represents a **per-generation probability**. Internally, the model divides `p.cat` by the generation time to get an annual probability — so a value of 0.05 with a 4-year generation time yields roughly a 1.25% chance of catastrophe in any given year. In catastrophe years, the population is reduced by a random proportion drawn from a Beta distribution. Set `p.cat` to 0 (the default if omitted) to disable catastrophic events.
+
+The `p.cat` parameter is also available as an interactive input in the [R Shiny application](https://mattjbayly.github.io/CEMPRA_documentation/06_r_shiny_app.html).
 
 
 ---
@@ -882,10 +949,14 @@ The `p.cat` parameter models the probability of a catastrophic event (e.g., dise
 | Tutorial | Description |
 |----------|-------------|
 | [4. Population Model Batch Run](a04-population-model-batch-run.html) | Run population projections across multiple scenarios and locations |
-| [5. BC CEF Data Import](a05-bc-cef.html) | Import data from BC Cumulative Effects Framework |
-| [6. Population Model Sensitivity](a06-population-model-sensitivity.html) | Sensitivity analysis and model evaluation |
+| [5. Population Model Evaluation](a06-population-model-sensitivity.html) | Sensitivity analysis and model evaluation |
 
-For additional guidance on building custom species profiles and detailed parameter descriptions, see the [CEMPRA Documentation](https://mattjbayly.github.io/CEMPRA_documentation/).
+For additional guidance, see the [CEMPRA Documentation](https://mattjbayly.github.io/CEMPRA_documentation/):
+
+- [Life Cycle Profiles](https://mattjbayly.github.io/CEMPRA_documentation/07_life_cycle_model.html#data-input-life-cycle-profiles) — detailed parameter descriptions and tips for building custom species profiles
+- [Density-Dependent Constraints](https://mattjbayly.github.io/CEMPRA_documentation/07_life_cycle_model.html#density-dependent-constraints-on-growth) — compensation ratios, Beverton-Holt, and Hockey-Stick options
+- [Linking Stressors to Vital Rates](https://mattjbayly.github.io/CEMPRA_documentation/07_life_cycle_model.html#linking-stressor-response-relationships-to-vital-rates-in-the-population-model) — configuring the Parameters and Life_stages columns
+- [Data Inputs](https://mattjbayly.github.io/CEMPRA_documentation/05_data_inputs.html) — setup and formatting for all input files
 
 
 # References

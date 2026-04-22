@@ -27,6 +27,6 @@ Uses the existing beta_param() function to convert mean/sd to shape parameters.
 \details{
 Uses the beta_param() function to estimate alpha and beta parameters
 from mean and sd, then samples and truncates to bounds. For values outside
-\link{0,1}, the function adjusts the sampling appropriately.
+[0,1], the function adjusts the sampling appropriately.
 }
 \keyword{internal}

@@ -27,7 +27,7 @@ NULL
 #'   \item alpha = 1 + shape * (mode - min) / (max - min)
 #'   \item beta = 1 + shape * (max - mode) / (max - min)
 #' }
-#' Samples are then scaled from [0,1] to [min, max].
+#' Samples are then scaled from \[0,1\] to \[min, max\].
 #'
 #' @keywords internal
 #'
@@ -111,7 +111,7 @@ rtruncnorm <- function(n, mean, sd, lower, upper) {
 #'
 #' @details Uses the beta_param() function to estimate alpha and beta parameters
 #' from mean and sd, then samples and truncates to bounds. For values outside
-#' [0,1], the function adjusts the sampling appropriately.
+#' \[0,1\], the function adjusts the sampling appropriately.
 #'
 #' @keywords internal
 #'

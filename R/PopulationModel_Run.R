@@ -272,12 +272,12 @@ PopulationModel_Run <- function(dose = NA,
 
       }
 
-      # Determine if K spanwrs for anadromous fish should override Ka
+      # Determine if K spawners should override Ka
       K_input <- life_histories$Ka
 
       if (!(is.null(total_anadromous_spawners))) {
         if (total_anadromous_spawners > 0) {
-          # If there are anadromous fish, override the Ka value
+          # Override the Ka value with spawner capacity
           K_input <- total_anadromous_spawners
         }
       }

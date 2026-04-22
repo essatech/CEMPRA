@@ -237,11 +237,58 @@ test_that("test-build-k-for-proj-dd", {
   expect_true({ names(hab_obj$ret_stage_k_override[1]) == "k_stage_0" })
   expect_true({ names(hab_obj$ret_stage_k_override[6]) == "k_stage_5" })
   expect_true({ length(hab_obj$ret_stage_k_override) == 6 })
-  expect_true({ length(hab_obj$ret_bh_dd_stages) == 1 })
-  expect_true({ hab_obj$ret_bh_dd_stages == "bh_stage_0" })
+  expect_true({ length(hab_obj$ret_bh_dd_stages) == 2 })
+  expect_true({ "bh_stage_0" %in% hab_obj$ret_bh_dd_stages })
+  expect_true({ "bh_spawners" %in% hab_obj$ret_bh_dd_stages })
 
 
 
+})
+
+
+# ===========================================================================
+# Test non-anadromous with spawner cap (bh_spawners)
+# ===========================================================================
+test_that("build_k_for_proj_dd works for non-anadromous with bh_spawners", {
+
+  filename <- system.file("extdata/simple_test/test_build_k_for_dd/test_07_lc_nonanad_spawners.csv",
+                          package = "CEMPRA")
+  lc <- read.csv(filename, stringsAsFactors = FALSE)
+  life_cycle_params <- pop_model_dat_clean(lc)
+  pop_mod_setup <- pop_model_setup(life_cycles = life_cycle_params)
+  pm <- pop_model_matrix_elements(pop_mod_setup = pop_mod_setup)
+  life_histories <- pm$life_histories
+
+  # Non-anadromous should now have stage_names
+  expect_true({ !is.null(life_histories$stage_names) })
+  expect_true({ length(life_histories$stage_names) == 4 })
+
+  # Habitat capacities with spawner cap
+  filename <- system.file("extdata/simple_test/test_build_k_for_dd/test_07_hab_nonanad_spawners.csv",
+                          package = "CEMPRA")
+  hc <- read.csv(filename, stringsAsFactors = FALSE)
+  habitat_dd_k <- pop_model_hab_dens_clean(hab_dens = hc)
+
+  hab_obj <- build_k_for_proj_dd(
+    habitat_dd_k = habitat_dd_k,
+    HUC_ID = 1,
+    life_histories = life_histories,
+    life_cycle_params = life_cycle_params
+  )
+
+  # Should detect bh_stage_0, bh_stage_1, and bh_spawners
+  expect_true({ "bh_stage_0" %in% hab_obj$ret_bh_dd_stages })
+  expect_true({ "bh_stage_1" %in% hab_obj$ret_bh_dd_stages })
+  expect_true({ "bh_spawners" %in% hab_obj$ret_bh_dd_stages })
+
+  # Spawner cap should be set
+  expect_true({ !is.null(hab_obj$ret_total_anadromous_spawners) })
+  expect_true({ hab_obj$ret_total_anadromous_spawners == 1000 })
+  expect_true({ hab_obj$ret_total_spawners == 1000 })
+
+  # Stage K overrides should be set
+  expect_true({ !is.na(hab_obj$ret_stage_k_override[1]) }) # K0
+  expect_true({ !is.na(hab_obj$ret_stage_k_override[2]) }) # K1
 
 })
 

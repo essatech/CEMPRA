@@ -52,17 +52,22 @@
 #' life_cycle_params <- read.csv(lc_file)
 #'
 #' # Run the analysis
-#' result <- pop_model_ltre_range(life_cycle_params, n_samples = 500, seed = 42)
+#' result <- pop_model_ltre_range(life_cycle_params, n_samples = 1000, seed = 42)
 #'
 #' # View top influential parameters
 #' head(result$prcc_rankings, 10)
+#'
+#' # How many simulations had ngative growth rates
+#' # Lambda less than 1
+#' sum(result$samples$lambda < 1) / nrow(result$samples)
 #'
 #' # View lambda distribution summary
 #' result$lambda_summary
 #'
 #' # Plot lambda distribution
 #' hist(result$samples$lambda, main = "Lambda Distribution", xlab = "Lambda")
-#' abline(v = 1, col = "red", lty = 2)
+#' abline(v = 1, col = "black", lty = 1)
+#' abline(v = result$lambda_summary$median, col = "red", lty = 2, lwd = 2)
 #'
 #' # ============================================
 #' # Horizontal bar chart of PRCC rankings

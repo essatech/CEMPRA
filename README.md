@@ -27,9 +27,8 @@ The CEMPRA tool is accessible as an open-source R package and R Shiny interactiv
 - GitHub Repository for R-Package: <https://github.com/essatech/CEMPRA>
 - GitHub Repository for R-Shiny Application: <https://github.com/essatech/CEMPRAShiny>
 - LIVE Online R-Shiny Application: <https://essa.shinyapps.io/CEMPRAShiny/>
-- R-Package Tutorials: <https://essatech.github.io/CEMPRA/index.html>
 - Guidance Document (Realtime Updates): <https://mattjbayly.github.io/CEMPRA_documentation/>
-- Guidance Document (2024 pdf): <https://www.essa.com/wp-content/uploads/2024/05/Guideline_Documentation_Report-2024.03.14.pdf>
+- R-Package Tutorials: <https://essatech.github.io/CEMPRA/index.html>
 
 
 ## Shiny App
@@ -60,8 +59,7 @@ Detailed tutorials are available as package vignettes:
 | [2. Joe Model Batch Run](https://essatech.github.io/CEMPRA/articles/a02-joe-model-batch-run.html) | Running the Joe Model across multiple locations |
 | [3. Population Model Overview](https://essatech.github.io/CEMPRA/articles/a03-population-model.html) | Introduction to stage-structured population modeling |
 | [4. Population Model Batch Run](https://essatech.github.io/CEMPRA/articles/a04-population-model-batch-run.html) | Running population projections across multiple scenarios |
-| [5. BC CEF Data Import](https://essatech.github.io/CEMPRA/articles/a05-bc-cef.html) | Importing data from BC Cumulative Effects Framework |
-| [6. Population Model Evaluation](https://essatech.github.io/CEMPRA/articles/a06-population-model-sensitivity.html) | Sensitivity analysis and model evaluation |
+| [5. Population Model Evaluation](https://essatech.github.io/CEMPRA/articles/a06-population-model-sensitivity.html) | Sensitivity analysis and model evaluation |
 
 Additional guidance is available in the [CEMPRA Documentation](https://mattjbayly.github.io/CEMPRA_documentation/):
 

@@ -35,7 +35,9 @@ dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages
     stop("error in dd.N.bh... Nstage does not match K vector")
   }
 
-  if(length(bh_dd_stages) > (dat$Nstage + 1)) {
+  # Allow extra entry for bh_spawners/hs_spawners
+  n_spawner_flags <- sum(c("bh_spawners", "hs_spawners") %in% bh_dd_stages)
+  if(length(bh_dd_stages) > (dat$Nstage + 1 + n_spawner_flags)) {
     stop("error in dd.N.bh... bh_dd_stages can only include dd_hs_0 and bh_stage_X values for each class")
   }
 
@@ -125,9 +127,14 @@ dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages
   if("hs_spawners" %in% bh_dd_stages) {
     # Get spawner cap
     spawner_cap <- dat$stage_k_spawners
-    # spawner_cap <- 1000
-    # Get current spawners
-    stage_index <- which(grepl("stage_B_", dat$stage_names))
+    # Get current spawners - identify by stage_B_ (anadromous) or maturity (non-anadromous)
+    if(dat$anadromous) {
+      stage_index <- which(grepl("stage_B_", dat$stage_names))
+    } else {
+      # Non-anadromous: mature stages identified via maturity vector
+      mat_nums <- as.numeric(gsub("mat", "", names(dat$mat[dat$mat > 0])))
+      stage_index <- mat_nums
+    }
     current_spawners <- N_adj[stage_index]
     current_spawners_s <- sum(current_spawners)
 
@@ -221,9 +228,14 @@ dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages
 
     # Get spawner cap
     spawner_cap <- dat$stage_k_spawners
-    # spawner_cap <- 100
-    # Get current spawners
-    stage_index <- which(grepl("stage_B_", dat$stage_names))
+    # Get current spawners - identify by stage_B_ (anadromous) or maturity (non-anadromous)
+    if(dat$anadromous) {
+      stage_index <- which(grepl("stage_B_", dat$stage_names))
+    } else {
+      # Non-anadromous: mature stages identified via maturity vector
+      mat_nums <- as.numeric(gsub("mat", "", names(dat$mat[dat$mat > 0])))
+      stage_index <- mat_nums
+    }
     current_spawners <- N_adj[stage_index]
     current_spawners_s <- sum(current_spawners)
 
@@ -233,7 +245,11 @@ dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages
       k_stage[stage_index] <- current_spawners * (spawner_cap / current_spawners_s)
 
       # Append BH classes to DD vector
-      add_these <- paste0("bh_", tolower(dat$stage_names[which(grepl("stage_B_", dat$stage_names))]))
+      if(dat$anadromous) {
+        add_these <- paste0("bh_", tolower(dat$stage_names[stage_index]))
+      } else {
+        add_these <- paste0("bh_stage_", stage_index)
+      }
       bh_dd_stages <- c(bh_dd_stages, add_these)
       bh_dd_stages <- unique(bh_dd_stages)
 

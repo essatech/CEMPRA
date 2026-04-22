@@ -1,0 +1,69 @@
+"Parameters","Name","Value"
+"Number of life stages","Nstage",4
+"Anadromous","anadromous",0
+"Adult capacity","k",5000
+"Spawn events per female","events",1
+"Eggs per age-3 female spawn","eps_3",3000
+"Eggs per age-4 female spawn","eps_4",4000
+"spawning interval","int",1
+"egg survival","SE",0.2
+"Fry survival to first Aug","S0",0.3
+"sex ratio","SR",0.5
+"Stage 1 survival","surv_1",0.35
+"Stage 2 survival","surv_2",0.5
+"Stage 3 survival","surv_3",0.7
+"Stage 4 survival","surv_4",0.8
+"egg survival compensation ratio","cr_E",1
+"yoy survival compensation ratio","cr_0",1
+"fry survival compensation ratio","cr_1",1
+"parr survival compensation ratio","cr_2",1
+"smolt survival compensation ratio","cr_3",1
+"adult survival compensation ratio","cr_4",1
+"maturity age 3","mat_3",0.5
+"maturity age 4","mat_4",1
+"variance in eggs per female","eps_sd",500
+"correlation in egg fecundity through time","egg_rho",0.1
+"coefficient of variation in stage-specific mortality","M.cv",0.2
+"correlation in mortality through time","M.rho",0.1
+"bh_stage_0","bh_stage_0",1
+"bh_stage_1","bh_stage_1",1
+"bh_spawners","bh_spawners",1
+"p.cat","p.cat",0
+"surv_5","surv_5",0
+"surv_6","surv_6",0
+"surv_7","surv_7",0
+"surv_8","surv_8",0
+"surv_9","surv_9",0
+"surv_10","surv_10",0
+"mat_1","mat_1",0
+"mat_2","mat_2",0
+"mat_5","mat_5",0
+"mat_6","mat_6",0
+"mat_7","mat_7",0
+"mat_8","mat_8",0
+"mat_9","mat_9",0
+"mat_10","mat_10",0
+"year_1","year_1",1
+"year_2","year_2",1
+"year_3","year_3",1
+"year_4","year_4",1
+"year_5","year_5",1
+"year_6","year_6",1
+"year_7","year_7",1
+"year_8","year_8",1
+"year_9","year_9",1
+"year_10","year_10",1
+"eps_1","eps_1",0
+"eps_2","eps_2",0
+"eps_5","eps_5",0
+"eps_6","eps_6",0
+"eps_7","eps_7",0
+"eps_8","eps_8",0
+"eps_9","eps_9",0
+"eps_10","eps_10",0
+"cr_5","cr_5",1
+"cr_6","cr_6",1
+"cr_7","cr_7",1
+"cr_8","cr_8",1
+"cr_9","cr_9",1
+"cr_10","cr_10",1

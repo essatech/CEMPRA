@@ -209,6 +209,9 @@ pop_model_matrix_elements <- function(pop_mod_setup = NA) {
 
   life_histories$anadromous <- FALSE
 
+  # Set stage names for non-anadromous populations
+  # Consistent with anadromous stage_names convention
+  life_histories$stage_names <- paste0("K", 1:Nstage)
 
   #--------------------------------------------
   # Build return object

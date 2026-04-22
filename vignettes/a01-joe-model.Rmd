@@ -236,6 +236,12 @@ names(smw)
 
 Now that we understand the input data, let's calculate system capacity. We'll start with a single stressor to understand the mechanics, then run the full model with all stressors.
 
+**A note on reproducibility:** The Joe Model relies on Monte Carlo simulation, so results will differ slightly each time you run it. To get reproducible results (useful for debugging or verifying your setup), set a random seed before any model calls:
+
+```{r, set_seed, echo = TRUE}
+set.seed(123)
+```
+
 ## Step 1: Generate Mean Response Curves
 
 Before calculating system capacity, we need to process the stressor-response data into interpolated curves. The `mean_Response()` function creates smooth curves from the discrete data points in your worksheets:
@@ -351,6 +357,20 @@ jmr <- JoeModel_Run(
 names(jmr)
 ```
 
+### Handling Missing Stressor Data: `strict_na`
+
+In real-world datasets, some locations may be missing data for one or more stressors. The `strict_na` parameter controls how these gaps affect the results:
+
+- **`strict_na = FALSE`** (the default): Missing stressor values are treated as having no effect (system capacity = 1 for that stressor). This is a permissive approach — locations are scored based on whatever data is available.
+- **`strict_na = TRUE`**: Any missing stressor data causes the cumulative score for that location to become `NA`. This is a conservative approach — it flags locations with incomplete data rather than assuming they are unimpacted.
+
+For exploratory analyses the default is usually fine. For formal assessments where data completeness matters, consider using `strict_na = TRUE` so that gaps are visible in the output:
+
+```r
+# Conservative: flag locations with missing stressor data
+jmr <- JoeModel_Run(dose = dose, sr_wb_dat = sr_wb_dat, MC_sims = 100, strict_na = TRUE)
+```
+
 ## Understanding the Output
 
 The Joe Model returns a list with two key components:
@@ -360,7 +380,7 @@ The Joe Model returns a list with two key components:
 | `ce.df` | **Cumulative Effects** - Overall system capacity for each location and simulation |
 | `sc.dose.df` | **Stressor-specific Capacity** - System capacity broken down by individual stressor |
 
-Let's visualize the cumulative system capacity across all locations and simulations:
+Let's start by visualizing the raw distribution of cumulative system capacity across all locations and simulations:
 
 ```{r, msc_plot, echo = TRUE, message=FALSE, warning=FALSE, fig.width = 6, fig.height = 4, fig.cap="Distribution of cumulative system capacity across all locations and Monte Carlo simulations. Lower values indicate locations where multiple stressors are limiting habitat quality.", fig.align = 'center'}
 # Extract cumulative system capacity (as percentage)
@@ -380,18 +400,83 @@ legend("topleft",
        bty = "n")
 ```
 
+Note that this histogram mixes two sources of variation together: **spatial differences** between locations and **Monte Carlo uncertainty** within each location. To separate these, we can summarize the results at the location level.
+
+## Location-Level Summary
+
+By averaging across Monte Carlo simulations for each location, we can see the **spatial pattern** — which locations are most impacted by cumulative stressors:
+
+```{r, loc_summary, echo = TRUE, message=FALSE, warning=FALSE, fig.width = 7, fig.height = 5, fig.cap="Mean cumulative system capacity for each location, averaged across Monte Carlo simulations. Locations are sorted from most impacted (left) to least impacted (right).", fig.align = 'center'}
+# Calculate mean system capacity per location across MC simulations
+loc_means <- tapply(jmr$ce.df$CE, jmr$ce.df$HUC, mean) * 100
+
+# Sort from lowest to highest capacity
+loc_means <- sort(loc_means)
+
+# Barplot of location-level means
+par(mar = c(5, 4, 3, 1))
+bp <- barplot(loc_means,
+              xlab = "Location (HUC_ID)",
+              ylab = "Mean System Capacity (%)",
+              main = "System Capacity by Location",
+              col = ifelse(loc_means < 40, "#E8726A",
+                    ifelse(loc_means < 70, "#F5C242", "#6AB187")),
+              border = NA,
+              las = 2,
+              cex.names = 0.6,
+              ylim = c(0, 100))
+abline(h = c(40, 70), col = "grey50", lty = 3)
+legend("topleft",
+       legend = c("< 40% (heavily impacted)",
+                  "40-70% (moderately impacted)",
+                  "> 70% (good condition)"),
+       fill = c("#E8726A", "#F5C242", "#6AB187"),
+       border = NA, bty = "n", cex = 0.85)
+```
+
+This view makes it easy to identify the most impacted locations that may benefit from targeted recovery actions.
+
+## Uncertainty at a Single Location
+
+Next, let's look at the Monte Carlo uncertainty for one specific location. This shows how confident we are in the system capacity estimate, given uncertainty in both the stressor measurements and the dose-response relationships:
+
+```{r, loc_uncertainty, echo = TRUE, message=FALSE, warning=FALSE, fig.width = 6, fig.height = 4, fig.cap="Distribution of cumulative system capacity across Monte Carlo simulations for a single location. The spread reflects combined uncertainty from stressor measurements and dose-response relationships.", fig.align = 'center'}
+# Pick the location with the lowest mean capacity to examine
+target_huc <- names(loc_means)[1]
+
+# Extract MC results for this location
+huc_ce <- jmr$ce.df$CE[as.character(jmr$ce.df$HUC) == target_huc] * 100
+
+hist(huc_ce,
+     xlab = "Cumulative System Capacity (%)",
+     main = paste("MC Uncertainty - Location", target_huc),
+     col = "coral",
+     border = "white",
+     breaks = 15,
+     xlim = c(0, 100))
+abline(v = mean(huc_ce), col = "darkred", lwd = 2, lty = 2)
+abline(v = quantile(huc_ce, c(0.05, 0.95)), col = "grey40", lwd = 1, lty = 3)
+legend("topright",
+       legend = c(paste("Mean =", round(mean(huc_ce), 1), "%"),
+                  paste("90% CI:", round(quantile(huc_ce, 0.05), 1), "-",
+                        round(quantile(huc_ce, 0.95), 1), "%")),
+       col = c("darkred", "grey40"),
+       lty = c(2, 3), lwd = c(2, 1), bty = "n", cex = 0.9)
+```
+
 ## Interpreting the Results
 
-The histogram shows the distribution of cumulative system capacity values. Key insights:
+These three views give complementary insights:
+
+- **Overall histogram**: A quick snapshot of the full range of outcomes across all locations and simulations
+- **Location barplot**: The spatial pattern — which locations are most/least impacted, after averaging out MC uncertainty
+- **Single-location histogram**: The uncertainty envelope — how confident we are in the estimate for a given location
+
+As a general guide for the system capacity values:
 
 - **High values (>70%)**: Locations with good habitat conditions where few stressors are limiting
 - **Medium values (40-70%)**: Locations where some stressors are degrading habitat quality
 - **Low values (<40%)**: Heavily impacted locations where multiple stressors are limiting capacity
-
-The spread in values reflects both:
-
-1. **Spatial variation**: Different locations have different stressor levels
-2. **Uncertainty**: Monte Carlo sampling propagates uncertainty from both stressor measurements and dose-response relationships
 
 
 # Next Steps
@@ -400,6 +485,6 @@ This tutorial covered the basics of running the Joe Model for a single scenario.
 
 - **Running multiple scenarios**: See [Tutorial 2: Joe Model Batch Run](a02-joe-model-batch-run.html)
 - **Linking to population dynamics**: See [Tutorial 3: Population Model Overview](a03-population-model.html)
-- **Sensitivity analysis**: See [Tutorial 6: Population Model Evaluation](a06-population-model-sensitivity.html)
+- **Sensitivity analysis**: See [Tutorial 5: Population Model Evaluation](a06-population-model-sensitivity.html)
 
 For detailed guidance on preparing your own data, see the [CEMPRA Documentation](https://mattjbayly.github.io/CEMPRA_documentation/).

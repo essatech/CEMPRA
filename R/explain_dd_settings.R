@@ -351,16 +351,16 @@ if (!is.data.frame(life_cycles)) {
         source = "habitat_dd_k"
       )
     }
+  }
 
-    # Total spawner capacity
-    spawner_cols <- grep("k_spawner|k_stage_b_mean$", names(habitat_k_values),
-                         value = TRUE)
-    if (length(spawner_cols) > 0) {
-      k_summary$K_spawners <- list(
-        value = habitat_k_values[[spawner_cols[1]]],
-        source = "habitat_dd_k"
-      )
-    }
+  # Total spawner capacity (applies to both anadromous and non-anadromous)
+  spawner_cols <- grep("k_spawner|k_stage_b_mean$", names(habitat_k_values),
+                       value = TRUE)
+  if (length(spawner_cols) > 0) {
+    k_summary$K_spawners <- list(
+      value = habitat_k_values[[spawner_cols[1]]],
+      source = "habitat_dd_k"
+    )
   }
 
   # ---------------------------------------------------------------------------
