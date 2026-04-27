@@ -228,6 +228,11 @@ PopulationModel_Run <- function(dose = NA,
     # Need to build table of bh_stage_0, bh_stage_pb_1, bh_spawners, etc.
     # to flag with stages will have DD restrictions
 
+    # Clean habitat capacity column names (normalize spawner column variants)
+    if (!is.null(habitat_dd_k)) {
+      habitat_dd_k <- pop_model_hab_dens_clean(hab_dens = habitat_dd_k)
+    }
+
     ret_obj <- build_k_for_proj_dd(
       habitat_dd_k = habitat_dd_k,
       HUC_ID = HUC_ID,

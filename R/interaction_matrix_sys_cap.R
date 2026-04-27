@@ -123,15 +123,17 @@ interaction_matrix_sys_cap <- function(MInt, sc.dose.df, adult_sys_cap) {
   )
 
   # Determine if main effects should be included or excluded
-  if(MInt$Main_Effect == "Included") {
-    # Drop main effects
-    sc.dose.df.ret <- sc.dose.df[!(sc.dose.df$Stressor %in% c(col_var, row_var)), ]
-    sc.dose.df.ret <- rbind(sc.dose.df.ret, mat_data)
-  }
+  main_effect <- tolower(trimws(MInt$Main_Effect))
+  if(is.na(main_effect)) main_effect <- "included"
 
-  if(MInt$Main_Effect == "Excluded") {
-    # Keep main effects
+  if(main_effect == "excluded") {
+    # Keep main effects alongside the interaction matrix result
     sc.dose.df.ret <- sc.dose.df
+    sc.dose.df.ret <- rbind(sc.dose.df.ret, mat_data)
+  } else {
+    # Default: main effects are included in the matrix,
+    # so drop standalone main effects to avoid double-counting
+    sc.dose.df.ret <- sc.dose.df[!(sc.dose.df$Stressor %in% c(col_var, row_var)), ]
     sc.dose.df.ret <- rbind(sc.dose.df.ret, mat_data)
   }
 

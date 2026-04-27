@@ -86,21 +86,23 @@ ce.func <- function(df, strict_na = FALSE) {
   # MJB added for NA error
   df$int.type <- ifelse(is.na(df$int.type), "no_int", df$int.type)
   df$int.type <- ifelse(df$int.type == "NA", "no_int", df$int.type)
+  # Normalize case for interaction type matching
+  df$int.type <- tolower(df$int.type)
 
-  sys.cap.no.int <- df$sys.cap[df$int.type != "Minimum" & df$int.type != "Maximum"]
+  sys.cap.no.int <- df$sys.cap[df$int.type != "minimum" & df$int.type != "maximum"]
 
   # for those with a minimum interaction take the minimum
   sys.cap.min <- tapply(
-    df$sys.cap[df$int.type == "Minimum"],
-    df$link[df$int.type == "Minimum"],
+    df$sys.cap[df$int.type == "minimum"],
+    df$link[df$int.type == "minimum"],
     min
   )
 
   # MJB added June 3 2023
   # for those with a maximum interaction take the maximum
   sys.cap.max <- tapply(
-    df$sys.cap[df$int.type == "Maximum"],
-    df$link[df$int.type == "Maximum"],
+    df$sys.cap[df$int.type == "maximum"],
+    df$link[df$int.type == "maximum"],
     max
   )
 

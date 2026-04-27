@@ -276,20 +276,20 @@ pop_model_ce_apply <- function(dat = NULL,
       if (trow$life_stage == "alevin") {
         dat$S[alevin_stage] <- dat$S[alevin_stage] * trow$sys.cap[trow$life_stage == "alevin"]
       }
-      if (trow$life_stage == "all_juv") {
-        dat$S[all_juv] <- dat$S[all_juv] * trow$sys.cap[trow$life_stage == "all_juv"]
+      if (trow$life_stage == "alljuv") {
+        dat$S[all_juv] <- dat$S[all_juv] * trow$sys.cap[trow$life_stage == "alljuv"]
       }
       if (trow$life_stage == "fry") {
         dat$S[fry_stages] <- dat$S[fry_stages] * trow$sys.cap[trow$life_stage == "fry"]
       }
-      if (trow$life_stage == "fry_parr") {
-        dat$S[fry_parr_stages] <- dat$S[fry_parr_stages] * trow$sys.cap[trow$life_stage == "fry_parr"]
+      if (trow$life_stage == "fryparr") {
+        dat$S[fry_parr_stages] <- dat$S[fry_parr_stages] * trow$sys.cap[trow$life_stage == "fryparr"]
       }
       if (trow$life_stage == "parr") {
         dat$S[parr_stages] <- dat$S[parr_stages] * trow$sys.cap[trow$life_stage == "parr"]
       }
-      if (trow$life_stage == "sub_adult") {
-        dat$S[subadult_stages] <- dat$S[subadult_stages] * trow$sys.cap[trow$life_stage == "sub_adult"]
+      if (trow$life_stage == "subadult") {
+        dat$S[subadult_stages] <- dat$S[subadult_stages] * trow$sys.cap[trow$life_stage == "subadult"]
       }
       if (trow$life_stage == "adult") {
         dat$S[adult_stages] <- dat$S[adult_stages] * trow$sys.cap[trow$life_stage == "adult"]
@@ -340,91 +340,91 @@ pop_model_ce_apply <- function(dat = NULL,
       }
 
 
-      if (trow$life_stage == "stage1" | trow$life_stage == "s1" | trow$life_stage == "k1" | trow$life_stage == "stage_pb_1" | trow$life_stage == "p1") {
+      if (trow$life_stage == "stage1" | trow$life_stage == "s1" | trow$life_stage == "k1" | trow$life_stage == "stagepb1" | trow$life_stage == "p1") {
         dat$K[paste0(k_prefix, 1)] <- dat$K[paste0(k_prefix, 1)] * trow$sys.cap
       }
-      if (trow$life_stage == "stage2" | trow$life_stage == "s2" | trow$life_stage == "k2" | trow$life_stage == "stage_pb_2" | trow$life_stage == "p2") {
+      if (trow$life_stage == "stage2" | trow$life_stage == "s2" | trow$life_stage == "k2" | trow$life_stage == "stagepb2" | trow$life_stage == "p2") {
         dat$K[paste0(k_prefix, 2)] <- dat$K[paste0(k_prefix, 2)] * trow$sys.cap
       }
-      if (trow$life_stage == "stage3" | trow$life_stage == "s3" | trow$life_stage == "k3" | trow$life_stage == "stage_pb_3" | trow$life_stage == "p3") {
+      if (trow$life_stage == "stage3" | trow$life_stage == "s3" | trow$life_stage == "k3" | trow$life_stage == "stagepb3" | trow$life_stage == "p3") {
         dat$K[paste0(k_prefix, 3)] <- dat$K[paste0(k_prefix, 3)] * trow$sys.cap
       }
-      if (trow$life_stage == "stage4" | trow$life_stage == "s4" | trow$life_stage == "k4" | trow$life_stage == "stage_pb_4" | trow$life_stage == "p4") {
+      if (trow$life_stage == "stage4" | trow$life_stage == "s4" | trow$life_stage == "k4" | trow$life_stage == "stagepb4" | trow$life_stage == "p4") {
         dat$K[paste0(k_prefix, 4)] <- dat$K[paste0(k_prefix, 4)] * trow$sys.cap
       }
-      if (trow$life_stage == "stage5" | trow$life_stage == "s5" | trow$life_stage == "k5" | trow$life_stage == "stage_pb_5" | trow$life_stage == "p5") {
+      if (trow$life_stage == "stage5" | trow$life_stage == "s5" | trow$life_stage == "k5" | trow$life_stage == "stagepb5" | trow$life_stage == "p5") {
         dat$K[paste0(k_prefix, 5)] <- dat$K[paste0(k_prefix, 5)] * trow$sys.cap
       }
-      if (trow$life_stage == "stage6" | trow$life_stage == "s6" | trow$life_stage == "k6" | trow$life_stage == "stage_pb_6" | trow$life_stage == "p6") {
+      if (trow$life_stage == "stage6" | trow$life_stage == "s6" | trow$life_stage == "k6" | trow$life_stage == "stagepb6" | trow$life_stage == "p6") {
         dat$K[paste0(k_prefix, 6)] <- dat$K[paste0(k_prefix, 6)] * trow$sys.cap
       }
-      if (trow$life_stage == "stage7" | trow$life_stage == "s7" | trow$life_stage == "k7" | trow$life_stage == "stage_pb_7" | trow$life_stage == "p7") {
+      if (trow$life_stage == "stage7" | trow$life_stage == "s7" | trow$life_stage == "k7" | trow$life_stage == "stagepb7" | trow$life_stage == "p7") {
         dat$K[paste0(k_prefix, 7)] <- dat$K[paste0(k_prefix, 7)] * trow$sys.cap
       }
-      if (trow$life_stage == "stage8" | trow$life_stage == "s8" | trow$life_stage == "k8" | trow$life_stage == "stage_pb_8" | trow$life_stage == "p8") {
+      if (trow$life_stage == "stage8" | trow$life_stage == "s8" | trow$life_stage == "k8" | trow$life_stage == "stagepb8" | trow$life_stage == "p8") {
         dat$K[paste0(k_prefix, 8)] <- dat$K[paste0(k_prefix, 8)] * trow$sys.cap
       }
-      if (trow$life_stage == "stage9" | trow$life_stage == "s9" | trow$life_stage == "k9" | trow$life_stage == "stage_pb_9" | trow$life_stage == "p9") {
+      if (trow$life_stage == "stage9" | trow$life_stage == "s9" | trow$life_stage == "k9" | trow$life_stage == "stagepb9" | trow$life_stage == "p9") {
         dat$K[paste0(k_prefix, 9)] <- dat$K[paste0(k_prefix, 9)] * trow$sys.cap
       }
-      if (trow$life_stage == "stage10" | trow$life_stage == "s10" | trow$life_stage == "k10" | trow$life_stage == "stage_pb_10" | trow$life_stage == "p10") {
+      if (trow$life_stage == "stage10" | trow$life_stage == "s10" | trow$life_stage == "k10" | trow$life_stage == "stagepb10" | trow$life_stage == "p10") {
         dat$K[paste0(k_prefix, 10)] <- dat$K[paste0(k_prefix, 10)] * trow$sys.cap
       }
-      if (trow$life_stage == "stage11" | trow$life_stage == "s11" | trow$life_stage == "k11" | trow$life_stage == "stage_pb_11" | trow$life_stage == "p11") {
+      if (trow$life_stage == "stage11" | trow$life_stage == "s11" | trow$life_stage == "k11" | trow$life_stage == "stagepb11" | trow$life_stage == "p11") {
         dat$K[paste0(k_prefix, 11)] <- dat$K[paste0(k_prefix, 11)] * trow$sys.cap
       }
-      if (trow$life_stage == "stage12" | trow$life_stage == "s12" | trow$life_stage == "k12" | trow$life_stage == "stage_pb_12" | trow$life_stage == "p12") {
+      if (trow$life_stage == "stage12" | trow$life_stage == "s12" | trow$life_stage == "k12" | trow$life_stage == "stagepb12" | trow$life_stage == "p12") {
         dat$K[paste0(k_prefix, 12)] <- dat$K[paste0(k_prefix, 12)] * trow$sys.cap
       }
 
 
       # Reduce K for all spawner classes combined
-      if (trow$life_stage == "spawners") {
+      if (trow$life_stage == "spawners" | trow$life_stage == "spawner" | trow$life_stage == "spawn" | trow$life_stage == "stageb") {
         if(!(is.null(dat$stage_k_spawners))) {
           dat$stage_k_spawners <- dat$stage_k_spawners * trow$sys.cap
         }
       }
 
       # Then run for specific spawner classes
-      if (trow$life_stage == "spawn1" | trow$life_stage == "spawners1" | trow$life_stage == "b1" | trow$life_stage == "stage_b_1") {
+      if (trow$life_stage == "spawn1" | trow$life_stage == "spawners1" | trow$life_stage == "b1" | trow$life_stage == "stageb1") {
         dat$K["stage_B_1"] <- dat$K["stage_B_1"] * trow$sys.cap
       }
-      if (trow$life_stage == "spawn2" | trow$life_stage == "spawners2" | trow$life_stage == "b2" | trow$life_stage == "stage_b_2") {
+      if (trow$life_stage == "spawn2" | trow$life_stage == "spawners2" | trow$life_stage == "b2" | trow$life_stage == "stageb2") {
         dat$K["stage_B_2"] <- dat$K["stage_B_2"] * trow$sys.cap
       }
-      if (trow$life_stage == "spawn3" | trow$life_stage == "spawners3" | trow$life_stage == "b3" | trow$life_stage == "stage_b_3") {
+      if (trow$life_stage == "spawn3" | trow$life_stage == "spawners3" | trow$life_stage == "b3" | trow$life_stage == "stageb3") {
         dat$K["stage_B_3"] <- dat$K["stage_B_3"] * trow$sys.cap
       }
-      if (trow$life_stage == "spawn4" | trow$life_stage == "spawners4" | trow$life_stage == "b4" | trow$life_stage == "stage_b_4") {
+      if (trow$life_stage == "spawn4" | trow$life_stage == "spawners4" | trow$life_stage == "b4" | trow$life_stage == "stageb4") {
         dat$K["stage_B_4"] <- dat$K["stage_B_4"] * trow$sys.cap
       }
-      if (trow$life_stage == "spawn5" | trow$life_stage == "spawners5" | trow$life_stage == "b5" | trow$life_stage == "stage_b_5") {
+      if (trow$life_stage == "spawn5" | trow$life_stage == "spawners5" | trow$life_stage == "b5" | trow$life_stage == "stageb5") {
         dat$K["stage_B_5"] <- dat$K["stage_B_5"] * trow$sys.cap
       }
-      if (trow$life_stage == "spawn6" | trow$life_stage == "spawners6" | trow$life_stage == "b6" | trow$life_stage == "stage_b_6") {
+      if (trow$life_stage == "spawn6" | trow$life_stage == "spawners6" | trow$life_stage == "b6" | trow$life_stage == "stageb6") {
         dat$K["stage_B_6"] <- dat$K["stage_B_6"] * trow$sys.cap
       }
-      if (trow$life_stage == "spawn7" | trow$life_stage == "spawners7" | trow$life_stage == "b7" | trow$life_stage == "stage_b_7") {
+      if (trow$life_stage == "spawn7" | trow$life_stage == "spawners7" | trow$life_stage == "b7" | trow$life_stage == "stageb7") {
         dat$K["stage_B_7"] <- dat$K["stage_B_7"] * trow$sys.cap
       }
-      if (trow$life_stage == "spawn8" | trow$life_stage == "spawners8" | trow$life_stage == "b8" | trow$life_stage == "stage_b_8") {
+      if (trow$life_stage == "spawn8" | trow$life_stage == "spawners8" | trow$life_stage == "b8" | trow$life_stage == "stageb8") {
         dat$K["stage_B_8"] <- dat$K["stage_B_8"] * trow$sys.cap
       }
-      if (trow$life_stage == "spawn9" | trow$life_stage == "spawners9" | trow$life_stage == "b9" | trow$life_stage == "stage_b_9") {
+      if (trow$life_stage == "spawn9" | trow$life_stage == "spawners9" | trow$life_stage == "b9" | trow$life_stage == "stageb9") {
         dat$K["stage_B_9"] <- dat$K["stage_B_9"] * trow$sys.cap
       }
-      if (trow$life_stage == "spawn10" | trow$life_stage == "spawners10" | trow$life_stage == "b10" | trow$life_stage == "stage_b_10") {
+      if (trow$life_stage == "spawn10" | trow$life_stage == "spawners10" | trow$life_stage == "b10" | trow$life_stage == "stageb10") {
         dat$K["stage_B_10"] <- dat$K["stage_B_10"] * trow$sys.cap
       }
-      if (trow$life_stage == "spawn11" | trow$life_stage == "spawners11" | trow$life_stage == "b11" | trow$life_stage == "stage_b_11") {
+      if (trow$life_stage == "spawn11" | trow$life_stage == "spawners11" | trow$life_stage == "b11" | trow$life_stage == "stageb11") {
         dat$K["stage_B_11"] <- dat$K["stage_B_11"] * trow$sys.cap
       }
-      if (trow$life_stage == "spawn12" | trow$life_stage == "spawners12" | trow$life_stage == "b12" | trow$life_stage == "stage_b_12") {
+      if (trow$life_stage == "spawn12" | trow$life_stage == "spawners12" | trow$life_stage == "b12" | trow$life_stage == "stageb12") {
         dat$K["stage_B_12"] <- dat$K["stage_B_12"] * trow$sys.cap
       }
 
       # Then run for all spawner classes
-      if (trow$life_stage == "spawn" | trow$life_stage == "spawners") {
+      if (trow$life_stage == "spawn" | trow$life_stage == "spawners" | trow$life_stage == "spawner" | trow$life_stage == "stageb") {
         dat$K[grepl("^stage_B_", names(dat$K))] <- dat$K[grepl("^stage_B_", names(dat$K))] * trow$sys.cap
       }
 
@@ -439,14 +439,14 @@ pop_model_ce_apply <- function(dat = NULL,
       if (trow$life_stage == "alevin") {
         dat$K0 <- dat$K0 * trow$sys.cap[trow$life_stage == "alevin"]
       }
-      if (trow$life_stage == "all_juv") {
-        dat$K[all_juv - 2] <- dat$K[all_juv - 2] * trow$sys.cap[trow$life_stage == "all_juv"]
+      if (trow$life_stage == "alljuv") {
+        dat$K[all_juv - 2] <- dat$K[all_juv - 2] * trow$sys.cap[trow$life_stage == "alljuv"]
       }
       if (trow$life_stage == "fry") {
         dat$K[fry_stages - 2] <- dat$K[fry_stages - 2] * trow$sys.cap[trow$life_stage == "fry"]
       }
-      if (trow$life_stage == "fry_parr") {
-        dat$K[fry_parr_stages - 2] <- dat$K[fry_parr_stages - 2] * trow$sys.cap[trow$life_stage == "fry_parr"]
+      if (trow$life_stage == "fryparr") {
+        dat$K[fry_parr_stages - 2] <- dat$K[fry_parr_stages - 2] * trow$sys.cap[trow$life_stage == "fryparr"]
       }
       if (trow$life_stage == "parr") {
         dat$K[parr_stages - 2] <- dat$K[parr_stages - 2] * trow$sys.cap[trow$life_stage == "parr"]
@@ -454,8 +454,8 @@ pop_model_ce_apply <- function(dat = NULL,
       if (trow$life_stage == "juv") {
         dat$K0 <- dat$K0 * trow$sys.cap[trow$life_stage == "juv"]
       }
-      if (trow$life_stage == "sub_adult") {
-        dat$K[subadult_stages - 2] <- dat$K[subadult_stages - 2] * trow$sys.cap[trow$life_stage == "sub_adult"]
+      if (trow$life_stage == "subadult") {
+        dat$K[subadult_stages - 2] <- dat$K[subadult_stages - 2] * trow$sys.cap[trow$life_stage == "subadult"]
       }
       if (trow$life_stage == "adult") {
         dat$K[adult_stages - 2] <- dat$K[adult_stages - 2] * trow$sys.cap[trow$life_stage == "adult"]

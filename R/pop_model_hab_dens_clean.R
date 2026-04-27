@@ -23,19 +23,14 @@ pop_model_hab_dens_clean <- function(hab_dens = NA) {
       this_col <- paste0(this_col, "_mean")
     }
     # Fix spawner naming alternatives
-    if (this_col == "k_B_mean") {
-      this_col <- "k_stage_B_mean"
-    }
-    if (this_col == "k_stage_spawner_mean") {
-      this_col <- "k_stage_B_mean"
-    }
-    if (this_col == "k_stage_spawners_mean") {
-      this_col <- "k_stage_B_mean"
-    }
-    if (this_col == "k_spawner_mean") {
-      this_col <- "k_stage_B_mean"
-    }
-    if (this_col == "k_spawners_mean") {
+    # Normalize all spawner column name variants to canonical k_stage_B_mean
+    # Note: columns are already lowercased above, so comparisons must be lowercase
+    if (this_col %in% c("k_b_mean",
+                         "k_stage_b_mean",
+                         "k_stage_spawner_mean",
+                         "k_stage_spawners_mean",
+                         "k_spawner_mean",
+                         "k_spawners_mean")) {
       this_col <- "k_stage_B_mean"
     }
     colnames(hab_dens)[cap_col_filter[i]] <- this_col

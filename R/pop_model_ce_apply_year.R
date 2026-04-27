@@ -447,7 +447,7 @@ pop_model_ce_apply_year <- function(
         stage_stage   <- paste0("stage", ss)
         s_stage <- paste0("s", ss)
         k_stage <- paste0("k", ss)
-        stage_pb_stage <- paste0("stage_pb_", ss)
+        stage_pb_stage <- paste0("stagepb", ss)
         p_stage <- paste0("p", ss)
 
         # If index_row$life_stage is one of these, do the update
@@ -478,7 +478,7 @@ pop_model_ce_apply_year <- function(
         check1 <- paste0("spawn", ss)
         check2 <- paste0("spawners", ss)
         check3 <- paste0("b", ss)
-        check4 <- paste0("stage_b_", ss)
+        check4 <- paste0("stageb", ss)
         check5 <- paste0("stageb", ss)
         check6 <- paste0("spawner", ss)
 
@@ -537,7 +537,7 @@ pop_model_ce_apply_year <- function(
       # Update capacity for ALL spawners
       if (index_row$life_stage == "spawner" |
           index_row$life_stage == "spawners" |
-          index_row$life_stage == "stage_b" |
+          index_row$life_stage == "stageb" |
           index_row$life_stage == "spawn") {
 
         sys_caps <- c(trow$sys.cap, trow$sys.cap[1]) # Match length

@@ -271,12 +271,9 @@ JoeModel_Run <- function(dose = NA,
       #                       grep(stressors[j], dose$Stressor))
       pnt.dose <- which(dose$HUC_ID == hucs[i] & dose$Stressor == stressors[j])
 
-      # MJB fix (Nov 12, 2023) - older AEP code uses grep(...)
-      # - older AEP code uses grep(...)
-      # which is problematic - some stressors may share same prefix
-      # e.g., road density; road density H60..
+      # If duplicate rows exist for the same HUC+Stressor, take the first match
       if(length(pnt.dose) > 1) {
-        pnt.dose <- which(dose$HUC_ID == hucs[j] & dose$Stressor == stressors[j])
+        pnt.dose <- pnt.dose[1]
       }
 
       # If nothing set - handle based on strict_na argument

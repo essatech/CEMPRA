@@ -292,3 +292,145 @@ test_that("build_k_for_proj_dd works for non-anadromous with bh_spawners", {
 
 })
 
+
+# ===========================================================================
+# Test that habitat data with CV columns does not cause errors
+# CV columns are dropped by pop_model_hab_dens_clean but build_k_for_proj_dd
+# should handle their absence gracefully
+# ===========================================================================
+test_that("build_k_for_proj_dd handles habitat data with CV columns after cleaning", {
+
+  filename <- system.file("extdata/simple_test/test_build_k_for_dd/test_07_lc_nonanad_spawners.csv",
+                          package = "CEMPRA")
+  lc <- read.csv(filename, stringsAsFactors = FALSE)
+  life_cycle_params <- pop_model_dat_clean(lc)
+  pop_mod_setup <- pop_model_setup(life_cycles = life_cycle_params)
+  pm <- pop_model_matrix_elements(pop_mod_setup = pop_mod_setup)
+  life_histories <- pm$life_histories
+
+  # Build habitat data with CV columns (like the legacy format)
+  habitat_dd_k_with_cv <- data.frame(
+    HUC_ID = 1,
+    NAME = "loc1",
+    k_stage_0_mean = 50000,
+    k_stage_1_mean = 5000,
+    k_stage_B_mean = 1000,
+    k_stage_0_cv = 0.1,
+    k_stage_1_cv = 0.1,
+    stringsAsFactors = FALSE
+  )
+
+  # After cleaning, CV columns should be dropped
+  habitat_dd_k_cleaned <- pop_model_hab_dens_clean(hab_dens = habitat_dd_k_with_cv)
+  expect_false("k_stage_0_cv" %in% colnames(habitat_dd_k_cleaned))
+  expect_false("k_stage_1_cv" %in% colnames(habitat_dd_k_cleaned))
+
+  # build_k_for_proj_dd should work without error
+  expect_no_error({
+    ro <- build_k_for_proj_dd(
+      habitat_dd_k = habitat_dd_k_cleaned,
+      HUC_ID = 1,
+      life_histories = life_histories,
+      life_cycle_params = life_cycle_params
+    )
+  })
+
+  # K overrides should still be set correctly
+  expect_true(!is.na(ro$ret_stage_k_override[1])) # k_stage_0
+  expect_true(!is.na(ro$ret_stage_k_override[2])) # k_stage_1
+  expect_equal(ro$ret_total_spawners, 1000)
+
+})
+
+
+# ===========================================================================
+# Test that all spawner column name variants are treated as synonymous
+# Variants: k_stage_B_mean, k_stage_b_mean, k_spawner_mean, k_spawners_mean
+# ===========================================================================
+test_that("spawner column name variants are all treated as synonymous", {
+
+  filename <- system.file("extdata/simple_test/test_build_k_for_dd/test_07_lc_nonanad_spawners.csv",
+                          package = "CEMPRA")
+  lc <- read.csv(filename, stringsAsFactors = FALSE)
+  life_cycle_params <- pop_model_dat_clean(lc)
+  pop_mod_setup <- pop_model_setup(life_cycles = life_cycle_params)
+  pm <- pop_model_matrix_elements(pop_mod_setup = pop_mod_setup)
+  life_histories <- pm$life_histories
+
+  # Define the four spawner column name variants to test
+  spawner_variants <- c("k_stage_B_mean", "k_stage_b_mean",
+                         "k_spawner_mean", "k_spawners_mean")
+
+  results <- list()
+
+  for (variant in spawner_variants) {
+    # Build habitat data with the current variant name
+    hc <- data.frame(
+      HUC_ID = 1,
+      NAME = "loc1",
+      k_stage_0_mean = 50000,
+      k_stage_1_mean = 5000,
+      placeholder = 1000,
+      stringsAsFactors = FALSE
+    )
+    colnames(hc)[colnames(hc) == "placeholder"] <- variant
+
+    hc_clean <- pop_model_hab_dens_clean(hab_dens = hc)
+
+    ro <- build_k_for_proj_dd(
+      habitat_dd_k = hc_clean,
+      HUC_ID = 1,
+      life_histories = life_histories,
+      life_cycle_params = life_cycle_params
+    )
+
+    results[[variant]] <- ro
+  }
+
+  # All variants should detect bh_spawners
+  for (variant in spawner_variants) {
+    expect_true(
+      "bh_spawners" %in% results[[variant]]$ret_bh_dd_stages,
+      info = paste("bh_spawners not detected for column name:", variant)
+    )
+  }
+
+  # All variants should yield the same spawner capacity
+  for (variant in spawner_variants) {
+    expect_equal(
+      results[[variant]]$ret_total_spawners, 1000,
+      info = paste("spawner cap mismatch for column name:", variant)
+    )
+  }
+
+  # Also test without pop_model_hab_dens_clean (direct to build_k_for_proj_dd)
+  for (variant in spawner_variants) {
+    hc <- data.frame(
+      HUC_ID = 1,
+      NAME = "loc1",
+      k_stage_0_mean = 50000,
+      k_stage_1_mean = 5000,
+      placeholder = 1000,
+      stringsAsFactors = FALSE
+    )
+    colnames(hc)[colnames(hc) == "placeholder"] <- variant
+
+    ro <- build_k_for_proj_dd(
+      habitat_dd_k = hc,
+      HUC_ID = 1,
+      life_histories = life_histories,
+      life_cycle_params = life_cycle_params
+    )
+
+    expect_true(
+      "bh_spawners" %in% ro$ret_bh_dd_stages,
+      info = paste("bh_spawners not detected (no clean) for column name:", variant)
+    )
+    expect_equal(
+      ro$ret_total_spawners, 1000,
+      info = paste("spawner cap mismatch (no clean) for column name:", variant)
+    )
+  }
+
+})
+

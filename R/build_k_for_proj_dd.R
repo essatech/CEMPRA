@@ -49,9 +49,14 @@ build_k_for_proj_dd <- function(habitat_dd_k,
     fixnms <- gsub("_Stage_", "_stage_", fixnms)
 
     # Fix spawner column name convention
-    fixnms <- gsub("k_stage_b_mean", "k_stage_B_mean", fixnms)
-    fixnms <- gsub("k_spawners_mean", "k_stage_B_mean", fixnms)
-    fixnms <- gsub("k_spawner_mean", "k_stage_B_mean", fixnms)
+    # Normalize all spawner capacity column name variants to canonical k_stage_B_mean
+    # Order matters: match longer/more-specific patterns first
+    fixnms <- gsub("k_stage_b_mean", "k_stage_B_mean", fixnms, ignore.case = TRUE)
+    fixnms <- gsub("k_stage_spawners_mean", "k_stage_B_mean", fixnms, ignore.case = TRUE)
+    fixnms <- gsub("k_stage_spawner_mean", "k_stage_B_mean", fixnms, ignore.case = TRUE)
+    fixnms <- gsub("k_spawners_mean", "k_stage_B_mean", fixnms, ignore.case = TRUE)
+    fixnms <- gsub("k_spawner_mean", "k_stage_B_mean", fixnms, ignore.case = TRUE)
+    fixnms <- gsub("k_b_mean", "k_stage_B_mean", fixnms, ignore.case = TRUE)
 
     colnames(hab_dd_k) <- fixnms
 
@@ -295,8 +300,10 @@ build_k_for_proj_dd <- function(habitat_dd_k,
       for (s in 0:(life_histories$Nstage)) {
 
         # Sample capacity for year and location
-        mean_k <- hab_dd_k[1, paste0("k_stage_", s, "_mean")]
-        cv_k <- hab_dd_k[1, paste0("k_stage_", s, "_cv")]
+        mean_col <- paste0("k_stage_", s, "_mean")
+        cv_col <- paste0("k_stage_", s, "_cv")
+        mean_k <- if (mean_col %in% colnames(hab_dd_k)) hab_dd_k[1, mean_col] else NA
+        cv_k <- if (cv_col %in% colnames(hab_dd_k)) hab_dd_k[1, cv_col] else 0
 
         # Set to 0 if missing
         cv_k <- ifelse(length(cv_k) == 0, 0, cv_k)
