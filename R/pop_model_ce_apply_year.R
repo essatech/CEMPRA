@@ -233,10 +233,12 @@ pop_model_ce_apply_year <- function(
       }
 
       # For ss in 1:12, build "stage{ss}" and "s{ss}" and "surv{ss}"
+      # Also match "stagepb{ss}" for anadromous pre-breeder stages
       for (ss in 1:12) {
         if (index_row$life_stage == paste0("stage", ss) |
             index_row$life_stage == paste0("s", ss) |
-            index_row$life_stage == paste0("surv", ss)) {
+            index_row$life_stage == paste0("surv", ss) |
+            index_row$life_stage == paste0("stagepb", ss)) {
 
           sys_caps <- c(trow$sys.cap, trow$sys.cap[1]) # Match length
 

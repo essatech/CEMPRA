@@ -14,7 +14,25 @@ pop_model_dat_clean <- function(dat, nstage_fill = NULL) {
 
   # Drop any extra columns - clean column order input
   # dat <- life_stages
-  dat <- dat[, c("Parameters", "Name", "Value")]
+
+  # Validate required columns exist
+  required_cols <- c("Parameters", "Name", "Value")
+  missing_cols <- setdiff(required_cols, colnames(dat))
+  if (length(missing_cols) > 0) {
+    stop(paste0(
+      "Life cycle CSV is missing required columns: ",
+      paste(missing_cols, collapse = ", "),
+      ". Found columns: ",
+      paste(colnames(dat), collapse = ", ")
+    ))
+  }
+
+  dat <- dat[, required_cols]
+
+  # Check that Nstage row exists
+  if (!("Nstage" %in% dat$Name)) {
+    stop("Life cycle CSV is missing the 'Nstage' row (in the 'Name' column). This parameter is required.")
+  }
 
   # Fix vectors to match Nstage
   n_stage <- as.numeric(dat$Value[dat$Name == "Nstage"])
@@ -23,9 +41,9 @@ pop_model_dat_clean <- function(dat, nstage_fill = NULL) {
     nstage_fill <- n_stage
   }
 
-  if(length(n_stage) == 0) { stop("Nstage must be set...") }
-  if(is.na(n_stage)) { stop("Nstage cannot be NA...") }
-  if(n_stage < 2) { stop("Nstage must be 2 or greater...") }
+  if(length(n_stage) == 0) { stop("Nstage must be set. Ensure your CSV has a row with Name='Nstage' and a numeric Value.") }
+  if(is.na(n_stage)) { stop("Nstage value is NA. Ensure the Value for the 'Nstage' row is a whole number (e.g., 3, 4, 5).") }
+  if(n_stage < 2) { stop(paste0("Nstage must be 2 or greater, but got ", n_stage, ".")) }
 
   # Assume anadromous if not set then assume life history is not anadromous
   if(length(dat$Value[dat$Name == "anadromous"]) == 0) {
