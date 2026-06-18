@@ -140,8 +140,21 @@ PopulationModel_Run <- function(dose = NA,
 
 
     # add on missing attr columns
+    base_merge_cols <- c("Stressor", "Life_stages", "Parameters", "Stressor_cat")
+
+    # Carry optional From_Year / To_Year activation-window columns (if supplied).
+    # These are dropped from the Joe Model input (smw_sample) above, but are
+    # propagated here so the population model can restrict stressors to a year
+    # window. Absent columns -> current behaviour (applied to all years).
+    if ("From_Year" %in% colnames(ce_df_sub)) {
+      base_merge_cols <- c(base_merge_cols, "From_Year")
+    }
+    if ("To_Year" %in% colnames(ce_df_sub)) {
+      base_merge_cols <- c(base_merge_cols, "To_Year")
+    }
+
     merge_cols <-
-      ce_df_sub[, c("Stressor", "Life_stages", "Parameters", "Stressor_cat")]
+      ce_df_sub[, base_merge_cols]
 
     merge_cols <-
       merge_cols[!(duplicated(merge_cols)), ]

@@ -81,6 +81,53 @@ pop_model_ce_apply_year <- function(
     CE_df$HUC <- 1
   }
 
+  # ============================================================================
+  # Optional From_Year / To_Year activation window
+  # ============================================================================
+  # If From_Year / To_Year columns are supplied, a stressor is only active
+  # between those simulation years (inclusive). Outside that window the
+  # stressor has no effect, implemented by forcing sys.cap to 1 (the
+  # multiplicative identity for survival, fecundity and capacity pathways).
+  #   - both NA/missing  -> active all years (current behaviour)
+  #   - From only        -> active for Year >= From_Year
+  #   - To only          -> active for Year <= To_Year
+  #   - From > To        -> empty window, inactive all years (+ warning)
+  # When the columns are absent this block is skipped entirely, so existing
+  # runs are unchanged.
+  has_from <- "From_Year" %in% colnames(CE_df)
+  has_to   <- "To_Year" %in% colnames(CE_df)
+
+  if (has_from || has_to) {
+
+    if (!("Year" %in% colnames(CE_df))) {
+      # No year information available - cannot window. Leave rates unchanged
+      # (stressor applied to all years) but warn so the user is aware.
+      warning("From_Year/To_Year supplied but no 'Year' column in CE_df; activation window ignored.")
+    } else {
+
+      yr <- suppressWarnings(as.numeric(CE_df$Year))
+      fy <- if (has_from) suppressWarnings(as.numeric(CE_df$From_Year)) else rep(NA_real_, nrow(CE_df))
+      ty <- if (has_to)   suppressWarnings(as.numeric(CE_df$To_Year))   else rep(NA_real_, nrow(CE_df))
+
+      # Warn on invalid (empty) windows where From_Year > To_Year
+      if (any(!is.na(fy) & !is.na(ty) & fy > ty)) {
+        warning("From_Year > To_Year for one or more stressors; those stressors are inactive in all years.")
+      }
+
+      # Years outside the activation window -> neutralize (no effect)
+      out_window <- (!is.na(fy) & yr < fy) | (!is.na(ty) & yr > ty)
+      out_window <- ifelse(is.na(out_window), FALSE, out_window)
+      CE_df$sys.cap[out_window] <- 1
+
+      # Downstream application consumes sys.cap positionally, so guarantee rows
+      # are Year-ascending. This is a no-op for the standard PopulationModel_Run
+      # path (rows already arrive Year-sorted), and is only engaged when window
+      # columns are present.
+      CE_df <- CE_df[order(yr), ]
+    }
+  }
+
+
   # otherwise modify dat with CE stressors
   CE_df$parameter <- tolower(CE_df$parameter)
   CE_cap <- CE_df[CE_df$parameter == "capacity", ]
@@ -188,7 +235,7 @@ pop_model_ce_apply_year <- function(
       }
 
       # Update Normal Stages for egg
-      if (index_row$life_stage == "stagee" | index_row$life_stage == "se" | index_row$life_stage == "egg" | index_row$life_stage == "eggs") {
+      if (index_row$life_stage == "stagee" | index_row$life_stage == "se" | index_row$life_stage == "egg" | index_row$life_stage == "eggs" | index_row$life_stage == "stageegg" | index_row$life_stage == "stageeggs") {
         sys_caps <- c(trow$sys.cap, trow$sys.cap[1]) # Match length
 
         if(length(sys_caps) != length(rates$st)) {
@@ -402,7 +449,9 @@ pop_model_ce_apply_year <- function(
       if (index_row$life_stage == "se" |
           index_row$life_stage == "stagee" |
           index_row$life_stage == "egg" |
-          index_row$life_stage == "eggs" | index_row$life_stage == "ke") {
+          index_row$life_stage == "eggs" |
+          index_row$life_stage == "stageegg" |
+          index_row$life_stage == "stageeggs" | index_row$life_stage == "ke") {
         sys_caps <- c(trow$sys.cap, trow$sys.cap[1]) # Match length
 
         if(length(sys_caps) != length(rates$Ke_list)) {

@@ -3,6 +3,11 @@
 #' @description Extract the stressor magnitude data from each sheet in the Excel workbook.
 #'
 #' @details For more information about data format requirements, see the Data Upload section of the vignette.
+#'  Optional `From_Year` and `To_Year` columns may be supplied. When present, they are
+#'  used only by the population model to restrict a stressor (per HUC) to an activation
+#'  window (active between `From_Year` and `To_Year`, inclusive); they are ignored by the
+#'  Joe Model. Stressors with missing/blank values, or files without these columns, are
+#'  applied to all years as before (backwards compatible).
 #'
 #' @param filename A string. Relative file name to the stressor magnitude Excel workbook.
 #' @param scenario_worksheet A string. Worksheet name for the scenario.
@@ -67,6 +72,30 @@ StressorMagnitudeWorkbook <- function(filename = NA, scenario_worksheet = NA) {
   data$Mean <- as.numeric(data$Mean)
 
 
+  # --------------------------------------------------------------------------
+  # Optional From_Year / To_Year activation-window columns
+  # --------------------------------------------------------------------------
+  # These are OPTIONAL columns. If present, they are used only by the
+  # population model to restrict when a stressor is active (between From_Year
+  # and To_Year, inclusive). They are ignored by the Joe Model. Files without
+  # these columns load and run exactly as before (backwards compatible).
+  # Accept common case/spacing variants and normalize to From_Year / To_Year.
+  norm_window_col <- function(cn) {
+    key <- tolower(gsub("[ _]", "", cn))
+    ifelse(key == "fromyear", "From_Year",
+           ifelse(key == "toyear", "To_Year", cn))
+  }
+  colnames(data) <- vapply(colnames(data), norm_window_col, character(1))
+
+  # Coerce window columns to numeric if present (blank/NA/garbage -> NA)
+  if ("From_Year" %in% colnames(data)) {
+    data$From_Year <- suppressWarnings(as.numeric(as.character(data$From_Year)))
+  }
+  if ("To_Year" %in% colnames(data)) {
+    data$To_Year <- suppressWarnings(as.numeric(as.character(data$To_Year)))
+  }
+
+
   # Need to deal with total mortality column
   # Total_Mortality is a sum of other inputs
   if ("Total_Mortality" %in% base::unique(data$Stressor_cat)) {
@@ -89,6 +118,11 @@ StressorMagnitudeWorkbook <- function(filename = NA, scenario_worksheet = NA) {
     data_mort_new$Low_Limit <- 0
     data_mort_new$Up_Limit <- 1
     data_mort_new$Comments <- NA
+    # Total_Mortality is a Joe Model aggregate (summed mortality). The activation
+    # window is a population-model-only concept, so drop From_Year/To_Year here.
+    # This also prevents differing window values from defeating the de-dup below.
+    if ("From_Year" %in% colnames(data_mort_new)) data_mort_new$From_Year <- NA
+    if ("To_Year" %in% colnames(data_mort_new)) data_mort_new$To_Year <- NA
     nrow(data_mort_new)
     data_mort_new <- data_mort_new[!(duplicated(data_mort_new)), ]
     nrow(data_mort_new)

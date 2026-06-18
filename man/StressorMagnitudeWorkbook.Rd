@@ -19,4 +19,9 @@ Extract the stressor magnitude data from each sheet in the Excel workbook.
 }
 \details{
 For more information about data format requirements, see the Data Upload section of the vignette.
+Optional \code{From_Year} and \code{To_Year} columns may be supplied. When present, they are
+used only by the population model to restrict a stressor (per HUC) to an activation
+window (active between \code{From_Year} and \code{To_Year}, inclusive); they are ignored by the
+Joe Model. Stressors with missing/blank values, or files without these columns, are
+applied to all years as before (backwards compatible).
 }

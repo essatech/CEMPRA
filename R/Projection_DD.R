@@ -300,23 +300,11 @@ Projection_DD <- function(M.mx = NA,
 
 
 
-  # ----------------------------------
-  # Apply CE stressors to vital rates
-  # ----------------------------------
-
-  # Apply the harm matrix to K or S (if needed)
-  # MJB: Apply CE stressors to population parameters
-  # if not null
-  # if (!(is.null(CE_df))) {
-  #   dat <- pop_model_ce_apply(
-  #     CE_df = CE_df,
-  #     dat = dat
-  #   )
-  # }
-
   # --------------------------------------------
   # Setup stochastic transition probabilities
   # --------------------------------------------
+  # Note: CE stressors are applied per-year further below via
+  # pop_model_ce_apply_year() once the stochastic rate lists are built.
 
   # Fecundity
   ft <- lapply(1:(Nyears + 1), function(x) {
