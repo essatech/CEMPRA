@@ -65,8 +65,9 @@ test_that("From=2,To=4 -> only years 2-4 reduced", {
   CE_df <- make_ce("stage_e", "survival", sys.cap = 0.5, n_years = 5, from = 2, to = 4)
   res <- pop_model_ce_apply_year(rates = rates, CE_df = CE_df,
                                  anadromous = FALSE, mat_stage = c(s3 = 1))
-  # rates index: 1 (Y1, off), 2-4 (Y2-4, on), 5 (Y5, off), 6 (filler=Y1, off)
-  expect_equal(sE_vec(res), c(0.9, 0.45, 0.45, 0.45, 0.9, 0.9))
+  # rates slot 1 = setup (carries Y1's value, off); slot t+1 = year t:
+  # slots 2 (Y1, off), 3-5 (Y2-4, on), 6 (Y5, off)
+  expect_equal(sE_vec(res), c(0.9, 0.9, 0.45, 0.45, 0.45, 0.9))
 })
 
 
@@ -78,7 +79,7 @@ test_that("From only (=3) -> years >= 3 reduced", {
   CE_df <- make_ce("stage_e", "survival", sys.cap = 0.5, n_years = 5, from = 3)
   res <- pop_model_ce_apply_year(rates = rates, CE_df = CE_df,
                                  anadromous = FALSE, mat_stage = c(s3 = 1))
-  expect_equal(sE_vec(res), c(0.9, 0.9, 0.45, 0.45, 0.45, 0.9))
+  expect_equal(sE_vec(res), c(0.9, 0.9, 0.9, 0.45, 0.45, 0.45))
 })
 
 
@@ -90,7 +91,8 @@ test_that("To only (=4) -> years <= 4 reduced", {
   CE_df <- make_ce("stage_e", "survival", sys.cap = 0.5, n_years = 5, to = 4)
   res <- pop_model_ce_apply_year(rates = rates, CE_df = CE_df,
                                  anadromous = FALSE, mat_stage = c(s3 = 1))
-  expect_equal(sE_vec(res), c(0.45, 0.45, 0.45, 0.45, 0.9, 0.45))
+  # setup slot + years 1-4 on; year 5 (final slot) off - no wrap-around
+  expect_equal(sE_vec(res), c(0.45, 0.45, 0.45, 0.45, 0.45, 0.9))
 })
 
 
@@ -127,7 +129,10 @@ test_that("From > To -> stressor inactive all years + warning", {
 # --------------------------------------------------------------------------
 test_that("From/To present but no Year column -> warning, applied all years", {
   rates <- make_rates(6)
-  CE_df <- make_ce("stage_e", "survival", sys.cap = 0.5, n_years = 5,
+  # Single constant row (multi-row per-year tables without a Year column
+  # are rejected by the duplicate-target check - see
+  # test-ce-duplicate-targets.R)
+  CE_df <- make_ce("stage_e", "survival", sys.cap = 0.5, n_years = 1,
                    from = 2, to = 4, add_year = FALSE)
   expect_warning(
     res <- pop_model_ce_apply_year(rates = rates, CE_df = CE_df,
@@ -149,8 +154,8 @@ test_that("multi life-stage stressor (stage_e, stage_0) respects window", {
   res <- pop_model_ce_apply_year(rates = rates, CE_df = CE_df,
                                  anadromous = FALSE, mat_stage = c(s3 = 1))
   # sE: 0.9 base -> 0.45 inside window; s0: 0.5 base -> 0.25 inside window
-  expect_equal(sE_vec(res), c(0.9, 0.45, 0.45, 0.45, 0.9, 0.9))
-  expect_equal(s0_vec(res), c(0.5, 0.25, 0.25, 0.25, 0.5, 0.5))
+  expect_equal(sE_vec(res), c(0.9, 0.9, 0.45, 0.45, 0.45, 0.9))
+  expect_equal(s0_vec(res), c(0.5, 0.5, 0.25, 0.25, 0.25, 0.5))
 })
 
 
@@ -163,7 +168,7 @@ test_that("capacity stressor (stage_1) respects window", {
   res <- pop_model_ce_apply_year(rates = rates, CE_df = CE_df,
                                  anadromous = FALSE, mat_stage = c(s3 = 1))
   k1 <- vapply(res$K_list, function(x) unname(x["K1"]), numeric(1))
-  expect_equal(k1, c(1000, 500, 500, 500, 1000, 1000))
+  expect_equal(k1, c(1000, 1000, 500, 500, 500, 1000))
 })
 
 
@@ -176,7 +181,7 @@ test_that("fecundity stressor (eps) respects window", {
   res <- pop_model_ce_apply_year(rates = rates, CE_df = CE_df,
                                  anadromous = FALSE, mat_stage = c(s3 = 1))
   eps <- vapply(res$ft, function(x) unname(x["eps"]), numeric(1))
-  expect_equal(eps, c(100, 50, 50, 50, 100, 100))
+  expect_equal(eps, c(100, 100, 50, 50, 50, 100))
 })
 
 
@@ -202,7 +207,7 @@ test_that("anadromous prespawn (u) stressor respects window", {
                                  anadromous = TRUE, mat_stage = NULL)
 
   u4 <- vapply(res$ut, function(x) unname(x["u4"]), numeric(1))
-  expect_equal(u4, c(0.9, 0.45, 0.45, 0.45, 0.9, 0.9))
+  expect_equal(u4, c(0.9, 0.9, 0.45, 0.45, 0.45, 0.9))
 })
 
 

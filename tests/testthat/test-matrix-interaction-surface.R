@@ -1,4 +1,5 @@
 test_that("Matrix Interaction", {
+  set.seed(42) # deterministic stochastic outcomes, independent of test file order
 
   # ----------------------------------------
   # JOE MODEL TEST 1

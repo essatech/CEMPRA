@@ -665,21 +665,23 @@ if (!is.data.frame(life_cycles)) {
 
     for (stage in active_bh_dd) {
       if (stage == "dd_hs_0" || stage == "hs_stage_0") {
-        lines <- c(lines, "     - Cap fry population at K0 (hard ceiling)")
+        lines <- c(lines, "     - Cap fry production at K0 (hard ceiling; within-year flow cap)")
       } else if (stage == "bh_stage_0") {
-        lines <- c(lines, "     - Apply Beverton-Holt to egg->fry transition")
+        lines <- c(lines, "     - Apply Beverton-Holt to egg->fry flow (within-year flow cap)")
       } else if (grepl("^bh_stage_[0-9]+$", stage)) {
         stage_num <- gsub("bh_stage_", "", stage)
         lines <- c(lines,
-                   paste0("     - Apply Beverton-Holt to stage ", stage_num, " transition"))
+                   paste0("     - Beverton-Holt on stage ", stage_num,
+                          " total: holdovers kept, recruits admitted into residual K",
+                          stage_num))
       } else if (grepl("^hs_stage_[0-9]+$", stage)) {
         stage_num <- gsub("hs_stage_", "", stage)
         lines <- c(lines,
-                   paste0("     - Cap stage ", stage_num, " at K", stage_num, " (hard ceiling)"))
+                   paste0("     - Cap stage ", stage_num, " total at K", stage_num, " (hard ceiling)"))
       } else if (grepl("bh_stage_pb", stage)) {
-        lines <- c(lines, "     - Apply Beverton-Holt to pre-spawner stage")
+        lines <- c(lines, "     - Beverton-Holt on pre-spawner stage total (holdovers kept, recruits into residual K)")
       } else if (grepl("bh_stage_b", stage)) {
-        lines <- c(lines, "     - Apply Beverton-Holt to spawner stage")
+        lines <- c(lines, "     - Beverton-Holt on spawner stage total")
       } else if (stage == "bh_spawners") {
         lines <- c(lines, "     - Apply Beverton-Holt constraint on total spawners")
       } else if (stage == "hs_spawners") {

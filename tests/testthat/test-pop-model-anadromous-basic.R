@@ -1,5 +1,7 @@
 test_that("test-pop-model-anadromous-basic", {
 
+  set.seed(42) # deterministic stochastic outcomes, independent of test file order
+
   #----------------------------------------------
   # Test Strange (but possible input formats)
   #----------------------------------------------
@@ -9,15 +11,21 @@ test_that("test-pop-model-anadromous-basic", {
   life_cycles <- read.csv(filename, stringsAsFactors = FALSE)
   pop_mod_setup <- pop_model_setup(life_cycles = life_cycles)
   pop_mod_mat <- pop_model_matrix_elements(pop_mod_setup = pop_mod_setup)
-  expect_true(pop_mod_mat$life_histories$eps == 3000) # This must be equal to 3000
+  # eps is now per-stage (eps2..eps4); every stage's value must be 3000
+  expect_true(all(pop_mod_mat$life_histories$eps == 3000))
   A <- pop_mod_mat$projection_matrix
   lambda <- popbio::lambda(A)
   expect_true(round(lambda, 2) == 1.21) # Manual check - might be wrong
 
+  # This fixture has mat_1 = 0.1: stage-1 maturity is no longer accepted
+  # (it was previously ignored silently by the simulation while appearing
+  # in the preview matrix) - it must now error cleanly.
   filename <- system.file("extdata/simple_test/test_anadromous/test_setup_error.csv", package = "CEMPRA")
   life_cycles <- read.csv(filename, stringsAsFactors = FALSE)
-  pop_mod_setup <- pop_model_setup(life_cycles = life_cycles)
-  pop_mod_mat <- pop_model_matrix_elements(pop_mod_setup = pop_mod_setup)
+  expect_error(
+    pop_model_setup(life_cycles = life_cycles),
+    regexp = "mat_1 > 0 is not supported"
+  )
 
   filename <- system.file("extdata/simple_test/test_anadromous/test_setup_error_2.csv", package = "CEMPRA")
   life_cycles <- read.csv(filename, stringsAsFactors = FALSE)
@@ -121,9 +129,11 @@ test_that("test-pop-model-anadromous-basic", {
   # With CR applied lambda should roughly equal 1.0
   expect_true(diff < 0.2)
 
-  # Run with CE_df
+  # Run with CE_df (suppressWarnings: the CE_df_testing fixture blasts
+  # every tag at small profiles, so never-matching capacity targets now
+  # emit informative target-skipped warnings - not the tested behaviour)
   CE_run <-
-    Projection_DD(
+    suppressWarnings(Projection_DD(
       M.mx = M.mx,
       D.mx = D.mx,
       dat = dat,
@@ -131,7 +141,7 @@ test_that("test-pop-model-anadromous-basic", {
       K = dat$Ka,
       Nyears = 500,
       anadromous = pop_mod_setup$anadromous
-    )
+    ))
   # Compare CE to baseline
   m1 <- median(baseline$pop$N)
   m2 <- median(CE_run$pop$N)
@@ -210,9 +220,11 @@ test_that("test-pop-model-anadromous-basic", {
   # With CR applied lambda should roughly equal 1.0
   expect_true(diff < 0.2)
 
-  # Run with CE_df
+  # Run with CE_df (suppressWarnings: the CE_df_testing fixture blasts
+  # every tag at small profiles, so never-matching capacity targets now
+  # emit informative target-skipped warnings - not the tested behaviour)
   CE_run <-
-    Projection_DD(
+    suppressWarnings(Projection_DD(
       M.mx = M.mx,
       D.mx = D.mx,
       dat = dat,
@@ -220,7 +232,7 @@ test_that("test-pop-model-anadromous-basic", {
       K = dat$Ka,
       Nyears = 500,
       anadromous = pop_mod_setup$anadromous
-    )
+    ))
   # Compare CE to baseline
   m1 <- median(baseline$pop$N)
   m2 <- median(CE_run$pop$N)
@@ -356,9 +368,11 @@ test_that("test-pop-model-anadromous-basic", {
   # With CR applied lambda should roughly equal 1.0
   expect_true(diff < 0.2)
 
-  # Run with CE_df
+  # Run with CE_df (suppressWarnings: the CE_df_testing fixture blasts
+  # every tag at small profiles, so never-matching capacity targets now
+  # emit informative target-skipped warnings - not the tested behaviour)
   CE_run <-
-    Projection_DD(
+    suppressWarnings(Projection_DD(
       M.mx = M.mx,
       D.mx = D.mx,
       dat = dat,
@@ -366,7 +380,7 @@ test_that("test-pop-model-anadromous-basic", {
       K = dat$Ka,
       Nyears = 500,
       anadromous = pop_mod_setup$anadromous
-    )
+    ))
   # Compare CE to baseline
   m1 <- median(baseline$pop$N)
   m2 <- median(CE_run$pop$N)
@@ -552,7 +566,7 @@ test_that("test-pop-model-anadromous-basic", {
   # plot(mcheck$pop$N, type = 'l')
   # Population should STILL grow exponentially
   expect_true(10000000 > median(mcheck$pop$N) && 1000 < median(mcheck$pop$N))
-  diff <- abs(1 - (10000 / median(mcheck$N[, "K2"])))
+  diff <- abs(1 - (10000 / median(mcheck$N[, "stage_Pb_2"])))
   expect_true(diff < 0.1)
 
 
@@ -577,7 +591,7 @@ test_that("test-pop-model-anadromous-basic", {
   # plot(mcheck$pop$N, type = 'l')
   # Population should STILL grow exponentially
   expect_true(10000000 > median(mcheck$pop$N) && 800 < median(mcheck$pop$N))
-  diff <- abs(1 - (10000 / (median(mcheck$N[, "K1"]) / 0.8)))
+  diff <- abs(1 - (10000 / (median(mcheck$N[, "stage_Pb_1"]) / 0.8)))
   expect_true(diff < 0.1)
 
 
@@ -601,7 +615,7 @@ test_that("test-pop-model-anadromous-basic", {
     )
   # plot(mcheck$pop$N, type = 'l')
   # CE stressor to fry with hs
-  diff <- abs(1 - ((10000 * 0.5) / (median(mcheck$N[, "K1"]) / 0.8)))
+  diff <- abs(1 - ((10000 * 0.5) / (median(mcheck$N[, "stage_Pb_1"]) / 0.8)))
   expect_true(diff < 0.1)
 
 
@@ -648,7 +662,7 @@ test_that("test-pop-model-anadromous-basic", {
   # dat$stage_names
   # plot(mcheck$pop$N, type = 'l')
   # CE stressor to fry with hs
-  expect_true(median(mcheck$N[, "K2"]) < 5000 &  median(mcheck$N[, "K2"]) > 2000)
+  expect_true(median(mcheck$N[, "stage_Pb_2"]) < 5000 &  median(mcheck$N[, "stage_Pb_2"]) > 2000)
 
   stage_k_override <- rep(NA, dat$Nstage + 1)
   names(stage_k_override) <- c("K0", dat$stage_names)

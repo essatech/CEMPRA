@@ -16,4 +16,12 @@ pop_model_dat_clean
 }
 \details{
 Cleans input parameters from csv.
+
+Fecundity (non-anadromous): per-stage rows (eps_1, eps_2, ...) are the
+canonical format and are used directly by the population model. A legacy
+single "eps" row is spread across stages based on maturity - mature
+stages (mat_x > 0) receive the legacy value and immature stages get 0 -
+and the legacy row is then removed, so cleaned data always carries
+per-stage eps rows. If both formats are present, the per-stage values
+win and the legacy value only fills missing mature-stage rows.
 }

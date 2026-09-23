@@ -29,6 +29,11 @@ Transition Matrix:
 \item Checks for excessive compensation ratios.
 }
 
+Stage 1 must be immature (\code{mat_1 = 0}): reproduction begins at stage 2.
+Setting \code{mat_1 > 0} raises an error (previously it was silently ignored
+by the simulation while appearing in the preview matrix). The shortest
+supported life cycle matures in its second year (e.g., pink salmon).
+
 Dataset for life-histories:
 \itemize{
 \item transition probabilities

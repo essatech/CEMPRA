@@ -67,6 +67,12 @@ JoeModel_Run <- function(dose = NA,
   # -------------------------------------------------------
   msheet <- sr_wb_dat$main_sheet
 
+  # Align dose stressor names with the (final) stressor-response names in
+  # case duplicates were disambiguated via Stressor_cat on the SR side
+  if (is.data.frame(dose)) {
+    dose <- align_dose_stressor_names(dose, msheet$Stressors)
+  }
+
   if (adult_sys_cap) {
 
     # Allowable stressors

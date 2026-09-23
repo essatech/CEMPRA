@@ -4,7 +4,7 @@
 \alias{E_est}
 \title{E_est}
 \usage{
-E_est(N, dat)
+E_est(N, dat, eps = dat[["eps"]])
 }
 \description{
 E_est

@@ -26,3 +26,17 @@ a modified dat vital rates object after applying CE effects.
 \description{
 Utility function to apply cumulative effects to vital rates.
 }
+\details{
+Per-year sys.cap values are matched to simulation years via the
+Year column of \code{CE_df} (slot 1 of each internal rate list is the
+initialization entry and carries Year 1's value; slot t + 1 carries
+simulation year t's value). Stressors supplied as a single row (no Year
+information) are treated as constant and applied to every year. Years
+missing from \code{CE_df} are treated as unstressed (sys.cap = 1) with
+a warning. Each vital rate may be targeted at most once per stressor:
+life_stage tokens are resolved to their underlying vital rate (so
+aliases such as "s1", "stage_1" and "surv_1" are recognized as the same
+target), and duplicate targeting - via aliases, a repeated token, or
+duplicate rows - is an error. To apply two separate effects to the same
+life stage, create two distinctly named stressors (effects multiply).
+}

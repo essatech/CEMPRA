@@ -116,7 +116,15 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
 
   # Assign row names
   row.names(life_pars) <- life_pars$Name
-  # Ensure life_pars value is numeric
+  # Ensure life_pars value is numeric. TRUE/FALSE strings (e.g. the BH/HS
+  # density-dependence flag rows in raw, uncleaned files) are mapped to
+  # 1/0 first - mirroring pop_model_dat_clean() - so that flag VALUES
+  # survive the coercion instead of becoming NA (which would make the
+  # s0-calibration gate misread enabled flags as disabled).
+  val_chr <- tolower(trimws(as.character(life_pars$Value)))
+  life_pars$Value <- ifelse(val_chr == "true", 1,
+                     ifelse(val_chr == "false", 0,
+                            as.character(life_pars$Value)))
   life_pars$Value <- suppressWarnings({
     as.numeric(as.character(life_pars$Value))
   })
@@ -126,8 +134,38 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
   # Determine Nstage from non-zero survival
   Nstage <- sum(life_pars[grepl("^surv_", rownames(life_pars)), "Value"] > 0)
 
+  # The life cycle model supports between 2 and 10 stages (ages). Note
+  # the local Nstage above counts pre-breeder stages (ages minus the
+  # terminal zero-survival row), so validate on the file's Nstage row.
+  # Guarded here for direct callers that bypass pop_model_dat_clean().
+  file_nstage <- suppressWarnings(as.numeric(life_pars["Nstage", "Value"]))
+  ages_n <- ifelse(is.na(file_nstage), Nstage + 1, file_nstage)
+  if (is.na(ages_n) || ages_n < 2 || ages_n > 10) {
+    stop(
+      "The number of life stages (Nstage) must be between 2 and 10, but ",
+      "got ", ages_n, ".",
+      call. = FALSE
+    )
+  }
+
   # Get the mature stage classes
   mature_spawners <- life_pars[grepl("mat_", rownames(life_pars)), ]
+
+  # Blank/NA maturity values must be caught here: an NA survives the
+  # Value > 0 filter below (NA > 0 is NA, not FALSE), producing a spawning
+  # age of NA, a stage_B_NA class and an unresolvable matrix symbol - the
+  # run would otherwise crash much later with the baffling
+  # "object 'uNA' not found".
+  na_mat <- rownames(mature_spawners)[is.na(mature_spawners$Value)]
+  if (length(na_mat) > 0) {
+    stop(
+      "Maturity row(s) ", paste(na_mat, collapse = ", "),
+      " are blank/NA in the life cycles file. Enter 0 for non-spawning ",
+      "ages and a proportion (0-1] for spawning ages.",
+      call. = FALSE
+    )
+  }
+
   # Filter for any non-zero classes (probability of maturity greater than 0)
   mature_spawners <- mature_spawners[mature_spawners$Value > 0, ]
 
@@ -148,6 +186,21 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
 
   # Age of earliest spawner
   spanwing_years <- as.numeric(sapply(strsplit(mature_spawners$Name, "_"), `[`, 2))
+
+  # Age-1 spawning is not supported: maturation flows from pre-breeder
+  # stage (x - 1) into spawner class B_x, so a stage_B_1 class could never
+  # receive individuals (it would exist as a permanently empty class that
+  # distorts stage bookkeeping). The shortest supported anadromous life
+  # cycle matures in its second year (e.g., pink salmon at age 2).
+  if (1 %in% spanwing_years) {
+    stop(
+      "mat_1 > 0 is not supported for anadromous life cycles: spawning ",
+      "cannot occur at age 1 (there is no pre-breeder stage to mature ",
+      "from). Set mat_1 to 0; the earliest supported spawning age is 2.",
+      call. = FALSE
+    )
+  }
+
   # First year of spawning
   first_year_spawning <- min(spanwing_years)
 
@@ -168,7 +221,10 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
   cr <-
     life_pars[match(paste("cr", 1:Nstage_Pb, sep = "_"), life_pars$Name), "Value"]
 
-  if (any((cr * survival) > 1)) {
+  # NA-safe: blank/missing cr values are treated as 1 (no compensation)
+  # downstream, and 1 * survival can never exceed 1, so NA pairs are
+  # safely ignored here.
+  if (isTRUE(any((cr * survival) > 1, na.rm = TRUE))) {
     message("compensation ratios too high")
     possible_error_state <- "compensation ratios too high"
   }
@@ -306,6 +362,23 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
       paste("s", i, sep = "")
   }
 
+  # Maturation transitions (Pb_i -> B_(i+1)) use the same survival s_i as
+  # the stay-immature transition (Pb_i -> Pb_(i+1)) and must carry the
+  # same density-dependence multiplier. These cells previously kept the
+  # default of 1, so the maturing portion of each cohort escaped
+  # compensation-ratio density dependence entirely (and the terminal
+  # pre-breeder stage - whose only outflow is maturation - had a dead cr).
+  # Multiplying the whole element s_i*mat*smig by d(s_i) makes only the
+  # survival component density-dependent; maturity and migration survival
+  # stay density-independent.
+  for (i in 1:Nstage)
+  {
+    if ((i + 1) %in% spanwing_years) {
+      density_stage_symbols[grepl(paste0("_B_", (i + 1), "$"), stage_names), i] <-
+        paste("s", i, sep = "")
+    }
+  }
+
   # identify the reproductive stage
   density_stage_symbols[1, 2:Nstage] <- "sE * s0"
   diag(density_stage_symbols) <- paste("s", 1:Nstage, sep = "")
@@ -400,7 +473,11 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
   # with numeric values from life_pars
   life_stages_numeric <- life_stages_symbols
 
-  for (i in 1:Nstage) {
+  # DESCENDING order: the substitution patterns are unanchored text
+  # replacements, so eps1 would also match inside eps10 (and mat1 inside
+  # mat10, ^s1 inside s10, ...). Replacing the higher indices first
+  # eliminates the substring collisions for age-10 symbols.
+  for (i in Nstage:1) {
     # Assume age transition survival is 1.0 if unspecified
     new_val <- life_pars[paste0("surv_", i), "Value"]
     new_val <- ifelse(is.na(new_val), 1, new_val)

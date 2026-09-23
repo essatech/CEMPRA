@@ -42,7 +42,15 @@ applicable to the population model.}
 Run a LTRE for the population model
 }
 \details{
-In prep .... step_size = 0.05
+Perturbs each life-cycle parameter up and down by \code{step_size}
+and compares mean lambda values across stochastic yearly projection
+matrices. Three design safeguards (added 2026-09-22): (1) all runs use
+\code{s0_calibrate = FALSE}, so lambda responds to the perturbation instead
+of being re-tuned to 1 by the fry-survival calibration; (2) the
+status-quo, increase, and decrease runs for every parameter share one
+random seed (common random numbers), so Monte-Carlo noise cancels in
+the increase-vs-decrease differences; (3) the \code{stressors} subset is
+forwarded to the underlying population-model runs.
 }
 \examples{
 \dontrun{

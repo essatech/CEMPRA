@@ -9,6 +9,22 @@
 #'  Joe Model. Stressors with missing/blank values, or files without these columns, are
 #'  applied to all years as before (backwards compatible).
 #'
+#'  The `Stressor_cat` column is OPTIONAL and is normally a user label only
+#'  (the original value is preserved in `Stressor_cat_orig`), with two
+#'  exceptions. (1) The reserved value `"Total_Mortality"` (exact spelling)
+#'  aggregates all rows so tagged into a single synthetic `Total_Mortality`
+#'  stressor per HUC: the Means are summed and the SDs are pooled in
+#'  quadrature (`sqrt(sum(SD^2))`), dropping NA components (all-NA -> 0). A
+#'  matching `Total_Mortality` curve must exist in the stressor-response
+#'  workbook for the aggregate to have an effect. Near-miss spellings warn.
+#'  (2) If the stressor-response workbook disambiguated duplicate stressor
+#'  names as `"<Stressor>_<Stressor_cat>"`, dose rows are aligned to those
+#'  full names at model run time (see
+#'  \code{\link{align_dose_stressor_names}}, with a warning). Duplicate
+#'  stressor names within this workbook are otherwise left untouched:
+#'  legacy files legitimately list multiple component rows per stressor
+#'  with `Stressor_cat` as a component label.
+#'
 #' @param filename A string. Relative file name to the stressor magnitude Excel workbook.
 #' @param scenario_worksheet A string. Worksheet name for the scenario.
 #'
@@ -37,15 +53,6 @@ StressorMagnitudeWorkbook <- function(filename = NA, scenario_worksheet = NA) {
     data$HUC_ID <- as.matrix(data[, 1])[, 1]
   }
 
-  # Ensure that there are no duplicates
-  dups <- paste0(data$HUC_ID, data$Stressor)
-
-  if (any(duplicated(dups))) {
-    # print(dups[which(duplicated(dups))])
-    message("Duplicated values in stressor magnitude worksheet...")
-  }
-
-
   # If HUC_ID column is missing create it from HUC_10
   if(!("HUC_ID" %in% colnames(data))) {
     if("HUC_10" %in% colnames(data)) {
@@ -55,7 +62,10 @@ StressorMagnitudeWorkbook <- function(filename = NA, scenario_worksheet = NA) {
     }
   }
 
-
+  # Stressor_cat is an OPTIONAL column - synthesize it if absent
+  if (!("Stressor_cat" %in% colnames(data))) {
+    data$Stressor_cat <- data$Stressor
+  }
 
   # Ensure that all values are formatted properly
   target_columns <- c(
@@ -65,6 +75,48 @@ StressorMagnitudeWorkbook <- function(filename = NA, scenario_worksheet = NA) {
 
   if(!(all(target_columns %in% colnames(data)))) {
     stop(paste0("Bad column names. Expect columns to be ", paste(target_columns, collapse = ", ")))
+  }
+
+  # Trim whitespace on names and categories; preserve the user's original
+  # category label for display/reference
+  data$Stressor <- trimws(as.character(data$Stressor))
+  data$Stressor_cat <- trimws(as.character(data$Stressor_cat))
+  data$Stressor_cat_orig <- data$Stressor_cat
+
+  # Warn on near-miss spellings of the reserved Total_Mortality value
+  # (the aggregation below only fires on the exact spelling)
+  near_tm <- !(is.na(data$Stressor_cat)) &
+    grepl("^total[ _]?mortality$", tolower(data$Stressor_cat)) &
+    data$Stressor_cat != "Total_Mortality"
+  if (any(near_tm)) {
+    warning(
+      "Stressor_cat value(s) ",
+      paste(unique(data$Stressor_cat[near_tm]), collapse = ", "),
+      " look like the reserved value 'Total_Mortality' but do not match ",
+      "exactly, so those rows will NOT be aggregated into a Total_Mortality ",
+      "stressor. Use the exact spelling 'Total_Mortality' if aggregation ",
+      "is intended.",
+      call. = FALSE
+    )
+  }
+
+  # NOTE: duplicate stressor names with distinct Stressor_cat values are NOT
+  # renamed here. Legacy magnitude workbooks legitimately list multiple
+  # component rows per (HUC, stressor) with Stressor_cat as a component
+  # label feeding a single stressor-response curve, which is
+  # indistinguishable (from this file alone) from the disambiguation
+  # pattern. The stressor-response workbook is the authority: when its Main
+  # sheet renames duplicates to "<Stressor>_<Stressor_cat>", dose rows are
+  # aligned to those names at model run time (see
+  # align_dose_stressor_names(), called by JoeModel_Run and
+  # PopulationModel_Run).
+
+  # Ensure that there are no duplicates
+  dups <- paste0(data$HUC_ID, data$Stressor)
+
+  if (any(duplicated(dups))) {
+    # print(dups[which(duplicated(dups))])
+    message("Duplicated values in stressor magnitude worksheet...")
   }
 
 
@@ -102,11 +154,13 @@ StressorMagnitudeWorkbook <- function(filename = NA, scenario_worksheet = NA) {
     data_other <- data[which(data$Stressor_cat != "Total_Mortality"), ]
     data_mort <- data[which(data$Stressor_cat == "Total_Mortality"), ]
 
-    # summarise by HUC ID
+    # summarise by HUC ID. Means add; SDs pool in quadrature
+    # (sqrt of summed variances - independent mortality components).
+    # NA components are dropped; if every SD is NA the pooled SD is 0.
     dms1 <- dplyr::group_by(data_mort, HUC_ID)
     dms2 <- dplyr::summarise(dms1,
-      tmort_mean = sum(Mean),
-      tmort_sd = mean(SD)
+      tmort_mean = sum(Mean, na.rm = TRUE),
+      tmort_sd = sqrt(sum(SD^2, na.rm = TRUE))
     )
 
     # Consolidate

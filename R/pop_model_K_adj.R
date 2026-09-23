@@ -1,20 +1,30 @@
 #' K_adj
 #'
-#' @description Define K_adj value.
+#' @description Define K_adj value. DEPRECATED legacy pathway.
 #'
-#' @details Initialize populations and find carrying capacity for each life stage.
-#' Carrying capacity is defined at the adult stage and estimated for all other
-#' life-stages using the stable-stage distribution (i.e., if the carrying
-#' capacity of the adult stage was set to 100 the carrying capacity
-#' for a stage below (stage x) is the amount of stage x necessary to result
-#' in 100 adults at equilibrium conditions).
+#' @details DEPRECATED: this is a legacy stochastic capacity calibration
+#' retained for backwards compatibility with older scripts. It is never
+#' called by PopulationModel_Run or the Shiny app, is only meaningful in
+#' compensation-ratio mode, and is deliberately not exercised by the test
+#' suite (the replicate simulations are slow). Repaired 2026-09-15
+#' (previously received NULL projection matrices from Projection_DD and
+#' crashed).
+#'
+#' Runs replicate stochastic simulations, measures the realized long-run
+#' mean adult abundance, and returns K.adj = K / mean so callers can
+#' inflate the working capacity (stochastic variability drags the long-run
+#' mean below the deterministic K). A 51-year burn-in is discarded from
+#' each replicate, so Nyears must exceed 51.
 #'
 #' @param replicates Number of replicates
 #' @param dat Life history data
 #' @param mx A projection matrix expression
 #' @param dx A matrix of density-dependence effect
-#' @param Nyears Years to run simulation
+#' @param Nyears Years to run simulation (must be greater than 51)
 #' @param H.mx A harm projection matrix
+#' @param K Adult carrying capacity being calibrated. Defaults to dat$Ka
+#' for backwards compatibility; Projection_DD passes its own K argument so
+#' the calibration measures the same model it is calibrating.
 #'
 #' @importFrom rlang .data
 #'
@@ -26,8 +36,26 @@ pop_model_K_adj <- function(replicates = 100,
                             mx,
                             dx,
                             Nyears = 250,
-                            H.mx = NULL
+                            H.mx = NULL,
+                            K = NULL
                             ) {
+
+  # DEPRECATED legacy pathway - see Projection_DD(K_adj = TRUE) notes.
+
+  # Backwards-compatible fallback to the life cycle file's adult K
+  if (is.null(K)) {
+    K <- dat$Ka
+  }
+  K <- as.numeric(K)
+  if (length(K) == 0 || is.na(K)) {
+    stop("pop_model_K_adj requires a K value (or dat$Ka) to calibrate against...")
+  }
+
+  # A 51-year burn-in is discarded below; shorter runs would silently
+  # produce NaN adjustments
+  if (Nyears <= 51) {
+    stop("pop_model_K_adj requires Nyears > 51 (51-year burn-in per replicate)...")
+  }
 
   pop_data <- list()
 
@@ -38,7 +66,7 @@ pop_model_K_adj <- function(replicates = 100,
                          H.mx = H.mx,
                          dat = dat,
                          Nyears = Nyears,
-                         K = dat$Ka,
+                         K = K,
                          p.cat = 0,
                          CE_df = NULL,
                          K_adj = FALSE)
@@ -48,9 +76,6 @@ pop_model_K_adj <- function(replicates = 100,
     pop_data[[i]] <- out
 
   }
-
-
-  K <- dat$Ka
 
   # mean pop size (adult density) in each replicate
   meanK <- sapply(pop_data, function(x) {

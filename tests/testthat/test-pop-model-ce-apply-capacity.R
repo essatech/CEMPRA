@@ -1,4 +1,5 @@
 test_that("CE capacity stressor modifies K_list for juvenile stages via life_stage tag variants", {
+  set.seed(42) # deterministic stochastic outcomes, independent of test file order
 
   # Build a minimal rates object mimicking what Projection_DD passes
   # Non-anadromous 3-stage model: K1, K2, K3
@@ -56,6 +57,7 @@ test_that("CE capacity stressor modifies K_list for juvenile stages via life_sta
 
 
 test_that("CE capacity stressor modifies egg and fry capacity", {
+  set.seed(42) # deterministic stochastic outcomes, independent of test file order
 
   n_years <- 2
   rates <- list(
@@ -107,6 +109,7 @@ test_that("CE capacity stressor modifies egg and fry capacity", {
 
 
 test_that("CE capacity stressor modifies spawner K via life_stage tag variants (anadromous)", {
+  set.seed(42) # deterministic stochastic outcomes, independent of test file order
 
   n_years <- 2
   base_K <- c(stage_Pb_1 = 1000, stage_Pb_2 = 500, stage_B_1 = 200, stage_B_2 = 100)
@@ -176,6 +179,7 @@ test_that("CE capacity stressor modifies spawner K via life_stage tag variants (
 
 
 test_that("CE capacity stressor with 'adult' tag targets mature stages for non-anadromous", {
+  set.seed(42) # deterministic stochastic outcomes, independent of test file order
 
   n_years <- 2
   base_K <- c(K1 = 1000, K2 = 500, K3 = 200)
@@ -213,6 +217,7 @@ test_that("CE capacity stressor with 'adult' tag targets mature stages for non-a
 
 
 test_that("CE capacity with 'adult' tag redirects to spawners for anadromous", {
+  set.seed(42) # deterministic stochastic outcomes, independent of test file order
 
   n_years <- 2
   base_K <- c(stage_Pb_1 = 1000, stage_B_1 = 200)
@@ -250,6 +255,7 @@ test_that("CE capacity with 'adult' tag redirects to spawners for anadromous", {
 
 
 test_that("CE capacity with pre-breeder tag variants targets stage_Pb K (anadromous)", {
+  set.seed(42) # deterministic stochastic outcomes, independent of test file order
 
   n_years <- 2
   base_K <- c(stage_Pb_1 = 1000, stage_Pb_2 = 500, stage_B_1 = 200)

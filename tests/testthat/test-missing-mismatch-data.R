@@ -1,4 +1,5 @@
 test_that("test-missing-mismatch-datad", {
+  set.seed(42) # deterministic stochastic outcomes, independent of test file order
 
   # ----------------------------------------
   # Import of stressor response and magnitude workbook

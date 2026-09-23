@@ -294,9 +294,10 @@ test_that("build_k_for_proj_dd works for non-anadromous with bh_spawners", {
 
 
 # ===========================================================================
-# Test that habitat data with CV columns does not cause errors
-# CV columns are dropped by pop_model_hab_dens_clean but build_k_for_proj_dd
-# should handle their absence gracefully
+# Habitat data with CV columns: pop_model_hab_dens_clean keeps them by
+# default (capacity uncertainty feature; see test-habitat-k-cv.R) and drops
+# them with keep_cv = FALSE (Shiny app mode). build_k_for_proj_dd must
+# handle both forms.
 # ===========================================================================
 test_that("build_k_for_proj_dd handles habitat data with CV columns after cleaning", {
 
@@ -320,12 +321,18 @@ test_that("build_k_for_proj_dd handles habitat data with CV columns after cleani
     stringsAsFactors = FALSE
   )
 
-  # After cleaning, CV columns should be dropped
+  # Default cleaning keeps the CV columns
   habitat_dd_k_cleaned <- pop_model_hab_dens_clean(hab_dens = habitat_dd_k_with_cv)
-  expect_false("k_stage_0_cv" %in% colnames(habitat_dd_k_cleaned))
-  expect_false("k_stage_1_cv" %in% colnames(habitat_dd_k_cleaned))
+  expect_true("k_stage_0_cv" %in% colnames(habitat_dd_k_cleaned))
+  expect_true("k_stage_1_cv" %in% colnames(habitat_dd_k_cleaned))
 
-  # build_k_for_proj_dd should work without error
+  # keep_cv = FALSE (Shiny app mode) drops them
+  habitat_dd_k_nocv <- pop_model_hab_dens_clean(hab_dens = habitat_dd_k_with_cv,
+                                                keep_cv = FALSE)
+  expect_false("k_stage_0_cv" %in% colnames(habitat_dd_k_nocv))
+  expect_false("k_stage_1_cv" %in% colnames(habitat_dd_k_nocv))
+
+  # build_k_for_proj_dd should work without error on both forms
   expect_no_error({
     ro <- build_k_for_proj_dd(
       habitat_dd_k = habitat_dd_k_cleaned,
@@ -334,11 +341,25 @@ test_that("build_k_for_proj_dd handles habitat data with CV columns after cleani
       life_cycle_params = life_cycle_params
     )
   })
+  expect_no_error({
+    ro_nocv <- build_k_for_proj_dd(
+      habitat_dd_k = habitat_dd_k_nocv,
+      HUC_ID = 1,
+      life_histories = life_histories,
+      life_cycle_params = life_cycle_params
+    )
+  })
 
-  # K overrides should still be set correctly
+  # K overrides should still be set correctly (identical in both forms)
   expect_true(!is.na(ro$ret_stage_k_override[1])) # k_stage_0
   expect_true(!is.na(ro$ret_stage_k_override[2])) # k_stage_1
   expect_equal(ro$ret_total_spawners, 1000)
+  expect_identical(ro$ret_stage_k_override, ro_nocv$ret_stage_k_override)
+
+  # cv values captured with cv columns present; zero without
+  expect_equal(as.numeric(ro$ret_stage_k_cv[1]), 0.1)
+  expect_equal(as.numeric(ro$ret_stage_k_cv[2]), 0.1)
+  expect_true(all(ro_nocv$ret_stage_k_cv == 0))
 
 })
 

@@ -5,6 +5,11 @@
 #' @details This is an intermediate setup function to run the population model. However, some of outputs are useful on their own, especially for eigen analyses. pop_model_matrix_elements() is run after pop_model_setup() or pop_model_setup_anadromous(), but pop_model_matrix_elements() must be run before Projection_DD(). Key outputs to explore include a density independent projection matrix, life histories, and a symbolic representation of the matrix math for density dependent and density independent components.
 #'
 #' @param pop_mod_setup List. Object returned from population_model_setup().
+#' @param s0_calibrate Logical. If TRUE (default) and an adult capacity `k`
+#'  is set (with no Beverton-Holt flags), fry survival (s0) is re-calibrated
+#'  so that lambda = 1. Set to FALSE to keep the raw s0 from the life cycles
+#'  file - used by sensitivity analyses (e.g., pop_model_ltre) that must
+#'  measure lambda responses on the un-calibrated matrix.
 #'
 #' @returns a list object of symbolic objects.
 #'
@@ -33,12 +38,13 @@
 #'
 #' @export
 #'
-pop_model_matrix_elements <- function(pop_mod_setup = NA) {
+pop_model_matrix_elements <- function(pop_mod_setup = NA, s0_calibrate = TRUE) {
 
   # Detrmine if we should use pop_model_matrix_elements_anadromous()
   # instead of pop_model_matrix_elements()
   if(pop_mod_setup$anadromous) {
-    ret_obj <- pop_model_matrix_elements_anadromous(pop_mod_setup)
+    ret_obj <- pop_model_matrix_elements_anadromous(pop_mod_setup,
+                                                    s0_calibrate = s0_calibrate)
     return(ret_obj)
   }
 
@@ -58,8 +64,11 @@ pop_model_matrix_elements <- function(pop_mod_setup = NA) {
   # MJB Nov 19, 2024 Check for issue with one year and surv 1
   # Check for issue where survivorship is 1.0 and years in stage is 1.0
   bad_match <- life_histories$S[paste0("s", 1:pop_mod_setup$Nstage)] == 1
+  # NA-safe (blank survival cells) and name-based so NA entries cannot
+  # shift the assignment onto the wrong stage
+  bad_match <- bad_match[!(is.na(bad_match))]
   if(any(bad_match)) {
-    life_histories$S[paste0("s", 1:pop_mod_setup$Nstage)][which(bad_match)] <- 0.999999
+    life_histories$S[names(bad_match)[bad_match]] <- 0.999999
   }
 
 
@@ -71,7 +80,8 @@ pop_model_matrix_elements <- function(pop_mod_setup = NA) {
         life_histories,
         life_histories$S,
         life_histories$nYrs,
-        life_histories$mat
+        life_histories$mat,
+        life_histories$eps
       )
     )
 
@@ -91,21 +101,27 @@ pop_model_matrix_elements <- function(pop_mod_setup = NA) {
   # necessary to result in k (e.g., 100) adults at equilibrium conditions)
 
   # replaced with try catch - gives error with high suv...
-  gets0 <- tryCatch(
-    {
-      stats::optimize(
-          s0_optim.f,
-          interval = c(0, 1),
-          tol = 1e-16,
-          mx = life_stages_symbolic,
-          dat = life_histories,
-          target.lambda = 1
-        )$minimum
-    },
-    error=function(cond) {
-      life_histories$S["s0"]
-    }
-  )
+  if (s0_calibrate) {
+    gets0 <- tryCatch(
+      {
+        stats::optimize(
+            s0_optim.f,
+            interval = c(0, 1),
+            tol = 1e-16,
+            mx = life_stages_symbolic,
+            dat = life_histories,
+            target.lambda = 1
+          )$minimum
+      },
+      error=function(cond) {
+        life_histories$S["s0"]
+      }
+    )
+  } else {
+    # Sensitivity-analysis mode: keep the raw fry survival so lambda
+    # responds to vital-rate perturbations instead of being re-tuned to 1
+    gets0 <- as.numeric(life_histories$S["s0"])
+  }
 
   s0_optim_min <- gets0
 
@@ -140,10 +156,15 @@ pop_model_matrix_elements <- function(pop_mod_setup = NA) {
   }
   # MJB: end of density-independent growth
 
-  # Also, if any Beverton-Holt DD functions are present then set s0.1.det back to s0
-  bh_functions <- pop_mod_setup$life_pars[grep("bh_stage_", life_pars$Name), "Value"]
-
-  if(length(bh_functions) > 0) {
+  # If any BH/HS density-dependence flag is ENABLED (any spelling, any
+  # life stage) the run is in habitat-capacity mode and s0 keeps its raw
+  # file value. Only a run truly in compensation-ratio mode (no enabled
+  # flags) gets the lambda = 1 calibration so the stated adult k is the
+  # equilibrium. Note this checks flag VALUES via dd_flag_enabled() - a
+  # profile whose flag rows are all 0/blank runs in CR mode and IS
+  # calibrated (previously row presence alone skipped the calibration,
+  # silently letting CR runs equilibrate ~2.7x above the stated k).
+  if (any_dd_flag_enabled(life_pars)) {
     life_histories$s0.1.det <- as.numeric(life_histories$S["s0"])
   }
 
@@ -158,7 +179,8 @@ pop_model_matrix_elements <- function(pop_mod_setup = NA) {
           life_histories,
           life_histories$S,
           life_histories$nYrs,
-          life_histories$mat
+          life_histories$mat,
+          life_histories$eps
         )
       )
   }
@@ -171,7 +193,8 @@ pop_model_matrix_elements <- function(pop_mod_setup = NA) {
   }
 
 
-  if (!(all(pop_mod_setup$projection_matrix == M.1.pmx))) {
+  # isTRUE(): NA-safe - an NA matrix cell must not crash this check
+  if (!isTRUE(all(pop_mod_setup$projection_matrix == M.1.pmx))) {
     message(
       "Running with S0 adjusted to s0.1.det..."
     )
@@ -188,22 +211,74 @@ pop_model_matrix_elements <- function(pop_mod_setup = NA) {
   # variation in eggs per spawner
   life_histories$eps_sd <- as.numeric(life_pars["eps_sd", "Value"])
   names(life_histories$eps_sd) <- "eps_sd"
+  if (is.na(life_histories$eps_sd)) {
+    message(
+      "eps_sd is missing or blank: fecundity will not vary between years ",
+      "(treated as SD = 0)."
+    )
+  }
 
   # names(life_histories$sR) <- "eps_sd"
 
-  # temporal correlation in eggs per spawner
+  # correlation among stage-specific fecundity draws within a year
+  # (note: applied across stages, not across years)
   life_histories$egg_rho <- as.numeric(life_pars["egg_rho", "Value"])
   names(life_histories$egg_rho) <- "egg_rho"
+  if (is.na(life_histories$egg_rho)) {
+    message(
+      "egg_rho is missing or blank: treated as 0 (stage-specific ",
+      "fecundity draws uncorrelated)."
+    )
+  }
 
   # variation in natural mortality
   life_histories$M.cv <- as.numeric(life_pars["M.cv", "Value"])
   names(life_histories$M.cv) <- "M.cv"
+  if (is.na(life_histories$M.cv)) {
+    message(
+      "M.cv is missing or blank: survival will not vary between years ",
+      "(treated as CV = 0)."
+    )
+  } else if (life_histories$M.cv > 0.21) {
+    message(
+      "M.cv is ", life_histories$M.cv, ": at CVs above ~0.21 the mortality ",
+      "distribution is truncated at zero, so a fraction of yearly survival ",
+      "draws will sit exactly at 100% survival. Consider whether this much ",
+      "interannual variability is intended."
+    )
+  }
 
-  # temporal correlation in natural mortality
+  # correlation among stage-specific survival draws within a year
+  # (note: applied across stages, not across years)
   life_histories$M.rho <- as.numeric(life_pars["M.rho", "Value"])
   names(life_histories$M.rho) <- "M.rho"
+  if (is.na(life_histories$M.rho)) {
+    message(
+      "M.rho is missing or blank: treated as 0 (stage-specific survival ",
+      "draws uncorrelated)."
+    )
+  }
 
-  life_histories$cr <- as.numeric(life_pars[grep("cr", life_pars$Name), "Value"])
+  # Compensation ratios are looked up BY NAME (mirroring the anadromous
+  # variant) - the previous positional grep silently mis-assigned every
+  # ratio when rows were missing or out of canonical order (the data
+  # cleaner appends missing cr_E/cr_0 rows at the end of the file).
+  # A missing or blank row defaults to 1 (no compensation), matching the
+  # data cleaner's fill value. d.vec.f() pairs this vector positionally
+  # with the survival vector (sE, s0, s1..sN), so canonical order is
+  # guaranteed here.
+  cr_names <- c("cr_E", "cr_0", paste0("cr_", 1:Nstage))
+  cr_vals <- suppressWarnings(as.numeric(
+    life_pars[match(cr_names, life_pars$Name), "Value"]))
+  if (all(is.na(cr_vals))) {
+    message(
+      "No compensation ratio (cr) rows found in the life cycles file - ",
+      "all compensation ratios default to 1 (no compensatory density ",
+      "dependence)."
+    )
+  }
+  cr_vals[is.na(cr_vals)] <- 1
+  life_histories$cr <- cr_vals
   names(life_histories$cr) <- paste("cr", c("E", 0:Nstage), sep = "")
 
 

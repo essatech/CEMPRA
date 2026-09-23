@@ -1,4 +1,5 @@
 test_that("test-pop-model-nicola", {
+  set.seed(42) # deterministic stochastic outcomes, independent of test file order
 
   #----------------------------------------------
   # Create a 5-stage population model for coho

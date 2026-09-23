@@ -1,4 +1,5 @@
 test_that("Nicola Chinook Profile", {
+  set.seed(42) # deterministic stochastic outcomes, independent of test file order
 
   # Test Nicola Chinook Life Cycle Profile
   # -- from Kyle Wilson

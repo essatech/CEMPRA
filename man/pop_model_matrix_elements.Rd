@@ -4,10 +4,16 @@
 \alias{pop_model_matrix_elements}
 \title{Population Model Matrix Elements}
 \usage{
-pop_model_matrix_elements(pop_mod_setup = NA)
+pop_model_matrix_elements(pop_mod_setup = NA, s0_calibrate = TRUE)
 }
 \arguments{
 \item{pop_mod_setup}{List. Object returned from population_model_setup().}
+
+\item{s0_calibrate}{Logical. If TRUE (default) and an adult capacity \code{k}
+is set (with no Beverton-Holt flags), fry survival (s0) is re-calibrated
+so that lambda = 1. Set to FALSE to keep the raw s0 from the life cycles
+file - used by sensitivity analyses (e.g., pop_model_ltre) that must
+measure lambda responses on the un-calibrated matrix.}
 }
 \value{
 a list object of symbolic objects.

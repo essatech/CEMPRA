@@ -12,11 +12,50 @@ bh_stage_f <- function(alpha = NA,
   return(expression(((alpha * Nt1) / (1 + ((alpha/k) * Nt1)))))
 }
 
-#' dd.N.bh
-#' @description Apply location and stage-specific Beverton-Holt density dependent constraints
+
+#' bh_inflow_f
+#' @description Beverton-Holt saturation applied to a realized inflow of
+#' recruits approaching a capacity k. Algebraically identical to bh_stage_f
+#' with inflow = alpha * Nt1:
+#' (alpha * Nt1) / (1 + (alpha/k) * Nt1) = inflow / (1 + inflow / k).
+#' Returns the inflow unchanged as k approaches Inf and saturates at k.
 #'
 #' @keywords internal
-dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages = NA, smig = NA) {
+bh_inflow_f <- function(inflow, k) {
+  inflow / (1 + inflow / k)
+}
+
+
+#' dd.N.bh
+#' @description Apply location and stage-specific density-dependent capacity
+#' constraints (Beverton-Holt or hockey-stick) to the projected population
+#' vector.
+#'
+#' @details Stage capacities (K1, K2, ...) are the maximum TOTAL abundance of
+#' each stage: holdover individuals remaining in a multi-year stage plus this
+#' year's newcomers. Newcomers are admitted into the residual capacity
+#' (K minus holdovers) through a Beverton-Holt curve (bh_ flags), while hs_
+#' flags cap the stage total directly (hard ceiling). If holdovers alone
+#' exceed K (e.g., the year after a capacity stressor reduces K), the stage
+#' is trimmed down to K and no newcomers are admitted (habitat loss displaces
+#' residents). The egg and fry capacities (Ke, K0) remain flow caps: the
+#' egg -> fry -> stage-1 transition always completes within a single census
+#' year, so those transitions can never carry holdovers.
+#'
+#' @param dat Life history data for the current year (K, K0, Nstage, ...).
+#' @param t Current year index.
+#' @param st List of stochastic survival vectors by year.
+#' @param N Projected population vector for the current year (N = A %*% N_prev).
+#' @param N_prev Population vector from the previous year.
+#' @param bh_dd_stages Character vector of DD flags (bh_stage_X, hs_stage_X, ...).
+#' @param A Realized projection matrix for the current year (stochastic draws,
+#' compensation-ratio and harm effects included). Used to decompose each stage
+#' into holdovers (`A[i,i] * N_prev[i]`) and inflow (`N[i]` - holdovers). If NULL,
+#' all stages are assumed to spend one year per stage (no holdovers).
+#'
+#' @keywords internal
+dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA,
+                    bh_dd_stages = NA, A = NULL) {
 
   # Exist function if values not set
   if(length(bh_dd_stages) == 0) {
@@ -29,6 +68,11 @@ dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages
 
   # Should always be lowercase
   bh_dd_stages <- tolower(bh_dd_stages)
+
+  # dd_hs_spawners is an accepted alias of hs_spawners (for direct
+  # callers; Projection_DD already normalizes it)
+  bh_dd_stages <- ifelse(bh_dd_stages == "dd_hs_spawners",
+                         "hs_spawners", bh_dd_stages)
 
 
   if(length(dat$K) != dat$Nstage) {
@@ -51,30 +95,49 @@ dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages
   # Recall vector is S1,S2,S3,S4...B1,B2,B3,B4... (no eggs no SE; no fry s0)
   N_adj <- N
 
+  # Holdovers: individuals that survived and remain within the same
+  # (multi-year) stage this year. A[i,i] is the realized stay rate; it is
+  # zero for 1-year stages (including all anadromous stages) and treated as
+  # zero for every stage when A is not supplied.
+  if (is.null(A)) {
+    holdovers <- rep(0, length(N))
+  } else {
+    holdovers <- diag(A) * N_prev
+    holdovers <- ifelse(is.na(holdovers), 0, holdovers)
+  }
+
   # ----------------------------------------------
-  # Calculate max fry (s0) given egg abundance
-  # assume egg to fry (dd), if specified, follows
-  # simple hockey-stick type DD
+  # Stage 1: separate holdovers from this year's recruits.
+  # Recruits arrive through the within-year egg -> fry -> stage-1 chain
+  # (row-1 fecundity terms of the projection matrix). That chain always
+  # completes within one census year, so egg (Ke) and fry (K0) capacities
+  # are pure flow caps with no holdover component.
 
   # Fry survival for this transition
   step_s0 <- st[[t + 1]]["s0"]
 
-  # Projected fry abundance for this transition
-  # Stage_1 abundance / fry survival
-  N_stage_0 <- N[[1]] / step_s0
+  # Stage-1 recruits this year (excludes stage-1 holdovers)
+  newcomers_1 <- max(N[[1]] - holdovers[1], 0)
+
+  # Fry (age-0) produced this year, back-calculated from stage-1 recruits
+  N_stage_0 <- newcomers_1 / step_s0
+  if (!is.finite(N_stage_0)) {
+    N_stage_0 <- 0
+  }
 
   # Should DD be applied to egg to fry (sE to s0) transition
-  # using a hockey-stick type DD?
-  # Set egg to 1 if no DD effect
+  # using a hockey-stick type DD? (flow cap)
   if(any(c("dd_hs_0", "hs_stage_0") %in% bh_dd_stages)) {
-    # Truncate surviving fry to max egg capacity (max fry)
-    N_stage_Et_to_0_max <- dat$K0
-    # Update and set abundance to egg capacity (if exceeded)
-    N_stage_0 <- ifelse(N_stage_0 > N_stage_Et_to_0_max, N_stage_Et_to_0_max, N_stage_0)
+    if(!(is.na(dat$K0))) {
+      # Truncate surviving fry to max egg capacity (max fry)
+      N_stage_Et_to_0_max <- as.numeric(dat$K0)
+      N_stage_0 <- ifelse(N_stage_0 > N_stage_Et_to_0_max, N_stage_Et_to_0_max, N_stage_0)
+    }
   }
 
   # ------------------------------------------------------------
   # Apply hockey-stick DD to other specific life stages (if set)
+  # hs_ flags are hard ceilings on the TOTAL abundance of a stage
   # ------------------------------------------------------------
   if(any(grepl("hs", bh_dd_stages))) {
 
@@ -87,12 +150,10 @@ dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages
       # if neither are present skip to next stage
       if(check_2 %in% bh_dd_stages) {
         # Apply hockey-stick DD to life stage K
-        N_current <- N_adj[i] # Recal s1, s2, s3... (no egg or fry)
-        N_cap <- dat$K[paste0("K", i)]
-
-        # Apply simple hockey stick DD
-        N_current <- ifelse(N_current > N_cap, N_cap, N_current)
-        N_adj[i] <- N_current # Update vector
+        N_cap <- as.numeric(dat$K[[i]])
+        if(!(is.na(N_cap))) {
+          N_adj[i] <- ifelse(N_adj[i] > N_cap, N_cap, N_adj[i])
+        }
       }
 
       # Check if target is applied to "stage_pb_X"
@@ -100,11 +161,12 @@ dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages
       if(check_3 %in% bh_dd_stages) {
         # Apply hockey-stick DD to life stage K
         stage_index <- which(paste0("stage_Pb_", i) == dat$stage_names)[1]
-        N_current <- N_adj[stage_index]
-        N_cap <- dat$K[paste0("K", i)]
-        # Apply simple hockey stick DD
-        N_current <- ifelse(N_current > N_cap, N_cap, N_current)
-        N_adj[stage_index] <- N_current # Update vector
+        if(!(is.na(stage_index))) {
+          N_cap <- as.numeric(dat$K[[stage_index]])
+          if(!(is.na(N_cap))) {
+            N_adj[stage_index] <- ifelse(N_adj[stage_index] > N_cap, N_cap, N_adj[stage_index])
+          }
+        }
       }
 
       # Check if target is applied to "stage_b_X"
@@ -112,12 +174,12 @@ dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages
       if(check_4 %in% bh_dd_stages) {
         # Apply hockey-stick DD to life stage K
         stage_index <- which(paste0("stage_B_", i) == dat$stage_names)[1]
-        N_current <- N_adj[stage_index]
-        N_cap <- dat$K[paste0("K", i)]
-        # Apply simple hockey stick DD
-        N_current <- ifelse(N_current > N_cap, N_cap, N_current)
-        N_adj[stage_index] <- N_current # Update vector
-
+        if(!(is.na(stage_index))) {
+          N_cap <- as.numeric(dat$K[[stage_index]])
+          if(!(is.na(N_cap))) {
+            N_adj[stage_index] <- ifelse(N_adj[stage_index] > N_cap, N_cap, N_adj[stage_index])
+          }
+        }
       }
     }
   }
@@ -129,19 +191,28 @@ dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages
     spawner_cap <- dat$stage_k_spawners
     # Get current spawners - identify by stage_B_ (anadromous) or maturity (non-anadromous)
     if(dat$anadromous) {
+      # Anadromous B classes are 100% spawners by construction (weight 1)
       stage_index <- which(grepl("stage_B_", dat$stage_names))
+      spawn_w <- rep(1, length(stage_index))
     } else {
-      # Non-anadromous: mature stages identified via maturity vector
-      mat_nums <- as.numeric(gsub("mat", "", names(dat$mat[dat$mat > 0])))
-      stage_index <- mat_nums
+      # Non-anadromous: mature stages identified via maturity vector.
+      # Stages can be PARTIALLY mature (0 < mat < 1), so abundances are
+      # weighted by maturity - the cap counts actual spawners (the same
+      # Nb_est convention used everywhere else), not the full abundance
+      # of every stage that contains some mature fish.
+      mat_pos <- dat$mat[!is.na(dat$mat) & dat$mat > 0]
+      stage_index <- as.numeric(gsub("mat", "", names(mat_pos)))
+      spawn_w <- as.numeric(mat_pos)
     }
-    current_spawners <- N_adj[stage_index]
+    current_spawners <- N_adj[stage_index] * spawn_w
     current_spawners_s <- sum(current_spawners)
 
     if(current_spawners_s > spawner_cap) {
-      # Apply simple hockey stick DD
-      # Reduce by fraction
-      N_adj[stage_index] <- current_spawners * (spawner_cap / current_spawners_s)
+      # Apply simple hockey stick DD: scale the spawner stages so the
+      # maturity-weighted spawner count lands exactly on the cap.
+      # Immature fish sharing a partially-mature stage are reduced
+      # proportionally (the state vector cannot separate them).
+      N_adj[stage_index] <- N_adj[stage_index] * (spawner_cap / current_spawners_s)
     }
   }
 
@@ -152,71 +223,64 @@ dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages
 
 
   # ----------------------------------------------
-  # Calculate max egg to fry with Beverton-Holt
+  # Calculate max egg to fry with Beverton-Holt (flow cap - the egg -> fry
+  # transition always completes within one census year)
   if (any(c("bh_stage_0") %in% bh_dd_stages)) {
-    # Max fry from egg to fry from BH pathway
-    alpha_eggs <- st[[t + 1]]["sE"]  # Alpha Egg Survival
-    n_eggs <- N_stage_0 / alpha_eggs # Current Egg Count
-    N_stage_Et_to_0_max <- dat$K0    # Max possible fry
-    N_stage_0_BH <- eval(bh_stage_f(),
-                         list(
-                           alpha = alpha_eggs,
-                           k = N_stage_Et_to_0_max,
-                           Nt1 = n_eggs
-                         ))
-    # Overwrite above value for fry after BH DD
-    N_stage_0 <- N_stage_0_BH
+    if(!(is.na(dat$K0))) {
+      # BH on the egg -> fry flow. With alpha = sE and Nt1 = eggs this is
+      # algebraically identical to inflow / (1 + inflow / K0) where
+      # inflow = fry produced this year.
+      N_stage_0 <- bh_inflow_f(N_stage_0, as.numeric(dat$K0))
+    }
   }
 
   # ----------------------------------------------
-  # Calculate max stage 1 abundance
-  # given fry (s0) abundance using BH-DD
-  # (stage 1 abundance) / (fry surv)
-  # Capacity for stage 1
-  k_stage_1 <- dat$K[[1]]
+  # Stage 1 total: holdovers plus (possibly flow-capped) recruits.
 
   # Functionality for stage 1 is the same as anadromous vs non anadromous so adjust here
   bh_dd_stages <- ifelse(bh_dd_stages == "bh_stage_pb_1", "bh_stage_1", bh_dd_stages)
-  bh_dd_stages <- ifelse(bh_dd_stages == "bh_stage_Pb_1", "bh_stage_1", bh_dd_stages)
 
-  # Should BH-DD constraint be applied to
-  # stage_0 to stage_1 transition?
-  # Note that all of this happens in the same year sE*s0*Fec...
-  # Naming convention should follow: dd_hs_sE_to_s0, dd_bh_stage_0_to_1
+  # Capacity for stage 1
+  k_stage_1 <- as.numeric(dat$K[[1]])
 
-  if(any(c("bh_stage_1") %in% bh_dd_stages)) {
-    # Max stage 1 allowed given BH equation
-    N_stage_1_BH <- eval(
-      bh_stage_f(),
-      list(
-        alpha = as.numeric(step_s0),
-        k = as.numeric(k_stage_1),
-        Nt1 = as.numeric(N_stage_0)
-      )
-    )
-    N_stage_1 <- N_stage_1_BH
-    # Apply updates to population vector
-    N_adj[[1]] <- N_stage_1
+  stage1_flow_flagged <- any(c("dd_hs_0", "hs_stage_0", "bh_stage_0") %in% bh_dd_stages)
+  stage1_modified <- FALSE
+
+  if(("bh_stage_1" %in% bh_dd_stages) && !(is.na(k_stage_1))) {
+    if(holdovers[1] >= k_stage_1) {
+      # Residents alone exceed the stage capacity (e.g., K was reduced by a
+      # capacity stressor): trim to K and admit no newcomers - habitat loss
+      # displaces residents.
+      N_adj[[1]] <- k_stage_1
+    } else {
+      # Admit this year's recruits into the residual capacity
+      # (K minus holdovers) through the BH curve
+      inflow_1 <- N_stage_0 * step_s0
+      N_adj[[1]] <- holdovers[1] + bh_inflow_f(inflow_1, k_stage_1 - holdovers[1])
+    }
+    stage1_modified <- TRUE
   } else if(any(c("hs_stage_1", "hs_stage_pb_1") %in% bh_dd_stages)) {
-    # HS constraint was already applied above - do NOT overwrite N_adj[[1]]
-    # The HS code caps the current population, not the fry-derived calculation
-  } else {
-    # Do not apply BH-DD constraint
-    # but recalculate stage_1 with fry adjusted for
-    # possible egg survival constraint
-    N_stage_1 <- N_stage_0 * step_s0
-    # Apply updates to population vector
-    N_adj[[1]] <- N_stage_1
+    # Total-abundance cap was already applied in the hockey-stick block
+    # above - do NOT overwrite N_adj[1] with an admission calculation.
+    # But if an egg/fry flow cap (K0) is ALSO flagged, the inflow must
+    # still honour it: admit at most the flow-capped recruits on top of
+    # the holdovers, and never exceed the HS total cap already applied.
+    # (Previously the flow cap was silently discarded in this branch.)
+    if (stage1_flow_flagged) {
+      N_adj[[1]] <- min(N_adj[[1]], holdovers[1] + N_stage_0 * step_s0)
+      stage1_modified <- TRUE
+    }
+  } else if(stage1_flow_flagged) {
+    # Only egg/fry flow caps are set: capped recruits plus untouched holdovers
+    N_adj[[1]] <- holdovers[1] + N_stage_0 * step_s0
+    stage1_modified <- TRUE
   }
+  # (no stage-1 related flags: leave the projected value unchanged)
 
 
   # ----------------------------------------------
   # Repeat BH for other subsequent life stages
   # ----------------------------------------------
-  # Gather survival values for subsequent stages
-  surv <- st[[t + 1]][paste0("s", 1:dat$Nstage)]
-  sNt1 <- N_prev
-  sNt2 <- rep(NA, length(sNt1))
   k_stage <- dat$K
 
 
@@ -230,19 +294,25 @@ dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages
     spawner_cap <- dat$stage_k_spawners
     # Get current spawners - identify by stage_B_ (anadromous) or maturity (non-anadromous)
     if(dat$anadromous) {
+      # Anadromous B classes are 100% spawners by construction (weight 1)
       stage_index <- which(grepl("stage_B_", dat$stage_names))
+      spawn_w <- rep(1, length(stage_index))
     } else {
-      # Non-anadromous: mature stages identified via maturity vector
-      mat_nums <- as.numeric(gsub("mat", "", names(dat$mat[dat$mat > 0])))
-      stage_index <- mat_nums
+      # Non-anadromous: mature stages identified via maturity vector.
+      # Weighted by maturity so the cap counts actual spawners (Nb_est
+      # convention) - see the hs_spawners block above.
+      mat_pos <- dat$mat[!is.na(dat$mat) & dat$mat > 0]
+      stage_index <- as.numeric(gsub("mat", "", names(mat_pos)))
+      spawn_w <- as.numeric(mat_pos)
     }
-    current_spawners <- N_adj[stage_index]
+    current_spawners <- N_adj[stage_index] * spawn_w
     current_spawners_s <- sum(current_spawners)
 
     if(current_spawners_s > spawner_cap) {
-      # Apply simple hockey stick DD
-      # Reduce KStage by relative fraction
-      k_stage[stage_index] <- current_spawners * (spawner_cap / current_spawners_s)
+      # Reduce the per-stage K values by the relative fraction so that,
+      # after the BH admission below, the maturity-weighted spawner count
+      # approaches the cap
+      k_stage[stage_index] <- N_adj[stage_index] * (spawner_cap / current_spawners_s)
 
       # Append BH classes to DD vector
       if(dat$anadromous) {
@@ -257,71 +327,44 @@ dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages
   } # end of special bh_spawners (all classes)
 
 
+  # For each stage, decompose the projected abundance into holdovers
+  # (A[i,i] * N_prev[i]) and inflow (N[i] - holdovers), then admit the
+  # inflow into the residual capacity (K - holdovers) with the BH curve.
+  # Because N = A %*% N_prev this is exact for every inflow pathway,
+  # including the anadromous maturation terms (s * mat * smig).
+  sNt2 <- rep(NA_real_, length(N))
 
+  for (i in 2:length(N)) {
 
+    k_i <- as.numeric(k_stage[i])
+    if(is.na(k_i)) { next }  # NA capacity = unconstrained stage
 
-  # Skip the first stage
-  for (i in 2:length(sNt1))
-  {
-    if(is.na(sNt1[i])) { next }
+    H_i <- holdovers[i]
+    inflow_i <- N[[i]] - H_i
+    if(is.na(inflow_i)) { next }
+    inflow_i <- max(inflow_i, 0)
 
-    # Max K allowed to advance given DD
-    sNt2[i] <-
-      eval(
-        bh_stage_f(),
-        list(
-          alpha = as.numeric(surv[i - 1]), # Reference surv for previous stage...
-          k = as.numeric(k_stage[i]),      # K is set for target stage
-          Nt1 = as.numeric(sNt1[i - 1])    # Reference N for previous stage...
-        )
-      )
-
-    # Will deal with B spawner classes below
-
-    # Special case for anadromous spawner _B_ classes
-    if(dat$anadromous) {
-      if(grepl("_B_", dat$stage_names[i])) {
-        # Get custom alpha value
-        # stage_B_4 = s3*mat4*smig4; stage_B_5 = s4*mat5*smig5
-
-        # Get the spawn year
-        msplit <- strsplit(dat$stage_names[i], "_")[[1]]
-        msplit <- as.numeric(msplit[length(msplit)])
-
-        # Remember s is set back by one stage
-        alpha_B <- st[[t + 1]][paste0("s", msplit - 1)] * dat$mat[paste0("mat", msplit)] * smig[paste0("smig", msplit)]
-
-        # Get the number at time Nt1
-        Nt1_B <- sNt1[paste0("K", msplit - 1)]
-        if(is.na(Nt1_B)) {
-          Nt1_B <- sNt1[msplit - 1]
-        }
-
-        # Get the capacity for the spawning class
-        k_B <- as.numeric(k_stage[i]) # Do not apply any offset
-
-        # Run the BH function and overwrite the value
-        sNt2[i] <-
-          eval(
-            bh_stage_f(),
-            list(
-              alpha = alpha_B,  # Reference surv for previous stage...
-              k = k_B,          # K is set for target stage
-              Nt1 = Nt1_B       # Reference N for previous stage...
-            )
-          )
-      }
+    if(H_i >= k_i) {
+      # Residents alone exceed capacity (e.g., K reduced by a capacity
+      # stressor): trim to K, no newcomers admitted
+      sNt2[i] <- k_i
+    } else {
+      sNt2[i] <- H_i + bh_inflow_f(inflow_i, k_i - H_i)
     }
 
     # End of loop thourgh i stages
   }
 
-  # Update values according to user-specified BH-DD relationships
-  sNt2[sNt2 < 1] <- 0 # cleans up basins with less than 1 individual
+  # Extinction threshold applied to the stage totals
+  # cleans up basins with less than 1 individual
+  sNt2[sNt2 < 1] <- 0
 
-  # Check other life stages - set to 1 if no DD effect
+  # Update values according to user-specified BH-DD relationships
   # important: skip stage 1. Start at stage 2.
   for(j in 2:(dat$Nstage)) {
+
+    if(is.na(sNt2[j])) { next }
+
     this_stage <- paste0("bh_stage_", j)
     if(this_stage %in% bh_dd_stages) {
       N_adj[[j]] <- sNt2[[j]]
@@ -346,16 +389,17 @@ dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages
 
   }
 
-  # Non-linear stage structured matrix model
-  # some staged will have more than 1 year
-  # only apply BH curve if projected values
-  # are greater than BH limit
+  # Extinction threshold for the stage-1 total (only when modified above)
+  if(stage1_modified) {
+    if(!(is.na(N_adj[[1]])) && N_adj[[1]] < 1) {
+      N_adj[[1]] <- 0
+    }
+  }
 
   # MJB added Sept 27 2023
   N_adj[1] <- ifelse(is.na(N_adj[1]), 0, N_adj[1])
 
 
-  # N_adj <- ifelse(N_adj > N, N, N_adj)
   if (any(is.na(N_adj))) {
     # K might be zero for stage...
     N_adj <- ifelse(is.na(N_adj), k_stage, N_adj)
@@ -364,6 +408,10 @@ dd.N.bh <- function(dat = NA, t = NA, st = NA, N = NA, N_prev = NA, bh_dd_stages
       stop("NA values in dd.N.bh")
     }
   }
+
+  # Density dependence can only remove individuals, never add them: use the
+  # BH/HS values as a ceiling on the projected vector.
+  N_adj <- ifelse(is.na(N), N_adj, pmin(N_adj, N))
 
   return(N_adj)
 

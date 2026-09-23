@@ -16,6 +16,7 @@ Projection_DD(
   K_adj = FALSE,
   stage_k_override = NULL,
   bh_dd_stages = NULL,
+  stage_k_noise = NULL,
   anadromous = FALSE,
   alt_return = NULL
 )
@@ -33,22 +34,51 @@ Projection_DD(
 
 \item{K}{The population carrying Capacity of adults (mature individuals). Used for back-calculating stage-specific carrying capacities with compensation ratios. Also used in anadromous model for setting K of adult spawners (across all age classes).}
 
-\item{p.cat}{Probability of catastrophic event.}
+\item{p.cat}{Probability of a catastrophic event per generation (converted
+internally to an annual probability as p.cat / generation time). In a
+catastrophe year the population is first projected normally - fish age,
+spawn, transition between stages, suffer natural mortality and any density
+dependence is applied - and then the catastrophe removes a random fraction
+(50 to 100 percent; scaled beta distribution fit from Reed et al. 2003) of
+every life stage. Catastrophic mortality is therefore IN ADDITION to
+normal annual mortality, not a replacement for it.}
 
 \item{CE_df}{Cumulative effect data frame. Data frame identifying cumulative effects stressors targets system capacity or population parameter, or both, and target life stages.}
 
-\item{K_adj}{Boolean. Should K_adj be run. Defaults to false.}
+\item{K_adj}{Boolean. DEPRECATED legacy pathway; defaults to FALSE and
+should generally stay FALSE. When TRUE, runs a slow 100-replicate
+stochastic calibration that inflates K by the ratio of the target adult
+K to the realized stochastic mean (compensation-ratio mode only; never
+set by PopulationModel_Run; requires Nyears > 51). Retained for
+backwards compatibility with older scripts.}
 
-\item{stage_k_override}{Vector of K values for egg fry (age-0), fry (age-0) to stage_1, stage_1 to stage_2, etc. Defaults to NULL for compensation ratios. If set, values will override adult K value for density dependence with Beverton-Holt. NA values should be used in stages with no constraints. For example, if a fry to stage_1 bottle neck was set to 3000, the resulting vector should look like this c(NA, 3000, NA):
+\item{stage_k_override}{Vector of stage-specific carrying capacity (K) values. Position 1 is the egg-to-fry flow capacity K0 (maximum fry produced within a census year - this transition always completes within one year and can never carry holdovers). Positions 2 onward are the maximum TOTAL abundance of stage_1, stage_2, etc.: holdover individuals remaining in a multi-year stage plus newly admitted recruits. Defaults to NULL for compensation ratios. NA values should be used in stages with no constraints. For example, if stage_1 capacity was set to 3000, the resulting vector should look like this c(NA, 3000, NA):
 \itemize{
-\item 1. Egg to fry (K), NA - no constraint
-\item 2. Fry to stage_1 (K), constrained to 3000 fry entering stage_1
-\item 3. stage_1 to stage_2 (K), NA - no constraint
+\item 1. Egg to fry flow capacity (K0), NA - no constraint
+\item 2. stage_1 total capacity, constrained to 3000 individuals
+\item 3. stage_2 total capacity, NA - no constraint
 }
 For anadromous species with a spawner capacity constraint, create a vector of NAs equal number
-of stages + 1 and then set the spawner capacity in the K input parameter of this function.}
+of stages + 1 and then set the spawner capacity in the K input parameter of this function.
+Note that supplying stage_k_override (even as all NA values) switches the run into
+habitat-capacity mode: fry survival (s0) is NOT recalibrated to force lambda = 1 at the
+adult capacity K, because growth is expected to be restrained by the explicit stage
+constraints instead. Blank/NA entries mean "no constraint for that stage", not that the
+value is unknown.}
 
-\item{bh_dd_stages}{Optional Character vector of life stages c("dd_hs_0", "bh_stage_1", "bh_stage_2", "bh_stage_3", ...) to apply classical Beverton-Holt density-dependence. To be used in place of compensation ratios if set. Use "dd_hs_0" for egg-to-fry k, "bh_stage_1" for fry to stage_1 k and "bh_stage_2" for stage_1 to stage_2 k etc. Densities are the capped value for the transition stage.}
+\item{bh_dd_stages}{Optional Character vector of life stages c("dd_hs_0", "bh_stage_1", "bh_stage_2", "bh_stage_3", ...) to apply Beverton-Holt (bh_ prefix) or hockey-stick (hs_ prefix) density-dependence. To be used in place of compensation ratios if set. Use "dd_hs_0" (or "bh_stage_0") for the egg-to-fry flow cap and "bh_stage_1", "bh_stage_2", etc. for stage capacities. Stage capacities are the maximum TOTAL abundance of each stage (holdovers surviving in a multi-year stage plus this year's recruits). Recruits are admitted into the residual capacity (K minus holdovers) through a Beverton-Holt curve (bh_) or the stage total is hard-capped (hs_). If holdovers alone exceed a stage's K (e.g., the year after a capacity stressor reduces K), the stage is trimmed down to K and no recruits are admitted.}
+
+\item{stage_k_noise}{Optional matrix of per-year multiplicative noise
+factors for the capacity constraints (habitat K uncertainty), generated
+with \code{\link{build_stage_k_noise}} from the k_..._cv columns of the
+habitat capacity file. Must have Nyears rows and Nstage + 2 columns:
+column 1 scales the fry flow cap (K0), columns 2..(Nstage + 1) scale the
+stage capacities, and the last column scales the total spawner capacity.
+Factors multiply the capacity values AFTER any CE capacity stressors are
+applied; the initial population vector and the derived egg capacity (Ke)
+always use the mean (un-noised) capacities. Default NULL (capacities
+treated as exact). PopulationModel_Run() generates one matrix per batch
+replicate and passes the same matrix to the CE and baseline runs.}
 
 \item{anadromous}{Boolean. If true, the model will apply anadromous life history parameters. Defaults to false.}
 

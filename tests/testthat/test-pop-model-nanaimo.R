@@ -1,4 +1,5 @@
 test_that("test-pop-model-nanaimo", {
+  set.seed(42) # deterministic stochastic outcomes, independent of test file order
 
   #------------------------------------------------
   # Run some tests for the Nanaimo River Application

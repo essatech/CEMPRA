@@ -2,7 +2,15 @@
 #'
 #' @description Run a LTRE for the population model
 #'
-#' @details In prep .... step_size = 0.05
+#' @details Perturbs each life-cycle parameter up and down by `step_size`
+#' and compares mean lambda values across stochastic yearly projection
+#' matrices. Three design safeguards (added 2026-09-22): (1) all runs use
+#' `s0_calibrate = FALSE`, so lambda responds to the perturbation instead
+#' of being re-tuned to 1 by the fry-survival calibration; (2) the
+#' status-quo, increase, and decrease runs for every parameter share one
+#' random seed (common random numbers), so Monte-Carlo noise cancels in
+#' the increase-vs-decrease differences; (3) the `stressors` subset is
+#' forwarded to the underlying population-model runs.
 #'
 #' @param step_size numeric. step size for ltre experiment parameter adjustment.
 #' @param dose dataframe. Stressor magnitude dataset
@@ -60,7 +68,15 @@ pop_model_ltre <- function(step_size = 0.05,
   }
 
 
+  # Common random numbers: every run (status quo and each perturbation)
+  # starts from the same seed, so run-to-run differences reflect the
+  # parameter change rather than Monte-Carlo noise. The base seed is drawn
+  # from the current RNG state, so results are reproducible under an outer
+  # set.seed() call.
+  base_seed <- sample.int(.Machine$integer.max, 1)
+
   # Perform a status_quo run
+  set.seed(base_seed)
   status_quo <- PopulationModel_Run(
     dose = dose,
     sr_wb_dat = sr_wb_dat,
@@ -68,9 +84,11 @@ pop_model_ltre <- function(step_size = 0.05,
     HUC_ID = HUC_ID,
     n_years = n_years,
     MC_sims = MC_sims,
+    stressors = stressors,
     output_type = "qa_matrices",
     # Make sure matricies are returned
-    habitat_dd_k = habitat_dd_k
+    habitat_dd_k = habitat_dd_k,
+    s0_calibrate = FALSE
   )
 
   # get the global mean lambda
@@ -155,6 +173,7 @@ pop_model_ltre <- function(step_size = 0.05,
     lcm_sim <- lcm_clean
     lcm_sim$Value[lcm_sim$Name == this_param] <- p_value_plus
 
+    set.seed(base_seed)
     p_increase <- PopulationModel_Run(
       dose = dose,
       sr_wb_dat = sr_wb_dat,
@@ -162,9 +181,11 @@ pop_model_ltre <- function(step_size = 0.05,
       HUC_ID = HUC_ID,
       n_years = n_years,
       MC_sims = MC_sims,
+      stressors = stressors,
       output_type = "qa_matrices",
       # Make sure matricies are returned
-      habitat_dd_k = habitat_dd_k
+      habitat_dd_k = habitat_dd_k,
+      s0_calibrate = FALSE
     )
 
     ce_lambda_increase <- unlist(calculate_lambdas(p_increase$ce))
@@ -177,6 +198,7 @@ pop_model_ltre <- function(step_size = 0.05,
     lcm_sim <- lcm_clean
     lcm_sim$Value[lcm_sim$Name == this_param] <- p_value_minus
 
+    set.seed(base_seed)
     p_decrease <- PopulationModel_Run(
       dose = dose,
       sr_wb_dat = sr_wb_dat,
@@ -184,9 +206,11 @@ pop_model_ltre <- function(step_size = 0.05,
       HUC_ID = HUC_ID,
       n_years = n_years,
       MC_sims = MC_sims,
+      stressors = stressors,
       output_type = "qa_matrices",
       # Make sure matricies are returned
-      habitat_dd_k = habitat_dd_k
+      habitat_dd_k = habitat_dd_k,
+      s0_calibrate = FALSE
     )
 
     ce_lambda_decrease <- unlist(calculate_lambdas(p_decrease$ce))

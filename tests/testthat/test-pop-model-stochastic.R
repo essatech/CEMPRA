@@ -1,4 +1,5 @@
 test_that("Test pop model stochastic", {
+  set.seed(42) # deterministic stochastic outcomes, independent of test file order
 
 
   expect_true(1 == 1)

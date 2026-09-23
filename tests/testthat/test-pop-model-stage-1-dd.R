@@ -1,4 +1,5 @@
 test_that("test-pop-model-stage-1-dd", {
+  set.seed(42) # deterministic stochastic outcomes, independent of test file order
 
   # Life cycle and habitat input
   filename_lc <- system.file("extdata/simple_test/test_stage_1_k/lcm_stage_pb_1_check.csv", package = "CEMPRA")

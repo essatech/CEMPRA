@@ -249,10 +249,15 @@ test_that("hs_spawners works for non-anadromous species", {
   # Stages 1 and 2 should be unchanged (not spawners)
   expect_equal(res[[1]], N_tmp[[1]])
   expect_equal(res[[2]], N_tmp[[2]])
-  # Total spawners (stages 3+4) should be capped at 500
-  expect_equal(sum(res[3:4]), 500)
-  # Proportional reduction: each reduced by same fraction
-  frac <- 500 / sum(N_tmp[3:4])
+  # Re-anchored 2026-09-22 (issue 1.8): the cap counts maturity-WEIGHTED
+  # spawners (Nb_est convention). With mat = (0.5, 1.0) the true spawner
+  # count is 0.5*800 + 1*500 = 900, and after the cap the weighted count
+  # must land exactly on 500. (The old expectations asserted the raw
+  # stage-3+4 abundance summed to 500, which counted the immature half of
+  # stage 3 as spawners.)
+  expect_equal(0.5 * res[[3]] + 1.0 * res[[4]], 500)
+  # Proportional reduction: each spawner stage scaled by the same fraction
+  frac <- 500 / (0.5 * N_tmp[[3]] + 1.0 * N_tmp[[4]])
   expect_equal(res[[3]], N_tmp[[3]] * frac)
   expect_equal(res[[4]], N_tmp[[4]] * frac)
 })

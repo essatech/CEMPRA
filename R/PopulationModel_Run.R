@@ -8,6 +8,13 @@
 #'  `PopulationModel_Run` include the stressor-response and stressor magnitude
 #'  workbooks as well as the life cycle parameters object.
 #'
+#'  If the life cycle parameters include a `p.cat` row (probability of a
+#'  catastrophic event per generation), catastrophe years first run the
+#'  normal annual projection (aging, reproduction, natural mortality,
+#'  density dependence) and then remove a random 50-100 percent of every
+#'  life stage. Catastrophic mortality is applied in addition to normal
+#'  annual mortality, not instead of it (see \code{\link{Projection_DD}}).
+#'
 #' @param dose dataframe. Stressor magnitude dataset
 #'  imported from StressorMagnitudeWorkbook().
 #' @param sr_wb_dat list object. Stressor response workbook
@@ -22,7 +29,12 @@
 #'  value as NA if you wish to include all stressors
 #'  applicable to the population model.
 #' @param output_type (optional) character. Set to "full" for all data of "adults" for only adult data.
-#' @param habitat_dd_k (optional) dataframe of location and stage-specific habitat capacity k values for the target species. If used this dataframe will override the capacity estimates
+#' @param s0_calibrate (optional) logical. If TRUE (default) fry survival
+#'  (s0) is re-calibrated so lambda = 1 when an adult capacity `k` is set
+#'  and no Beverton-Holt flags are present. Set to FALSE to keep the raw
+#'  s0 from the life cycles file (used by pop_model_ltre so that lambda
+#'  responds to vital-rate perturbations instead of being re-tuned to 1).
+#' @param habitat_dd_k (optional) dataframe of location and stage-specific habitat capacity k values for the target species. If used this dataframe will override the capacity estimates. Blank or NA K cells mean "no constraint for that life stage" (not unknown/to-be-determined). Supplying a row for a HUC switches that location into habitat-capacity mode: fry survival (s0) is not recalibrated to force lambda = 1, because growth is expected to be restrained by the K constraints. A row whose K cells are all blank leaves every stage unconstrained and triggers a warning. Optional k_..._cv columns hold the coefficient of variation for the matching k_..._mean capacity estimate: each capacity with a cv > 0 is redrawn every projection year and every batch replicate from a normal distribution (mean = the K value, sd = K * cv) clamped at zero, with the CE and baseline runs of a replicate sharing the same draws (see build_stage_k_noise). Missing cv columns or blank/NA cv cells mean cv = 0 (capacity treated as exact; no random draws).
 #'
 #' @returns List object of population model outputs. These include the population vectors for each Monte Carlo simulation and year. List objects names include "ce" for the runs with stressors and "baseline" for the runs without stressors.
 #'
@@ -43,7 +55,8 @@ PopulationModel_Run <- function(dose = NA,
                                 MC_sims = 10,
                                 stressors = NA,
                                 output_type = "full",
-                                habitat_dd_k = NULL) {
+                                habitat_dd_k = NULL,
+                                s0_calibrate = TRUE) {
 
   # Define variables in function as null
   # .data <- HUC <- simulation <- NULL
@@ -61,6 +74,11 @@ PopulationModel_Run <- function(dose = NA,
 
     ce_df_sub <- dose[which(dose$HUC_ID == HUC_ID), ]
 
+    # Align dose stressor names with the (final) stressor-response names in
+    # case duplicates were disambiguated via Stressor_cat on the SR side
+    ce_df_sub <- align_dose_stressor_names(ce_df_sub,
+                                           sr_wb_dat$main_sheet$Stressors)
+
     # Omit non-target stressors from the stressor magnitude and sr dataframes
     if (any(!is.na(stressors))) {
       # Subset the stressor magnitude dataframe to include only the target stressors
@@ -70,6 +88,40 @@ PopulationModel_Run <- function(dose = NA,
       sr_wb_dat$stressor_names <- sr_wb_dat$stressor_names[sr_wb_dat$stressor_names %in% stressors] # nolint
       sr_wb_dat$sr_dat <- sr_wb_dat$sr_dat[which(names(sr_wb_dat$sr_dat) %in% stressors)]
 
+    }
+
+    # Multiple From_Year/To_Year activation windows for the same stressor
+    # are NOT supported: the downstream dose pooling (SystemCapacity
+    # combines all rows for one stressor) and the per-replicate
+    # de-duplication would silently collapse them into the first window
+    # with a contaminated magnitude (see OUTSTANDING_ISSUES 1.11), so this
+    # is a hard error. Workaround (full multi-window behaviour today):
+    # give each window its own stressor name (e.g. "Drawdown_early",
+    # "Drawdown_late") pointing at the same stressor-response curve - each
+    # row is then processed independently end to end.
+    # FUTURE: native multi-window support could be developed by carrying
+    # the window columns through the Joe Model dose stage (per-row
+    # disambiguation so magnitudes are not pooled), adding From/To to the
+    # per-replicate dedup key in the batch loop, and exempting
+    # non-overlapping windows from the duplicate-CE-row conflict check in
+    # pop_model_ce_apply_year().
+    if (any(c("From_Year", "To_Year") %in% colnames(ce_df_sub)) &&
+        nrow(ce_df_sub) > 0) {
+      fy <- if ("From_Year" %in% colnames(ce_df_sub)) ce_df_sub$From_Year else NA
+      ty <- if ("To_Year" %in% colnames(ce_df_sub)) ce_df_sub$To_Year else NA
+      win_key <- paste(fy, ty, sep = "|")
+      n_windows <- tapply(win_key, ce_df_sub$Stressor, function(x) length(unique(x)))
+      bad <- names(n_windows)[n_windows > 1]
+      if (length(bad) > 0) {
+        stop(
+          "Stressor(s) ", paste(bad, collapse = ", "), " at HUC_ID ", HUC_ID,
+          " have multiple rows with different From_Year/To_Year activation ",
+          "windows. Multiple windows per stressor are not supported - give ",
+          "each window its own stressor name (e.g. 'Drawdown_early', ",
+          "'Drawdown_late') pointing at the same stressor-response curve.",
+          call. = FALSE
+        )
+      }
     }
 
     # Merge stressor_response main sheet data
@@ -203,7 +255,8 @@ PopulationModel_Run <- function(dose = NA,
 
     # Build matrix elements for population model
     pop_mod_mat <-
-        pop_model_matrix_elements(pop_mod_setup = pop_mod_setup)
+        pop_model_matrix_elements(pop_mod_setup = pop_mod_setup,
+                                  s0_calibrate = s0_calibrate)
 
 
     # Set the K.adj (K adjustment prior to pop model run)
@@ -223,7 +276,8 @@ PopulationModel_Run <- function(dose = NA,
 
     #------------------------------------------------------------------------
     # Add in effect of population catastrophe
-    # probability per generation
+    # probability per generation. Catastrophic mortality is applied in
+    # addition to the normal annual projection (see Projection_DD).
     p.cat <- life_cycle_params$Value[life_cycle_params$Name == "p.cat"]
     if(length(p.cat) == 0) {
       p.cat <- 0
@@ -256,6 +310,11 @@ PopulationModel_Run <- function(dose = NA,
     stage_k_override <- ret_obj$ret_stage_k_override
     bh_dd_stages <- ret_obj$ret_bh_dd_stages
     total_anadromous_spawners <- ret_obj$ret_total_anadromous_spawners
+
+    # Capacity uncertainty (cv) values from the habitat file's k_..._cv
+    # columns (0 where absent/blank). Consumed per batch replicate below.
+    stage_k_cv <- ret_obj$ret_stage_k_cv
+    spawner_k_cv <- ret_obj$ret_spawner_k_cv
 
     #------------------------------------------------------------------------
     # Run the population model for each batch replicate
@@ -306,6 +365,17 @@ PopulationModel_Run <- function(dose = NA,
       alt_return <- ""
       alt_return <- ifelse(output_type == "qa_matrices", "qa_matrices", "")
 
+      # Stochastic capacity draw for this batch replicate (habitat K
+      # uncertainty from the k_..._cv columns): per-year multiplicative
+      # factors, clamped at zero. The SAME matrix is passed to the CE and
+      # baseline runs so the pair sees identical capacity trajectories.
+      # NULL (and no random numbers consumed) when no cv values are set.
+      stage_k_noise <- build_stage_k_noise(
+        stage_k_cv = stage_k_cv,
+        spawner_k_cv = spawner_k_cv,
+        Nyears = test_n_years
+      )
+
         # Run simple population projection - project forward through time
         # Run the simulation with CE stressors
         run_with_ce <-
@@ -328,6 +398,8 @@ PopulationModel_Run <- function(dose = NA,
                 stage_k_override = stage_k_override,
                 # Vector of life stages "dd_hs_0", "bh_stage_1" with DD
                 bh_dd_stages = bh_dd_stages,
+                # Per-year capacity noise (habitat K uncertainty)
+                stage_k_noise = stage_k_noise,
                 anadromous = life_histories$anadromous,
                 alt_return = alt_return
             )
@@ -354,6 +426,8 @@ PopulationModel_Run <- function(dose = NA,
                 stage_k_override = stage_k_override,
                 # Vector of life stages "dd_hs_0", "bh_stage_1" with DD
                 bh_dd_stages = bh_dd_stages,
+                # Same capacity noise as the CE run (paired draws)
+                stage_k_noise = stage_k_noise,
                 anadromous = life_histories$anadromous,
                 alt_return = alt_return
             )

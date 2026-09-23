@@ -1,4 +1,5 @@
 test_that("test-populationmodel-run-anadromous", {
+  set.seed(42) # deterministic stochastic outcomes, independent of test file order
 
   #----------------------------------------------------------
   # Test the 3X3 anadromous matrix with PopulationModel_Run()

@@ -14,7 +14,7 @@ library(testthat)
 rm(list = ls())
 devtools::load_all()
 devtools::document()
-devtools::test()  # Run tests - all passed April 22 2026
+devtools::test()  # Run tests - all passed Sept 11 2026
 devtools::check() # Operating system test
 
 remove.packages("CEMPRA")

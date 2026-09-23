@@ -275,7 +275,10 @@ pop_model_ltre_range <- function(life_cycle_params,
     # Run pop_model_setup and pop_model_matrix_elements
     tryCatch({
       pop_setup <- pop_model_setup(life_cycles = lc_sample)
-      pop_mat <- pop_model_matrix_elements(pop_mod_setup = pop_setup)
+      # s0_calibrate = FALSE: lambda comes from the pre-calibration
+      # projection_matrix anyway; skipping the optimize() saves time
+      pop_mat <- pop_model_matrix_elements(pop_mod_setup = pop_setup,
+                                           s0_calibrate = FALSE)
       lambda_values[s] <- popbio::lambda(pop_mat$projection_matrix)
       log_lambda_values[s] <- log(lambda_values[s])
     }, error = function(e) {

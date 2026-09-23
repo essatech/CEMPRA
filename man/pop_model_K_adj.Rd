@@ -4,7 +4,15 @@
 \alias{pop_model_K_adj}
 \title{K_adj}
 \usage{
-pop_model_K_adj(replicates = 100, dat, mx, dx, Nyears = 250, H.mx = NULL)
+pop_model_K_adj(
+  replicates = 100,
+  dat,
+  mx,
+  dx,
+  Nyears = 250,
+  H.mx = NULL,
+  K = NULL
+)
 }
 \arguments{
 \item{replicates}{Number of replicates}
@@ -15,21 +23,32 @@ pop_model_K_adj(replicates = 100, dat, mx, dx, Nyears = 250, H.mx = NULL)
 
 \item{dx}{A matrix of density-dependence effect}
 
-\item{Nyears}{Years to run simulation}
+\item{Nyears}{Years to run simulation (must be greater than 51)}
 
 \item{H.mx}{A harm projection matrix}
+
+\item{K}{Adult carrying capacity being calibrated. Defaults to dat$Ka
+for backwards compatibility; Projection_DD passes its own K argument so
+the calibration measures the same model it is calibrating.}
 }
 \value{
 A K_adj object to make adjustments
 }
 \description{
-Define K_adj value.
+Define K_adj value. DEPRECATED legacy pathway.
 }
 \details{
-Initialize populations and find carrying capacity for each life stage.
-Carrying capacity is defined at the adult stage and estimated for all other
-life-stages using the stable-stage distribution (i.e., if the carrying
-capacity of the adult stage was set to 100 the carrying capacity
-for a stage below (stage x) is the amount of stage x necessary to result
-in 100 adults at equilibrium conditions).
+DEPRECATED: this is a legacy stochastic capacity calibration
+retained for backwards compatibility with older scripts. It is never
+called by PopulationModel_Run or the Shiny app, is only meaningful in
+compensation-ratio mode, and is deliberately not exercised by the test
+suite (the replicate simulations are slow). Repaired 2026-09-15
+(previously received NULL projection matrices from Projection_DD and
+crashed).
+
+Runs replicate stochastic simulations, measures the realized long-run
+mean adult abundance, and returns K.adj = K / mean so callers can
+inflate the working capacity (stochastic variability drags the long-run
+mean below the deterministic K). A 51-year burn-in is discarded from
+each replicate, so Nyears must exceed 51.
 }

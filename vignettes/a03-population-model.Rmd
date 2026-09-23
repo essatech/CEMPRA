@@ -105,7 +105,9 @@ kbl(sr_display, row.names = FALSE,
 
 By carefully defining these columns we can effecively link stressor-response relationships to specific vital rates. Each stressor-response relationship can be linked to only one vital rate. If multiple linkages are desired then duplicate the stressor & stressor-response relationship accordingly in the Stressor Magnitude and Stressor-Response workbook (e.g., SummerStreamTemp_Parr, SummerStreamTemp_Prespawn).
 
-Alternatively, you can use a comma separated list of life stages in the `Life_stages` column to link a single stressor-response relationship to multiple vital rates (e.g., `stage_1, stage_2`). This will duplicate the stressor-response relationship for each life stage specified. See the [Life_stages Column](#the-life_stages-column) section below for more details on how to specify life stages. However, this functionality is only supported in the R package component of the CEMPRA tool and not in the R-Shiny application. For simplicity and reproducability, if a given stressor is linked to two or more vital rates, we reccomend duplicating the stressor in the stressor mangitude and stressor-response file, rather than using a comma separator (e.g., SummerStreamTemp_Parr, SummerStreamTemp_Prespawn).
+Alternatively, you can use a comma separated list of life stages in the `Life_stages` column to link a single stressor-response relationship to multiple vital rates (e.g., `stage_1, stage_2`). This will duplicate the stressor-response relationship for each life stage specified. See the [Life_stages Column](#the-life_stages-column) section below for more details on how to specify life stages. However, this functionality is only supported in the R package component of the CEMPRA tool and not in the R-Shiny application. For simplicity and reproducability, if a given stressor is linked to two or more vital rates, we reccomend creating separate, distinctly named stressors in the stressor magnitude and stressor-response files, rather than using a comma separator (e.g., SummerStreamTemp_Parr, SummerStreamTemp_Prespawn).
+
+Note that each stressor name may appear only **once** on the Main worksheet: one stressor is always linked to exactly one stressor-response relationship. Repeating a stressor name on a second row (e.g., to target a second parameter such as capacity) is not supported, and `StressorResponseWorkbook()` will stop with an error identifying the duplicated name. Use a comma-separated `Life_stages` list to reach multiple life stages, or create distinctly named stressors (each with its own worksheet) to affect multiple parameters. Unrecognized `Life_stages` or `Parameters` values do not stop a run, but they have no effect and the population model will issue a warning so typos can be caught.
 
 
 ## The Parameters Column
@@ -531,6 +533,10 @@ The habitat capacity file has columns:
 | `k_stage_2_mean`, etc. | Carrying capacity for subsequent stages |
 
 **Important**: Only include columns for stages with density-dependent bottlenecks. Leave cells blank or omit columns for stages without capacity constraints.
+
+### Capacity Uncertainty (Optional)
+
+Each `k_..._mean` column may optionally be paired with a `k_..._cv` column (e.g., `k_stage_1_mean` with `k_stage_1_cv`) holding the coefficient of variation for that capacity estimate. When a cv is greater than zero, `PopulationModel_Run()` redraws that capacity **every simulation year and every batch replicate** from a normal distribution (mean = the K value, sd = K × cv) truncated at zero; the baseline and CE runs of a replicate share the same draws so their comparison is not confounded by capacity luck. This is entirely optional: missing `_cv` columns and blank/NA cv cells mean cv = 0, and the capacity is treated as an exact value with no random draws (the default). See `?build_stage_k_noise` for details. Note the Shiny app does not use `_cv` columns (they are dropped on upload) — capacity uncertainty is an R-package feature.
 
 ### Enabling Stage-Specific Density Dependence
 

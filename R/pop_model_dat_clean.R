@@ -1,6 +1,14 @@
 #' pop_model_dat_clean
 #' @details Cleans input parameters from csv.
 #'
+#' Fecundity (non-anadromous): per-stage rows (eps_1, eps_2, ...) are the
+#' canonical format and are used directly by the population model. A legacy
+#' single "eps" row is spread across stages based on maturity - mature
+#' stages (mat_x > 0) receive the legacy value and immature stages get 0 -
+#' and the legacy row is then removed, so cleaned data always carries
+#' per-stage eps rows. If both formats are present, the per-stage values
+#' win and the legacy value only fills missing mature-stage rows.
+#'
 #' @param dat Data frame of life history parameters.
 #' @param nstage_fill Numeric. Number of stages to fill out to.
 #'
@@ -44,6 +52,12 @@ pop_model_dat_clean <- function(dat, nstage_fill = NULL) {
   if(length(n_stage) == 0) { stop("Nstage must be set. Ensure your CSV has a row with Name='Nstage' and a numeric Value.") }
   if(is.na(n_stage)) { stop("Nstage value is NA. Ensure the Value for the 'Nstage' row is a whole number (e.g., 3, 4, 5).") }
   if(n_stage < 2) { stop(paste0("Nstage must be 2 or greater, but got ", n_stage, ".")) }
+  if(n_stage > 10) {
+    stop(paste0(
+      "Nstage must be 10 or fewer (the life cycle model supports between ",
+      "2 and 10 stages), but got ", n_stage, "."
+    ))
+  }
 
   # Assume anadromous if not set then assume life history is not anadromous
   if(length(dat$Value[dat$Name == "anadromous"]) == 0) {
@@ -247,8 +261,9 @@ pop_model_dat_clean <- function(dat, nstage_fill = NULL) {
   if(anadromous) {
 
     # Anadromous
-    # eps
-    all_eps <- paste0("eps_", 1:10)
+    # eps (regex rather than a fixed 1:10 list so out-of-range rows like
+    # eps_11 are removed for any stage count)
+    all_eps <- dat$Name[grepl("^eps_[0-9]+$", dat$Name)]
     eps_keep <- paste0("eps_", 1:n_stage)
     eps_drop <- all_eps[!all_eps %in% eps_keep]
 
@@ -260,12 +275,21 @@ pop_model_dat_clean <- function(dat, nstage_fill = NULL) {
     # Add missing inputs with default value
     eps_missing <- eps_keep[!(eps_keep %in% dat$Name)]
 
+    # If a legacy single "eps" row is present, use its value as the fill
+    # default (mirrors the non-anadromous legacy handling below).
+    # pop_model_setup_anadromous() only falls back to the legacy "eps" row
+    # when eps_x entries are absent (NA), not zero - so filling with 0 here
+    # would silently zero fecundity for legacy-format anadromous files.
+    legacy_eps <- suppressWarnings(as.numeric(dat$Value[dat$Name == "eps"]))
+    legacy_eps <- legacy_eps[!is.na(legacy_eps)]
+    eps_fill <- if (length(legacy_eps) > 0) legacy_eps[1] else 0
+
     if(length(eps_missing) > 0) {
       mfill <- eps_missing
-      # Assume no eps if missing
+      # Assume no eps if missing (unless a legacy single eps value is given)
       add_row <- data.frame(Parameters = mfill,
                             Name = mfill,
-                            Value = 0)
+                            Value = eps_fill)
       dat <- rbind(dat, add_row)
     }
 
@@ -275,44 +299,50 @@ pop_model_dat_clean <- function(dat, nstage_fill = NULL) {
         paste0("eps_", (n_stage + 1):nstage_fill)
       add_row <- data.frame(Parameters = m_fill,
                             Name = m_fill,
-                            Value = 0)
+                            Value = eps_fill)
       dat <- rbind(dat, add_row)
     }
 
   } else {
 
     # Non-anadromous
-    # Make sure eps is defined for each age class (eps_1, eps_2, etc.)...
-    # not just eps (legacy)
+    # Per-stage rows (eps_1, eps_2, ...) are the canonical format. A legacy
+    # single "eps" row is spread across stages based on maturity: mature
+    # stages (mat_x > 0) receive the legacy value, immature stages get 0.
+    # The legacy row is then removed so all downstream code sees per-stage
+    # rows only. (mat_x rows are guaranteed present by this point - the
+    # maturity section above runs first.)
 
-    if(length(dat$Value[dat$Name == "eps"]) == 1 & length(grepl("eps_", dat$Name) == 1)) {
+    has_eps_x <- any(grepl("^eps_[0-9]+$", dat$Name))
 
-      eps_single <- as.numeric(dat$Value[dat$Name == "eps"])
+    legacy_eps <- suppressWarnings(as.numeric(dat$Value[dat$Name == "eps"]))
+    legacy_eps <- legacy_eps[!is.na(legacy_eps)]
+    legacy_eps <- if (length(legacy_eps) > 0) legacy_eps[1] else NA
 
-      # Drop existing eps row
-      dat <- dat[which(!(dat$Name == "eps")), ]
+    # Maturity lookup for the mat-dependent spread/fill below
+    get_mat <- function(i) {
+      m <- suppressWarnings(as.numeric(dat$Value[dat$Name == paste0("mat_", i)]))
+      if (length(m) == 0 || is.na(m[1])) 0 else m[1]
+    }
 
-      # Create new rows for each age class
-      add_rows <- data.frame(Parameters = paste0("eps_", 1:n_stage),
-                             Name = paste0("eps_", 1:n_stage),
-                             Value = eps_single)
-      dat <- rbind(dat, add_rows)
+    if (!has_eps_x) {
 
-      # Add additional rows to fill inputs
-      if(nstage_fill > n_stage) {
-        m_fill <-
-          paste0("eps_", (n_stage + 1):nstage_fill)
-        add_row <- data.frame(Parameters = m_fill,
-                              Name = m_fill,
-                              Value = eps_single)
-        dat <- rbind(dat, add_row)
-      }
+      # Legacy format only: spread the single eps value across the mature
+      # stages (mat-dependent); immature stages get eps of 0.
+      add_names <- paste0("eps_", 1:nstage_fill)
+      add_vals <- sapply(1:nstage_fill, function(i) {
+        if (!is.na(legacy_eps) && get_mat(i) > 0) legacy_eps else 0
+      })
+      add_row <- data.frame(Parameters = add_names,
+                            Name = add_names,
+                            Value = add_vals)
+      dat <- rbind(dat, add_row)
 
     } else {
 
-      # If eps is defined for each age class
-      # and population is non-anadromous
-      all_eps <- paste0("eps_", 1:10)
+      # Per-stage rows exist: drop out-of-range rows, then fill any gaps
+      # (legacy value for mature stages if available, otherwise 0)
+      all_eps <- dat$Name[grepl("^eps_[0-9]+$", dat$Name)]
       eps_keep <- paste0("eps_", 1:n_stage)
       eps_drop <- all_eps[!all_eps %in% eps_keep]
 
@@ -325,14 +355,15 @@ pop_model_dat_clean <- function(dat, nstage_fill = NULL) {
       eps_missing <- eps_keep[!(eps_keep %in% dat$Name)]
 
       if(length(eps_missing) > 0) {
-        mfill <- eps_missing
-        # Assume no eps if missing
-        add_row <- data.frame(Parameters = mfill,
-                              Name = mfill,
-                              Value = 0)
+        miss_i <- as.numeric(gsub("eps_", "", eps_missing))
+        miss_vals <- sapply(miss_i, function(i) {
+          if (!is.na(legacy_eps) && get_mat(i) > 0) legacy_eps else 0
+        })
+        add_row <- data.frame(Parameters = eps_missing,
+                              Name = eps_missing,
+                              Value = miss_vals)
         dat <- rbind(dat, add_row)
       }
-
 
       if(nstage_fill > n_stage) {
         m_fill <-
@@ -342,7 +373,19 @@ pop_model_dat_clean <- function(dat, nstage_fill = NULL) {
                               Value = 0)
         dat <- rbind(dat, add_row)
       }
+
+      if (!is.na(legacy_eps)) {
+        message(
+          "Life cycles file has both a legacy 'eps' row and per-stage ",
+          "eps_x rows; using the per-stage values (the legacy value only ",
+          "fills missing mature-stage rows)."
+        )
+      }
     } # end of non-anadromous eps alt case handling
+
+    # Remove the legacy single-eps row: downstream code is per-stage only
+    dat <- dat[which(!(dat$Name == "eps")), ]
+
   } # end of if anadormous eps
 
   # ================================================
@@ -385,15 +428,13 @@ pop_model_dat_clean <- function(dat, nstage_fill = NULL) {
 
   } else {
 
-    # Drop empty values
-    u_drop <- paste0("u_", 1:10)
+    # Drop empty values (regex, not a fixed 1:10 list, so any stray u_X
+    # row is removed regardless of stage count)
+    u_drop <- dat$Name[grepl("^u_[0-9]+$", dat$Name)]
     dat <- dat[which(!(dat$Name %in% u_drop)), ]
 
     # non-anadromous add empty values
     if(nstage_fill > n_stage) {
-
-      u_drop <- paste0("u_", 1:nstage_fill)
-      dat <- dat[which(!(dat$Name %in% u_drop)), ]
 
       m_fill <-
         paste0("u_", 1:nstage_fill)
@@ -442,15 +483,13 @@ pop_model_dat_clean <- function(dat, nstage_fill = NULL) {
 
   } else {
 
-    # Drop empty values
-    u_drop <- paste0("smig_", 1:10)
-    dat <- dat[which(!(dat$Name %in% u_drop)), ]
+    # Drop empty values (regex, not a fixed 1:10 list, so any stray
+    # smig_X row is removed regardless of stage count)
+    smig_drop <- dat$Name[grepl("^smig_[0-9]+$", dat$Name)]
+    dat <- dat[which(!(dat$Name %in% smig_drop)), ]
 
     # non-anadromous add empty values
     if(nstage_fill > n_stage) {
-
-      u_drop <- paste0("smig_", 1:nstage_fill)
-      dat <- dat[which(!(dat$Name %in% u_drop)), ]
 
       m_fill <-
         paste0("smig_", 1:nstage_fill)

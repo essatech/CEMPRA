@@ -4,14 +4,27 @@
 \alias{pop_model_hab_dens_clean}
 \title{pop_model_hab_dens_clean}
 \usage{
-pop_model_hab_dens_clean(hab_dens = NA)
+pop_model_hab_dens_clean(hab_dens = NA, keep_cv = TRUE)
 }
 \arguments{
 \item{hab_dens}{A data frame. Habitat density data frame with capacity columns.}
+
+\item{keep_cv}{Logical, default TRUE. If FALSE, all \code{k_..._cv}
+(capacity uncertainty) columns are dropped and every capacity value is
+treated as exact. The CEMPRA Shiny app runs with \code{keep_cv = FALSE};
+use the R package directly to include capacity uncertainty.}
 }
 \description{
 pop_model_hab_dens_clean
 }
 \details{
-Cleans input parameters from csv.
+Cleans input parameters from csv. Capacity column names are
+lowercased and normalized (a missing \verb{_mean} suffix is appended; spawner
+column name variants are renamed to the canonical \code{k_stage_B_mean} /
+\code{k_stage_B_cv}). Optional \code{k_..._cv} columns hold the coefficient of
+variation for the matching \code{k_..._mean} capacity estimate and are used
+for stochastic capacity draws in the population model (see
+\code{\link{build_k_for_proj_dd}}). A \verb{_cv} column with no matching
+\verb{_mean} column is dropped with a warning. Blank/NA cv values are treated
+as 0 (capacity used as an exact value).
 }

@@ -13,7 +13,8 @@ PopulationModel_Run(
   MC_sims = 10,
   stressors = NA,
   output_type = "full",
-  habitat_dd_k = NULL
+  habitat_dd_k = NULL,
+  s0_calibrate = TRUE
 )
 }
 \arguments{
@@ -39,7 +40,13 @@ applicable to the population model.}
 
 \item{output_type}{(optional) character. Set to "full" for all data of "adults" for only adult data.}
 
-\item{habitat_dd_k}{(optional) dataframe of location and stage-specific habitat capacity k values for the target species. If used this dataframe will override the capacity estimates}
+\item{habitat_dd_k}{(optional) dataframe of location and stage-specific habitat capacity k values for the target species. If used this dataframe will override the capacity estimates. Blank or NA K cells mean "no constraint for that life stage" (not unknown/to-be-determined). Supplying a row for a HUC switches that location into habitat-capacity mode: fry survival (s0) is not recalibrated to force lambda = 1, because growth is expected to be restrained by the K constraints. A row whose K cells are all blank leaves every stage unconstrained and triggers a warning. Optional k_...\emph{cv columns hold the coefficient of variation for the matching k}..._mean capacity estimate: each capacity with a cv > 0 is redrawn every projection year and every batch replicate from a normal distribution (mean = the K value, sd = K * cv) clamped at zero, with the CE and baseline runs of a replicate sharing the same draws (see build_stage_k_noise). Missing cv columns or blank/NA cv cells mean cv = 0 (capacity treated as exact; no random draws).}
+
+\item{s0_calibrate}{(optional) logical. If TRUE (default) fry survival
+(s0) is re-calibrated so lambda = 1 when an adult capacity \code{k} is set
+and no Beverton-Holt flags are present. Set to FALSE to keep the raw
+s0 from the life cycles file (used by pop_model_ltre so that lambda
+responds to vital-rate perturbations instead of being re-tuned to 1).}
 }
 \value{
 List object of population model outputs. These include the population vectors for each Monte Carlo simulation and year. List objects names include "ce" for the runs with stressors and "baseline" for the runs without stressors.
@@ -53,6 +60,13 @@ the Joe Model stress-response framework. The population model is
 run independently for each single sub-watershed unit (HUC_ID). Inputs for
 \code{PopulationModel_Run} include the stressor-response and stressor magnitude
 workbooks as well as the life cycle parameters object.
+
+If the life cycle parameters include a \code{p.cat} row (probability of a
+catastrophic event per generation), catastrophe years first run the
+normal annual projection (aging, reproduction, natural mortality,
+density dependence) and then remove a random 50-100 percent of every
+life stage. Catastrophic mortality is applied in addition to normal
+annual mortality, not instead of it (see \code{\link{Projection_DD}}).
 }
 \examples{
 \dontrun{

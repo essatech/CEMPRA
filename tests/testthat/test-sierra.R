@@ -1,4 +1,5 @@
 test_that("sierra_file", {
+  set.seed(42) # deterministic stochastic outcomes, independent of test file order
 
   filename_rm <-
     system.file("extdata", "/simple_test/test_sierra/berland_baseline_V2.xlsx", package = "CEMPRA")

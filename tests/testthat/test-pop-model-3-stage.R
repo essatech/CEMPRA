@@ -1,4 +1,5 @@
 test_that("Three-stage pop model works", {
+  set.seed(42) # deterministic stochastic outcomes, independent of test file order
 
   # library(CEMPRA); library(testthat)
 

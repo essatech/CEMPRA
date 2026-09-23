@@ -163,10 +163,10 @@ test_that("anadromous spawner capacity window neutralizes correctly", {
   res <- pop_model_ce_apply_year(rates = rates, CE_df = CE_df, anadromous = TRUE, mat_stage = NULL)
 
   ksp <- vapply(res$Kspawners_list, function(x) unname(x), numeric(1))
-  expect_equal(ksp, c(5000, 2500, 2500, 2500, 5000, 5000))
+  expect_equal(ksp, c(5000, 5000, 2500, 2500, 2500, 5000))
   # stage_B_ entries in K_list also reduced inside window only
   kB4 <- vapply(res$K_list, function(x) unname(x["stage_B_4"]), numeric(1))
-  expect_equal(kB4, c(200, 100, 100, 100, 200, 200))
+  expect_equal(kB4, c(200, 200, 100, 100, 100, 200))
 })
 
 
@@ -188,8 +188,9 @@ test_that("anadromous spawner-migration (smig) survival window neutralizes corre
   CE_df <- ewin_ce("smig", "survival", sys.cap = 0.5, n_years = 5, from = 3, to = 5)
   res <- pop_model_ce_apply_year(rates = rates, CE_df = CE_df, anadromous = TRUE, mat_stage = NULL)
   smig <- vapply(res$smigt, function(x) unname(x["smig4"]), numeric(1))
-  # years 3,4,5 reduced (0.4); year 1,2 and filler(=Y1) untouched (0.8)
-  expect_equal(smig, c(0.8, 0.8, 0.4, 0.4, 0.4, 0.8))
+  # slot 1 = setup (Y1's value, off), slots 2-3 = years 1-2 (off),
+  # slots 4-6 = years 3-5 (reduced to 0.4)
+  expect_equal(smig, c(0.8, 0.8, 0.8, 0.4, 0.4, 0.4))
 })
 
 
@@ -203,22 +204,22 @@ test_that("edge: multiple stressors with different windows each respect their ow
   b <- ewin_ce("stage_0", "survival", sys.cap = 0.5, n_years = 5, from = 4, to = 5, stressor = "B")
   res <- pop_model_ce_apply_year(rates = rates, CE_df = rbind(a, b),
                                  anadromous = FALSE, mat_stage = c(s3 = 1))
-  expect_equal(ewin_sE(res), c(0.9, 0.45, 0.45, 0.9, 0.9, 0.9))   # A: years 2-3
-  expect_equal(ewin_s0(res), c(0.5, 0.5, 0.5, 0.25, 0.25, 0.5))   # B: years 4-5
+  expect_equal(ewin_sE(res), c(0.9, 0.9, 0.45, 0.45, 0.9, 0.9))   # A: years 2-3
+  expect_equal(ewin_s0(res), c(0.5, 0.5, 0.5, 0.5, 0.25, 0.25))   # B: years 4-5
 })
 
 test_that("edge: From == To activates a single year", {
   rates <- ewin_rates(6)
   ce <- ewin_ce("stage_e", "survival", sys.cap = 0.5, n_years = 5, from = 3, to = 3)
   res <- pop_model_ce_apply_year(rates = rates, CE_df = ce, anadromous = FALSE, mat_stage = c(s3 = 1))
-  expect_equal(ewin_sE(res), c(0.9, 0.9, 0.45, 0.9, 0.9, 0.9))
+  expect_equal(ewin_sE(res), c(0.9, 0.9, 0.9, 0.45, 0.9, 0.9))
 })
 
 test_that("edge: To_Year beyond n_years extends to end of run", {
   rates <- ewin_rates(6)
   ce <- ewin_ce("stage_e", "survival", sys.cap = 0.5, n_years = 5, from = 3, to = 99)
   res <- pop_model_ce_apply_year(rates = rates, CE_df = ce, anadromous = FALSE, mat_stage = c(s3 = 1))
-  expect_equal(ewin_sE(res), c(0.9, 0.9, 0.45, 0.45, 0.45, 0.9))
+  expect_equal(ewin_sE(res), c(0.9, 0.9, 0.9, 0.45, 0.45, 0.45))
 })
 
 test_that("edge: From_Year <= 0 behaves as active from year 1", {
@@ -233,14 +234,14 @@ test_that("edge: fractional From_Year (2.5) excludes years below it", {
   ce <- ewin_ce("stage_e", "survival", sys.cap = 0.5, n_years = 5, from = 2.5)
   res <- pop_model_ce_apply_year(rates = rates, CE_df = ce, anadromous = FALSE, mat_stage = c(s3 = 1))
   # years 1,2 below 2.5 -> off; years 3-5 -> on
-  expect_equal(ewin_sE(res), c(0.9, 0.9, 0.45, 0.45, 0.45, 0.9))
+  expect_equal(ewin_sE(res), c(0.9, 0.9, 0.9, 0.45, 0.45, 0.45))
 })
 
 test_that("edge: character From_Year/To_Year values are coerced", {
   rates <- ewin_rates(6)
   ce <- ewin_ce("stage_e", "survival", sys.cap = 0.5, n_years = 5, from = "2", to = "4")
   res <- pop_model_ce_apply_year(rates = rates, CE_df = ce, anadromous = FALSE, mat_stage = c(s3 = 1))
-  expect_equal(ewin_sE(res), c(0.9, 0.45, 0.45, 0.45, 0.9, 0.9))
+  expect_equal(ewin_sE(res), c(0.9, 0.9, 0.45, 0.45, 0.45, 0.9))
 })
 
 test_that("edge: only some stressors carry window values (mixed NA)", {
@@ -250,6 +251,6 @@ test_that("edge: only some stressors carry window values (mixed NA)", {
   b <- ewin_ce("stage_0", "survival", sys.cap = 0.5, n_years = 5, from = NA, to = NA, stressor = "B")
   res <- pop_model_ce_apply_year(rates = rates, CE_df = rbind(a, b),
                                  anadromous = FALSE, mat_stage = c(s3 = 1))
-  expect_equal(ewin_sE(res), c(0.9, 0.45, 0.45, 0.9, 0.9, 0.9))   # A windowed
+  expect_equal(ewin_sE(res), c(0.9, 0.9, 0.45, 0.45, 0.9, 0.9))   # A windowed
   expect_equal(ewin_s0(res), rep(0.25, 6))                         # B all years
 })

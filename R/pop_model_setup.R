@@ -13,6 +13,11 @@
 #' * Initializes the survival/transition rates subject to a stage-specific density-dependence.
 #' * Checks for excessive compensation ratios.
 #'
+#' Stage 1 must be immature (`mat_1 = 0`): reproduction begins at stage 2.
+#' Setting `mat_1 > 0` raises an error (previously it was silently ignored
+#' by the simulation while appearing in the preview matrix). The shortest
+#' supported life cycle matures in its second year (e.g., pink salmon).
+#'
 #' Dataset for life-histories:
 #' * transition probabilities
 #' * egg-survival, age-0 survival, and then stage-specific survival probabilities
@@ -84,41 +89,6 @@ pop_model_setup <- function(life_cycles = NA) {
 
 
   # ==========================================
-  # Fix eps
-  # ==========================================
-
-  # Check if "eps_1", "eps_2", "eps_3... is defined but not "eps"
-  check_sum <- sum(grepl("eps_", life_cycles$Name))
-
-  # should be just 1 for eps_sd - if many
-  if(check_sum > 1 & !("eps" %in% life_cycles$Name)) {
-    # Find the eps_1, eps_2, eps_3... and sum them
-    eps_vals <- life_cycles$Value[life_cycles$Name %in% paste0("eps_", 1:1000)]
-    eps_vals <- as.numeric(eps_vals)
-    eps_vals <- eps_vals[!(is.na(eps_vals))]
-    eps_vals <- eps_vals[eps_vals > 0]
-    # Add the sum to the data frame
-    add_row <- data.frame(Parameters = "eps", Name = "eps", Value = stats::median(eps_vals, na.rm = TRUE))
-    life_cycles <- rbind(life_cycles, add_row)
-  }
-
-  # Check if both "eps_1", "eps_2", "eps_3... and "eps" are defined
-  if(check_sum > 1 & ("eps" %in% life_cycles$Name)) {
-    # check if eps value is na or blank
-    main_eps <- life_cycles$Value[life_cycles$Name == "eps"]
-    if(is.na(main_eps)) {
-      eps_vals <- life_cycles$Value[life_cycles$Name %in% paste0("eps_", 1:1000)]
-      eps_vals <- eps_vals[!(is.na(eps_vals))]
-      eps_vals <- eps_vals[eps_vals > 0]
-      life_cycles$Value[life_cycles$Name == "eps"] <- eps_vals
-    }
-    # delete the opther eps_ rows
-    life_cycles <- life_cycles[which(!(life_cycles$Name %in% paste0("eps_", 1:1000))), ]
-  }
-  # .........................................................
-
-
-  # ==========================================
   # Fix Survival - cannot be 100%
   # ==========================================
   surv_100 <- which(life_cycles$Name %in% paste0("surv_", 1:1000) & life_cycles$Value == 1)
@@ -148,6 +118,15 @@ pop_model_setup <- function(life_cycles = NA) {
 
   Nstage <- as.numeric(Nstage)
 
+  # The life cycle model supports between 2 and 10 stages (guarded here
+  # for direct callers that bypass pop_model_dat_clean)
+  if (is.na(Nstage) || Nstage < 2 || Nstage > 10) {
+    stop(
+      "Nstage must be between 2 and 10, but got ", Nstage, ".",
+      call. = FALSE
+    )
+  }
+
   stage_names <- paste("stage", 1:Nstage, sep = "_")
 
   survival <-
@@ -162,7 +141,10 @@ pop_model_setup <- function(life_cycles = NA) {
   cr <- as.numeric(cr)
 
 
-  if (any((cr * survival) > 1)) {
+  # NA-safe: blank/missing cr values default to 1 (no compensation) in
+  # pop_model_matrix_elements(), and 1 * survival can never exceed 1,
+  # so NA pairs are safely ignored here.
+  if (isTRUE(any((cr * survival) > 1, na.rm = TRUE))) {
     message("compensation ratios too high")
     possible_error_state <- "compensation ratios too high"
   }
@@ -173,8 +155,80 @@ pop_model_setup <- function(life_cycles = NA) {
 
   mat <- as.numeric(mat)
 
+  # Stage 1 must be immature: the projection machinery assumes reproduction
+  # begins at stage 2 (fecundity loop, E_est/Nb_est use mat_2+, adult
+  # counts). mat_1 > 0 was previously accepted but silently ignored by the
+  # simulation while appearing in the preview matrix - a silent divergence.
+  # The shortest supported life cycle matures in its second year (stage 2),
+  # e.g., pink salmon.
+  if (isTRUE(mat[1] > 0)) {
+    stop(
+      "mat_1 > 0 is not supported: the population model assumes stage 1 is ",
+      "immature and reproduction begins at stage 2. Set mat_1 to 0. If ",
+      "early maturity is required, restructure the life cycle so the first ",
+      "reproductive age falls in stage 2 or later.",
+      call. = FALSE
+    )
+  }
+
 
   names(survival) <- names(years) <- names(cr) <- stage_names
+
+  # ------------------------------------------------------------------
+  # Per-stage fecundity (eps): eggs per female spawner for each stage.
+  # Canonical input is per-stage rows (eps_1..eps_N). A legacy single
+  # "eps" row is used as a fallback, spread across the mature stages
+  # (mat_x > 0). Stage 1 is always immature (enforced above), so only
+  # eps_2..eps_N can act on the projection matrix.
+  # ------------------------------------------------------------------
+  eps_stage <- suppressWarnings(as.numeric(
+    life_pars[match(paste0("eps_", 1:Nstage), life_pars$Name), "Value"]))
+  legacy_eps <- suppressWarnings(as.numeric(
+    life_pars[match("eps", life_pars$Name), "Value"]))
+
+  mature_idx <- which(!is.na(mat) & mat > 0)
+
+  # Legacy fallback: fill mature stages that have no per-stage value
+  fill_idx <- intersect(which(is.na(eps_stage)), mature_idx)
+  if (length(fill_idx) > 0 && length(legacy_eps) == 1 && !is.na(legacy_eps)) {
+    eps_stage[fill_idx] <- legacy_eps
+  }
+  eps_stage[is.na(eps_stage)] <- 0
+
+  if (length(mature_idx) > 0 && all(eps_stage[mature_idx] <= 0)) {
+    stop(
+      "Fecundity is missing: every mature stage (mat_x > 0) has an eps ",
+      "value of 0 or blank. Add eps_x rows (eggs per female spawner) for ",
+      "the mature stages, or a single legacy 'eps' row.",
+      call. = FALSE
+    )
+  }
+
+  zero_mature <- mature_idx[eps_stage[mature_idx] <= 0]
+  if (length(zero_mature) > 0 && any(eps_stage > 0)) {
+    message(
+      "Note: eps is 0 or blank for mature stage(s) ",
+      paste(zero_mature, collapse = ", "),
+      " while other stages have positive eps. These stages will produce ",
+      "no eggs."
+    )
+  }
+
+  # The other fecundity-element components must be present and numeric -
+  # a missing row would otherwise NA the whole projection matrix and
+  # surface later as an unrelated-looking crash
+  # ("missing value where TRUE/FALSE needed").
+  fec_req <- c("events", "int", "SR", "SE", "S0")
+  fec_vals <- suppressWarnings(as.numeric(
+    life_pars[match(fec_req, life_pars$Name), "Value"]))
+  if (any(is.na(fec_vals))) {
+    stop(
+      "Life cycles file is missing (or has a blank/non-numeric Value for) ",
+      "required row(s): ",
+      paste(fec_req[is.na(fec_vals)], collapse = ", "),
+      call. = FALSE
+    )
+  }
 
   # Equilibrium adults population K
   N0 <- life_pars["k", "Value"]
@@ -256,10 +310,11 @@ pop_model_setup <- function(life_cycles = NA) {
   }
 
   # identify the reproductive stages
+  # (per-stage fecundity: each stage i references its own eps{i} symbol)
   for (i in 2:Nstage)
   {
     life_stages_symbols[1, i] <-
-      paste("(mat", i, " * events * eps * sE * s0 * sR)/int", sep = "")
+      paste("(mat", i, " * events * eps", i, " * sE * s0 * sR)/int", sep = "")
   }
 
   diag(life_stages_symbols) <-
@@ -370,7 +425,7 @@ pop_model_setup <- function(life_cycles = NA) {
   suppressWarnings({ lpn$Value <- as.numeric(lpn$Value) })
 
   life_cycle[grep("fec", life_stages)] <-
-    mat[which(mat > 0)] * lpn["events", "Value"] * lpn["eps", "Value"] *
+    mat[which(mat > 0)] * lpn["events", "Value"] * eps_stage[which(mat > 0)] *
     lpn["SE", "Value"] * lpn["S0", "Value"] * lpn["SR", "Value"] /
     lpn["int", "Value"]
 
@@ -416,10 +471,10 @@ pop_model_setup <- function(life_cycles = NA) {
 
   names(life_histories$events) <- "events"
 
-  # eggs per spawner
-  life_histories$eps <- lpn["eps", "Value"]
-
-  names(life_histories$eps) <- "eps"
+  # eggs per spawner - per stage (stages 2..Nstage; stage 1 is immature).
+  # Aligned with life_histories$mat (mat2..matN).
+  life_histories$eps <- eps_stage[-1]
+  names(life_histories$eps) <- paste0("eps", 2:Nstage)
 
   # spawning intervals
   life_histories$int <- lpn["int", "Value"]

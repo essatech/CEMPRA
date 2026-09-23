@@ -1,4 +1,5 @@
 test_that("Basic population model runs ok", {
+  set.seed(42) # deterministic stochastic outcomes, independent of test file order
 
 
   filename_lc <- system.file("extdata", "life_cycles.csv", package = "CEMPRA")

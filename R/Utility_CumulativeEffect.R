@@ -72,8 +72,11 @@ dd_calc <- function(dat, varNames, Nmat) {
 #' @details  Egg count - number of egg produced by pop annually
 #'
 #' @keywords internal
-E_est <- function(N, dat) {
-  E <- with(dat, sum(N * mat * events * eps * sR / int))
+E_est <- function(N, dat, eps = dat[["eps"]]) {
+  # N and eps cover stages 2..Nstage (aligned with dat$mat = mat2..matN).
+  # eps may be per-stage; pass the current year's fecundity draw explicitly
+  # when dat no longer carries the mean eps element.
+  E <- sum(N * dat[["mat"]] * dat[["events"]] * eps * dat[["sR"]] / dat[["int"]])
   names(E) <- NULL
   E
 }
@@ -118,7 +121,7 @@ E_est_anadromous <- function(N, dat, spanwing_years) {
 s0_optim.f <- function(s0, mx, dat, target.lambda) {
   dat$S["s0"] <- s0
 
-  pmx <- pmx_eval(mx, c(dat, dat$S, dat$nYrs, dat$mat))
+  pmx <- pmx_eval(mx, c(dat, dat$S, dat$nYrs, dat$mat, dat$eps))
 
   lambda <- popbio::lambda(pmx)
   (lambda - target.lambda)^2
@@ -299,6 +302,11 @@ Nb_est <- function(N, mat) {
 #'
 #' @keywords internal
 f_rand <- function(mn, sigma, rho) {
+  # A missing/blank egg_rho means no cross-stage correlation - an NA rho
+  # would otherwise abort mvrnorm with a cryptic error for per-stage draws
+  if (is.na(rho)) {
+    rho <- 0
+  }
   # Correlation matrix
   corr <-
     cor.CompSym(length(mn), rho) # compound symmetry correlation
@@ -335,6 +343,11 @@ f_rand <- function(mn, sigma, rho) {
 #'
 #' @keywords internal
 s_rand <- function(mn, cv, rho) {
+  # A missing/blank M.rho means no cross-stage correlation - an NA rho
+  # would otherwise abort mvrnorm with a cryptic error
+  if (is.na(rho)) {
+    rho <- 0
+  }
   # Correlation matrix
   corr <-
     cor.AR1(length(mn), rho) # AR1 structure
@@ -363,6 +376,13 @@ s_rand <- function(mn, cv, rho) {
   # convert probabilities into values to qbeta
   # based on stretched peta distribution
   qX <- stats::qbeta(pX, shape1 = params$a, shape2 = params$b) * (params$max - params$min) + params$min
+
+  # Instantaneous mortality cannot be negative: above cv ~0.21 the
+  # stretched-beta support dips below zero, and a negative mortality draw
+  # back-transforms to survival > 1. Floor at 0 (survival capped at 100%).
+  # No-op for cv <= ~0.21 - the support is entirely positive there, so
+  # all shipped profiles are bit-identical.
+  qX <- pmax(qX, 0)
 
   names(qX) <- names(mn)
 
@@ -492,6 +512,7 @@ bh_dd_stages_check_ok <- function(bh_dd_stages = NA) {
   ok7 <- c("dd_hs_0",
            "hs_stage_0",
            "hs_spawners",
+           "dd_hs_spawners",
            "bh_spawners",
            "bh_stage_0")
   ok_all <- c(ok1, ok2, ok3, ok4, ok5, ok6, ok7)

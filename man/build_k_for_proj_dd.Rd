@@ -24,6 +24,11 @@ for each life stage, including fry (K0) and spawners if applicable.
 Beverton-Holt density dependence.
 \item ret_total_anadromous_spawners: A numeric value representing the
 total carrying capacity for anadromous spawners, if applicable.
+\item ret_stage_k_cv: A numeric vector of capacity cv values aligned with
+ret_stage_k_override (0 where no uncertainty was supplied), or NULL
+when there is no location-based DD.
+\item ret_spawner_k_cv: A numeric cv value for the total spawner capacity
+(0 when no uncertainty was supplied).
 }
 }
 \description{
@@ -36,4 +41,28 @@ habitat_dd_k input data frame for the target HUC_ID and formats them for
 use in Projection_DD(). It also identifies which life stages are subject
 to density dependence based on the life cycle parameters. The function will
 return an empty list of there is no location-based DD.
+
+Density-dependence flag rows in the life cycles profile (bh_stage_...,
+hs_stage_..., bh_spawners, hs_spawners, dd_hs_0) are switches: a flag is
+active only when the row exists AND its Value is 1/TRUE. Setting a flag
+to 0 or leaving it blank disables it - in both the anadromous and
+non-anadromous branches. If both the bh_ and hs_ variants are enabled
+for the same stage, the Beverton-Holt (bh_) form takes precedence.
+
+Blank or NA K cells mean "no constraint for that stage" - NOT that the
+value is unknown or to-be-determined. Supplying a habitat row for a HUC
+switches that location into habitat-capacity mode (fry survival s0 is not
+recalibrated to force lambda = 1; see Projection_DD), even if every stage
+is left unconstrained. A row with no usable K values at all triggers a
+warning, since every stage being unconstrained is usually (but not always)
+unintended.
+
+Optional k_...\emph{cv columns in the habitat file hold the coefficient of
+variation for the matching k}..._mean capacity estimate. The mean values
+are returned unchanged in ret_stage_k_override (no draw happens here);
+the cv values are returned in ret_stage_k_cv / ret_spawner_k_cv and are
+consumed by PopulationModel_Run(), which draws stochastic capacity
+factors per batch replicate and per year via build_stage_k_noise().
+Missing cv columns and blank/NA cv cells mean cv = 0 (capacity treated
+as exact; no random draws are made).
 }

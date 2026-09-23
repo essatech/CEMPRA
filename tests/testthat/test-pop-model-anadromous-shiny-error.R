@@ -1,4 +1,5 @@
 test_that("test-pop-model-anadromous-shiny-error", {
+  set.seed(42) # deterministic stochastic outcomes, independent of test file order
 
   # Test errors found in Shiny App
 

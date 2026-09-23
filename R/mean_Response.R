@@ -88,10 +88,24 @@ mean_Response <- function(n.stressors = NA, str.list = NA, main = NA) {
     this_data$upr <- ifelse(is.na(this_data$upr), m_upr, this_data$upr)
 
 
-    if (this_main$Stress_Scale == "log") {
-      x <- this_data[, 1]
-    } else {
-      x <- this_data[, 1]
+    # Interpolation axis. Curve x-values are entered in raw units of the
+    # stressor (see Stress_Scale in the data inputs documentation). For "log"
+    # stressors, interpolation happens on a logarithmic axis: the curve
+    # x-values are transformed here and the sampled dose is transformed in
+    # SystemCapacity() with the same log(x + 1) convention (+1 so curves
+    # starting at 0 remain valid; matches the Shiny curve preview).
+    scale_flag <- tolower(trimws(as.character(this_main$Stress_Scale)))
+    if (length(scale_flag) == 0 || is.na(scale_flag)) {
+      scale_flag <- "linear"
+    }
+    x_axis <- this_data$value
+    if (scale_flag == "log") {
+      if (any(x_axis <= -1)) {
+        stop("Stress_Scale is 'log' for stressor '", this_stressor,
+             "' but the stressor-response x-values include values <= -1. ",
+             "Log-scale stressors require x-values > -1 (raw units).")
+      }
+      x_axis <- log(x_axis + 1)
     }
 
     # func.type sets whether approximation function is continuous or stepped (constant)
@@ -110,7 +124,7 @@ mean_Response <- function(n.stressors = NA, str.list = NA, main = NA) {
 
     # Function for the mean
     af1 <- stats::approxfun(
-      x = x$value,
+      x = x_axis,
       y = mdat,
       method = func.type,
       yleft = mdat[1],
@@ -121,7 +135,7 @@ mean_Response <- function(n.stressors = NA, str.list = NA, main = NA) {
     # Function for the SD
     mdat <- this_resp$sd / 100
     af2 <- stats::approxfun(
-      x = x$value,
+      x = x_axis,
       y = mdat,
       method = func.type,
       yleft = mdat[1],
@@ -132,7 +146,7 @@ mean_Response <- function(n.stressors = NA, str.list = NA, main = NA) {
     # Lower Limit LL
     mdat <- this_resp$lwr / 100
     af3 <- stats::approxfun(
-      x = x$value,
+      x = x_axis,
       y = mdat,
       method = func.type,
       yleft = mdat[1],
@@ -143,7 +157,7 @@ mean_Response <- function(n.stressors = NA, str.list = NA, main = NA) {
     # Upper Limit UL
     mdat <- this_resp$upr / 100
     af4 <- stats::approxfun(
-      x = x$value,
+      x = x_axis,
       y = mdat,
       method = func.type,
       yleft = mdat[1],

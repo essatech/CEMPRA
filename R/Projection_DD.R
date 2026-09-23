@@ -13,18 +13,46 @@
 #' @param dat Life history data
 #' @param Nyears Years to run simulation
 #' @param K The population carrying Capacity of adults (mature individuals). Used for back-calculating stage-specific carrying capacities with compensation ratios. Also used in anadromous model for setting K of adult spawners (across all age classes).
-#' @param p.cat Probability of catastrophic event.
+#' @param p.cat Probability of a catastrophic event per generation (converted
+#' internally to an annual probability as p.cat / generation time). In a
+#' catastrophe year the population is first projected normally - fish age,
+#' spawn, transition between stages, suffer natural mortality and any density
+#' dependence is applied - and then the catastrophe removes a random fraction
+#' (50 to 100 percent; scaled beta distribution fit from Reed et al. 2003) of
+#' every life stage. Catastrophic mortality is therefore IN ADDITION to
+#' normal annual mortality, not a replacement for it.
 #' @param CE_df Cumulative effect data frame. Data frame identifying cumulative effects stressors targets system capacity or population parameter, or both, and target life stages.
-#' @param K_adj Boolean. Should K_adj be run. Defaults to false.
-#' @param stage_k_override Vector of K values for egg fry (age-0), fry (age-0) to stage_1, stage_1 to stage_2, etc. Defaults to NULL for compensation ratios. If set, values will override adult K value for density dependence with Beverton-Holt. NA values should be used in stages with no constraints. For example, if a fry to stage_1 bottle neck was set to 3000, the resulting vector should look like this c(NA, 3000, NA):
+#' @param K_adj Boolean. DEPRECATED legacy pathway; defaults to FALSE and
+#' should generally stay FALSE. When TRUE, runs a slow 100-replicate
+#' stochastic calibration that inflates K by the ratio of the target adult
+#' K to the realized stochastic mean (compensation-ratio mode only; never
+#' set by PopulationModel_Run; requires Nyears > 51). Retained for
+#' backwards compatibility with older scripts.
+#' @param stage_k_override Vector of stage-specific carrying capacity (K) values. Position 1 is the egg-to-fry flow capacity K0 (maximum fry produced within a census year - this transition always completes within one year and can never carry holdovers). Positions 2 onward are the maximum TOTAL abundance of stage_1, stage_2, etc.: holdover individuals remaining in a multi-year stage plus newly admitted recruits. Defaults to NULL for compensation ratios. NA values should be used in stages with no constraints. For example, if stage_1 capacity was set to 3000, the resulting vector should look like this c(NA, 3000, NA):
 #' \itemize{
-#'   \item 1. Egg to fry (K), NA - no constraint
-#'   \item 2. Fry to stage_1 (K), constrained to 3000 fry entering stage_1
-#'   \item 3. stage_1 to stage_2 (K), NA - no constraint
+#'   \item 1. Egg to fry flow capacity (K0), NA - no constraint
+#'   \item 2. stage_1 total capacity, constrained to 3000 individuals
+#'   \item 3. stage_2 total capacity, NA - no constraint
 #' }
 #' For anadromous species with a spawner capacity constraint, create a vector of NAs equal number
 #' of stages + 1 and then set the spawner capacity in the K input parameter of this function.
-#' @param bh_dd_stages Optional Character vector of life stages c("dd_hs_0", "bh_stage_1", "bh_stage_2", "bh_stage_3", ...) to apply classical Beverton-Holt density-dependence. To be used in place of compensation ratios if set. Use "dd_hs_0" for egg-to-fry k, "bh_stage_1" for fry to stage_1 k and "bh_stage_2" for stage_1 to stage_2 k etc. Densities are the capped value for the transition stage.
+#' Note that supplying stage_k_override (even as all NA values) switches the run into
+#' habitat-capacity mode: fry survival (s0) is NOT recalibrated to force lambda = 1 at the
+#' adult capacity K, because growth is expected to be restrained by the explicit stage
+#' constraints instead. Blank/NA entries mean "no constraint for that stage", not that the
+#' value is unknown.
+#' @param bh_dd_stages Optional Character vector of life stages c("dd_hs_0", "bh_stage_1", "bh_stage_2", "bh_stage_3", ...) to apply Beverton-Holt (bh_ prefix) or hockey-stick (hs_ prefix) density-dependence. To be used in place of compensation ratios if set. Use "dd_hs_0" (or "bh_stage_0") for the egg-to-fry flow cap and "bh_stage_1", "bh_stage_2", etc. for stage capacities. Stage capacities are the maximum TOTAL abundance of each stage (holdovers surviving in a multi-year stage plus this year's recruits). Recruits are admitted into the residual capacity (K minus holdovers) through a Beverton-Holt curve (bh_) or the stage total is hard-capped (hs_). If holdovers alone exceed a stage's K (e.g., the year after a capacity stressor reduces K), the stage is trimmed down to K and no recruits are admitted.
+#' @param stage_k_noise Optional matrix of per-year multiplicative noise
+#' factors for the capacity constraints (habitat K uncertainty), generated
+#' with \code{\link{build_stage_k_noise}} from the k_..._cv columns of the
+#' habitat capacity file. Must have Nyears rows and Nstage + 2 columns:
+#' column 1 scales the fry flow cap (K0), columns 2..(Nstage + 1) scale the
+#' stage capacities, and the last column scales the total spawner capacity.
+#' Factors multiply the capacity values AFTER any CE capacity stressors are
+#' applied; the initial population vector and the derived egg capacity (Ke)
+#' always use the mean (un-noised) capacities. Default NULL (capacities
+#' treated as exact). PopulationModel_Run() generates one matrix per batch
+#' replicate and passes the same matrix to the CE and baseline runs.
 #' @param anadromous Boolean. If true, the model will apply anadromous life history parameters. Defaults to false.
 #' @param alt_return Character. Alternative return objects for internal use.
 #' @importFrom rlang .data
@@ -43,11 +71,10 @@ Projection_DD <- function(M.mx = NA,
                           K_adj = FALSE,
                           stage_k_override = NULL,
                           bh_dd_stages = NULL,
+                          stage_k_noise = NULL,
                           anadromous = FALSE,
                           alt_return = NULL
                           ) {
-
-  life_stages_symbolic <- density_stage_symbolic <- NULL
 
   if(is.null(alt_return)) {
     alt_return <- ""
@@ -81,7 +108,13 @@ Projection_DD <- function(M.mx = NA,
         "length of stage_k_override must have value for dd_hs_0, bh_stage_1, and be equal to Nstage + 1..."
       )
     }
-    # Reset fry survivorship to original
+    # Reset fry survivorship to original (raw file value).
+    # Supplying stage_k_override - even a vector of all NA values - places
+    # the run in habitat-capacity mode: growth is meant to be restrained by
+    # explicit K constraints (NA = no constraint for that stage, by design),
+    # so the lambda = 1 calibration of s0 from pop_model_matrix_elements()
+    # is deliberately undone here. build_k_for_proj_dd() warns when a
+    # habitat row contains no usable K values at all.
     dat$s0.1.det <- dat$Surv_annual[2]
     dat$S[2] <- dat$Surv_annual[2]
   }
@@ -89,17 +122,35 @@ Projection_DD <- function(M.mx = NA,
   # Should total spawners be constrained
   dat$stage_k_spawners <- NULL
   if (!(is.null(bh_dd_stages))) {
+    # dd_hs_spawners is an accepted alias of hs_spawners (mirroring the
+    # dd_hs_0 alias of hs_stage_0) - normalize before validation so the
+    # rest of the pipeline only sees the canonical token
+    bh_dd_stages <- ifelse(tolower(bh_dd_stages) == "dd_hs_spawners",
+                           "hs_spawners", bh_dd_stages)
     # check stage names ok
     if(!(bh_dd_stages_check_ok(bh_dd_stages))) {
       message(bh_dd_stages)
       stop("bh_dd_stages not set correctly...")
     }
-    if(any(c("hs_spawners", "dd_hs_spawners", "bh_spawners") %in% bh_dd_stages)) {
+    if(any(c("hs_spawners", "bh_spawners") %in% bh_dd_stages)) {
       # Set total spawner adult capacity to K
       dat$stage_k_spawners <- K
       if(is.null(stage_k_override)) {
         stop("stage_k_override should be set...")
       }
+    }
+    # Mixed density-dependence configuration: compensation ratios (cr > 1)
+    # and stage-specific K constraints (bh_dd_stages) both active. This is
+    # allowed but rarely intended - density dependence will be applied by
+    # both mechanisms simultaneously.
+    if (any(as.numeric(dat$cr) > 1, na.rm = TRUE)) {
+      warning(
+        "Both compensation ratios (cr > 1) and stage-specific K values ",
+        "(bh_dd_stages) are active. Density dependence will be applied by ",
+        "both mechanisms. Set cr values to 1 in the life cycles profile ",
+        "when using habitat capacity K files.",
+        call. = FALSE
+      )
     }
   }
 
@@ -111,15 +162,41 @@ Projection_DD <- function(M.mx = NA,
   Ka <- K * dat$K.adj
 
 
-  # Make CC Adjustments run with K_adj (optional) but slower processing
-  # Only relevant if running with compensation ratios
+  # ---------------------------------------------------------------------
+  # DEPRECATED PATHWAY: K_adj = TRUE (legacy stochastic K calibration)
+  # ---------------------------------------------------------------------
+  # Runs 100 replicate simulations to estimate the ratio between the target
+  # adult K and the realized stochastic mean, then inflates K accordingly
+  # (stochastic variability drags the long-run mean below the deterministic
+  # K). Retained for backwards compatibility with older scripts only:
+  #   - never set by PopulationModel_Run or the Shiny app
+  #   - deliberately NOT exercised by the test suite (the 100 replicate
+  #     simulations are too slow); repaired and verified manually 2026-09-15
+  #     (previously passed NULL matrices and crashed: "0 x 0 matrix")
+  #   - only meaningful in compensation-ratio mode
   if (K_adj) {
+    if (Nyears <= 51) {
+      stop(
+        "K_adj = TRUE requires Nyears > 51: a 51-year burn-in is discarded ",
+        "from each calibration replicate.",
+        call. = FALSE
+      )
+    }
+    if (!(is.null(bh_dd_stages))) {
+      warning(
+        "K_adj is a compensation-ratio-mode calibration and is not ",
+        "meaningful when stage-specific K values (bh_dd_stages) control ",
+        "density dependence.",
+        call. = FALSE
+      )
+    }
     kadj <- pop_model_K_adj(
       replicates = 100,
       dat = dat,
-      mx = life_stages_symbolic,
-      dx = density_stage_symbolic,
-      Nyears = Nyears
+      mx = M.mx,
+      dx = D.mx,
+      Nyears = Nyears,
+      K = K
     )
     dat$K.adj <- kadj$K.adj
     Ka <- K * dat$K.adj
@@ -184,9 +261,10 @@ Projection_DD <- function(M.mx = NA,
       popbio::stable.stage(pmx_eval(M.mx, c(dat, dat$S, dat$nYrs, dat$mat, dat$u, dat$smig, dat$eps)))
   } else {
     # For non-anadromous populations
-    pmx.det <- pmx_eval(M.mx, c(dat, dat$S, dat$nYrs, dat$mat))
+    # (dat$eps unpacks to eps2..epsN for the per-stage fecundity symbols)
+    pmx.det <- pmx_eval(M.mx, c(dat, dat$S, dat$nYrs, dat$mat, dat$eps))
     SS <-
-      popbio::stable.stage(pmx_eval(M.mx, c(dat, dat$S, dat$nYrs, dat$mat)))
+      popbio::stable.stage(pmx_eval(M.mx, c(dat, dat$S, dat$nYrs, dat$mat, dat$eps)))
   } # end of deterministic projection matrix
 
 
@@ -282,7 +360,17 @@ Projection_DD <- function(M.mx = NA,
     # assume other stages are unconstrained
     k_stage <- ifelse(is.na(k_stage_mod), k_stage, k_stage_mod)
 
-    names(k_stage) <- paste("K", 1:Nstage, sep = "")
+    if (anadromous) {
+      # Preserve the anadromous stage-class names (stage_Pb_x / stage_B_x)
+      # through the override: the CE capacity machinery resolves
+      # age-specific spawner targets (e.g. life_stage "b4") by these
+      # names. Renaming to generic K1..KN here silently orphaned those
+      # targets (a write to a missing name APPENDS an element, growing
+      # the K vector and crashing dd.N.bh's length check).
+      names(k_stage) <- dat$stage_names
+    } else {
+      names(k_stage) <- paste("K", 1:Nstage, sep = "")
+    }
     dat$K <- k_stage
 
     # Override K and Ka if set
@@ -307,14 +395,44 @@ Projection_DD <- function(M.mx = NA,
   # pop_model_ce_apply_year() once the stochastic rate lists are built.
 
   # Fecundity
-  ft <- lapply(1:(Nyears + 1), function(x) {
-    f_temp <- f_rand(dat$eps, dat$eps_sd, rho = dat$egg_rho)
-    f_temp <- ifelse(is.na(f_temp), dat$eps, f_temp)
-    if(!(anadromous)) {
-      names(f_temp) <- "eps"
-    }
-    return(f_temp)
-  })
+  # Non-anadromous eps is per-stage (eps2..epsN, aligned with mat2..matN).
+  # When every mature stage shares one fecundity value (the legacy
+  # single-eps case) a single value is drawn per year and broadcast, so
+  # the random-number stream - and therefore every seeded legacy result -
+  # matches the historical scalar behaviour exactly. Distinct per-stage
+  # values get correlated per-stage draws (compound symmetry, egg_rho),
+  # mirroring the anadromous per-age behaviour.
+  if (anadromous) {
+    ft <- lapply(1:(Nyears + 1), function(x) {
+      f_temp <- f_rand(dat$eps, dat$eps_sd, rho = dat$egg_rho)
+      f_temp <- ifelse(is.na(f_temp), dat$eps, f_temp)
+      return(f_temp)
+    })
+  } else {
+    eps_mature <- dat$eps[!is.na(dat$mat) & dat$mat > 0]
+    single_eps <- length(unique(eps_mature)) <= 1
+    ft <- lapply(1:(Nyears + 1), function(x) {
+      if (single_eps) {
+        mn <- if (length(eps_mature) > 0) eps_mature[[1]] else 0
+        f_one <- f_rand(mn, dat$eps_sd, rho = dat$egg_rho)
+        f_one <- ifelse(is.na(f_one), mn, f_one)
+        f_temp <- rep(f_one, length(dat$eps))
+      } else {
+        # Draw only for stages with positive fecundity; structural zeros
+        # (immature stages) stay 0 without consuming random numbers or
+        # producing qlnorm NaN warnings.
+        f_temp <- rep(0, length(dat$eps))
+        pos <- which(dat$eps > 0)
+        if (length(pos) > 0) {
+          f_draw <- f_rand(dat$eps[pos], dat$eps_sd, rho = dat$egg_rho)
+          f_draw <- ifelse(is.na(f_draw), dat$eps[pos], f_draw)
+          f_temp[pos] <- f_draw
+        }
+      }
+      names(f_temp) <- names(dat$eps)
+      return(f_temp)
+    })
+  }
 
   # Survival
   suppressWarnings({
@@ -383,6 +501,37 @@ Projection_DD <- function(M.mx = NA,
   }
 
 
+  # ===============================================================
+  # Apply stochastic capacity noise (habitat K uncertainty), if any
+  # ===============================================================
+  # stage_k_noise holds per-year multiplicative factors for the capacity
+  # constraints: column 1 = fry flow cap (K0), columns 2..(Nstage + 1) =
+  # stage capacities, column Nstage + 2 = total spawner capacity. Factors
+  # are applied on top of any CE capacity stressors (multiplicative). The
+  # initial population vector and the derived egg capacity Ke use the mean
+  # capacities (year slot 1 is left untouched). NA capacities stay NA
+  # (no constraint).
+  if (!is.null(stage_k_noise)) {
+    if (!is.matrix(stage_k_noise) ||
+        ncol(stage_k_noise) != (Nstage + 2) ||
+        nrow(stage_k_noise) < Nyears) {
+      stop(
+        "stage_k_noise must be a matrix with Nyears rows and Nstage + 2 ",
+        "columns (fry flow cap K0, stage capacities, total spawner ",
+        "capacity). See build_stage_k_noise()..."
+      )
+    }
+    for (t in 1:Nyears) {
+      K0_list[[t + 1]] <- K0_list[[t + 1]] * stage_k_noise[t, 1]
+      K_list[[t + 1]] <- K_list[[t + 1]] * stage_k_noise[t, 2:(Nstage + 1)]
+      if (!is.null(Kspawners_list[[t + 1]])) {
+        Kspawners_list[[t + 1]] <-
+          Kspawners_list[[t + 1]] * stage_k_noise[t, (Nstage + 2)]
+      }
+    }
+  }
+
+
   # Get ready to project populations forward through time
 
   new_dat <- dat
@@ -440,7 +589,8 @@ Projection_DD <- function(M.mx = NA,
     Na <- Nb_est(N[-1], new_dat$mat)
     E <-
       E_est(N = N[-1],
-            dat = c(new_dat, ft[[1]], st[[1]], new_dat$nYrs, new_dat$mat))
+            dat = c(new_dat, ft[[1]], st[[1]], new_dat$nYrs, new_dat$mat),
+            eps = ft[[1]])
   }
 
 
@@ -462,6 +612,15 @@ Projection_DD <- function(M.mx = NA,
 
     # Store previous abundance vector for BH equations
     N_prev <- N
+
+    # Reference capacities for the current year (CE capacity stressors
+    # applied via K_list/Ke_list/K0_list). Must be set before d.vec.f()
+    # so both the compensation-ratio and Beverton-Holt pathways see the
+    # current year's capacities.
+    new_dat$Ke <- Ke_list[[t + 1]]
+    new_dat$K0 <- K0_list[[t + 1]]
+    new_dat$K  <- K_list[[t + 1]]
+    new_dat$stage_k_spawners <- Kspawners_list[[t + 1]]
 
     # Density-Dependent Survival
     if (is.null(D.mx) == FALSE) {
@@ -501,15 +660,12 @@ Projection_DD <- function(M.mx = NA,
     # Quick check - going up or down
     # popbio::lambda(A)
 
-    # project the population 1 year ahead.
-    # or apply catastrophe
-    if (Catastrophe[t] == 1) {
-      # Apply catastrophe
-      N <- N * (1 - e.cat[t])
-    } else {
-      # Project ahead
-      N <- as.vector(A %*% N)
-    }
+    # Project the population 1 year ahead. Every year - including
+    # catastrophe years - runs the full projection: fish age, spawn,
+    # transition between stages and suffer natural mortality. Catastrophic
+    # mortality (applied further below, after density dependence) acts IN
+    # ADDITION to the normal annual projection, not instead of it.
+    N <- as.vector(A %*% N)
 
     # Prevent runaway to Inf
     too_many <- sum(N_prev, na.rm = TRUE)
@@ -521,16 +677,18 @@ Projection_DD <- function(M.mx = NA,
 
     # Allow for stage-specific DD effects
     # Constrain using Beverton-Holt functions
+    # Runs on the projected vector; catastrophic mortality is applied AFTER
+    # this step, so density dependence can never rebuild a stage above its
+    # post-catastrophe value.
     if (is.null(bh_dd_stages) == FALSE) {
       if(!(all(is.na(N)))) {
 
-        # Reference capacities for current year (after applying stressors)
-        new_dat$Ke <- Ke_list[[t+1]]
-        new_dat$K0 <- K0_list[[t+1]]
-        new_dat$K  <- K_list[[t+1]]
-        new_dat$stage_k_spawners  <- Kspawners_list[[t+1]]
+        # (Capacities for the current year are refreshed at the top of the
+        # year loop, before d.vec.f())
 
         # Apply Density-Dependant Beverton-Holt Constraints
+        # A (realized projection matrix for this year) lets dd.N.bh split
+        # each stage into holdovers and inflow exactly
         N <- dd.N.bh(
           dat = new_dat,
           t = t,
@@ -538,12 +696,21 @@ Projection_DD <- function(M.mx = NA,
           N = N,
           N_prev = N_prev,
           bh_dd_stages = bh_dd_stages,
-          smig = smigt[[t + 1]]
+          A = A
         )
         # (MJB Sept 27 2023 - update to allow for extinction)
       }
     }
 
+
+    # Apply catastrophic mortality (if any) IN ADDITION to the normal
+    # annual projection: the event removes a random fraction e.cat
+    # (50 - 100%; Reed et al. 2003) of every stage on top of that year's
+    # natural mortality, aging, reproduction and density dependence.
+    # Applied last so no downstream step can rebuild killed individuals.
+    if (Catastrophe[t] == 1) {
+      N <- N * (1 - e.cat[t])
+    }
 
 
     if (anadromous) {
@@ -564,7 +731,8 @@ Projection_DD <- function(M.mx = NA,
       Nj <- sum(N * c(1, 1 - new_dat$mat))
       # number of Egg produced
       E <-
-        E_est(N = N[-1], c(new_dat, st[[t + 1]], ft[[t + 1]], new_dat$mat))
+        E_est(N = N[-1], c(new_dat, st[[t + 1]], ft[[t + 1]], new_dat$mat),
+              eps = ft[[t + 1]])
     }
 
 

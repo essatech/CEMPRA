@@ -1,4 +1,5 @@
 test_that("test-pop-model-nicola-2", {
+  set.seed(42) # deterministic stochastic outcomes, independent of test file order
 
   # Load dummy CE_df
   filename <- system.file("extdata/simple_test/CE_df_testing.csv", package = "CEMPRA")

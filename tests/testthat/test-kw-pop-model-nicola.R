@@ -1,4 +1,5 @@
 test_that("test-kw-pop-model-nicola", {
+  set.seed(42) # deterministic stochastic outcomes, independent of test file order
 
   #----------------------------------------------
   # Test Kyle Wilsons Nicola Code for Comparison

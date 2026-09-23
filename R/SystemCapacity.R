@@ -60,6 +60,16 @@ SystemCapacity <- function(f.dose.df,
     if (f.dose.df$Distribution[i] == "lognormal") {
 
       # If mean < 0 change mean to minimum limit (can't have zero or negative on log scale)
+      if (isTRUE(f.dose.df$Mean[i] <= 0)) {
+        warning(
+          "Stressor '", f.dose.df$Stressor[i], "': the lognormal ",
+          "distribution requires a positive Mean (got ",
+          f.dose.df$Mean[i], "); using Low_Limit (",
+          f.dose.df$Low_Limit[i], ") instead. If Low_Limit is 0, every ",
+          "sampled dose for this stressor will be 0.",
+          call. = FALSE
+        )
+      }
       mn.val <- ifelse(f.dose.df$Mean[i] <= 0,
         f.dose.df$Low_Limit[i],
         f.dose.df$Mean[i]
@@ -156,9 +166,16 @@ SystemCapacity <- function(f.dose.df,
   )
 
 
-  # Change rnd.dose to log values if stress-response relation is logarithmic
-  if (f.main.df$Stress_Scale == "log") {
-    x.dose <- log(rnd.dose)
+  # Change rnd.dose to log values if stress-response relation is logarithmic.
+  # Must use the same log(x + 1) axis as mean_Response() uses for the curve
+  # x-values. Doses are already clamped to the curve's raw x-range above, so
+  # the transformed dose always falls on the transformed axis.
+  scale_flag <- tolower(trimws(as.character(f.main.df$Stress_Scale)))
+  if (length(scale_flag) == 0 || is.na(scale_flag)) {
+    scale_flag <- "linear"
+  }
+  if (scale_flag == "log") {
+    x.dose <- log(rnd.dose + 1)
   } else {
     x.dose <- rnd.dose
   }

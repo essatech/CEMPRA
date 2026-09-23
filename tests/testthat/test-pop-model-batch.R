@@ -1,4 +1,5 @@
 test_that("Test that batch population model runs successfully...", {
+  set.seed(42) # deterministic stochastic outcomes, independent of test file order
 
     # rm(list = ls())
 

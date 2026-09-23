@@ -5,6 +5,11 @@
 #' @details This is an intermediate setup function to run the population model. However, some of outputs are useful on their own, especially for eigen analyses. pop_model_matrix_elements() is run after pop_model_setup() or pop_model_setup_anadromous(), but pop_model_matrix_elements() must be run before Projection_DD(). Key outputs to explore include a density independent projection matrix, life histories, and a symbolic representation of the matrix math for density dependent and density independent components. population_model_setup() should be run with pop_model_matrix_elements() for non-anadromous species. population_model_setup_anadromous() should be run with pop_model_matrix_elements_anadromous() for anadromous species.
 #'
 #' @param pop_mod_setup List. Object returned from population_model_setup_anadromous(). Use pop_model_matrix_elements() for objects returned from population_model_setup().
+#' @param s0_calibrate Logical. If TRUE (default) and an adult capacity `k`
+#'  is set (with no Beverton-Holt flags), fry survival (s0) is re-calibrated
+#'  so that lambda = 1. Set to FALSE to keep the raw s0 from the life cycles
+#'  file - used by sensitivity analyses (e.g., pop_model_ltre) that must
+#'  measure lambda responses on the un-calibrated matrix.
 #'
 #' @returns a list object of symbolic objects.
 #'
@@ -33,7 +38,8 @@
 #'
 #' @export
 #'
-pop_model_matrix_elements_anadromous <- function(pop_mod_setup = NA) {
+pop_model_matrix_elements_anadromous <- function(pop_mod_setup = NA,
+                                                 s0_calibrate = TRUE) {
 
 
 
@@ -52,7 +58,9 @@ pop_model_matrix_elements_anadromous <- function(pop_mod_setup = NA) {
   bad_match <- bad_match[!(is.na(bad_match))]
 
   if(any(bad_match)) {
-    life_histories$S[paste0("s", 1:(pop_mod_setup$Nstage - 1))][which(bad_match)] <- 0.999999
+    # Name-based assignment: positional which() on the NA-filtered vector
+    # could shift the repair onto the wrong stage when NAs are present
+    life_histories$S[names(bad_match)[bad_match]] <- 0.999999
   }
 
 
@@ -71,7 +79,9 @@ pop_model_matrix_elements_anadromous <- function(pop_mod_setup = NA) {
       )
     )
 
-  if(!(all(pop_mod_setup$projection_matrix == pmx.det))) {
+  # isTRUE(): NA-safe - an NA matrix cell reports the real mismatch
+  # message instead of "missing value where TRUE/FALSE needed"
+  if(!isTRUE(all(pop_mod_setup$projection_matrix == pmx.det))) {
     stop("Projection matrix generated from pmx.det does not match projection matrix from pop_mod_setup...")
   }
 
@@ -83,21 +93,27 @@ pop_model_matrix_elements_anadromous <- function(pop_mod_setup = NA) {
   # necessary to result in k (e.g., 100) adults at equilibrium conditions)
 
   # replaced with try catch - gives error with high suv...
-  gets0 <- tryCatch(
-    {
-      stats::optimize(
-        s0_optim_anadromous.f,
-        interval = c(0, 1),
-        tol = 1e-16,
-        mx = life_stages_symbolic,
-        dat = life_histories,
-        target.lambda = 1
-      )$minimum
-    },
-    error=function(cond) {
-      life_histories$S["s0"]
-    }
-  )
+  if (s0_calibrate) {
+    gets0 <- tryCatch(
+      {
+        stats::optimize(
+          s0_optim_anadromous.f,
+          interval = c(0, 1),
+          tol = 1e-16,
+          mx = life_stages_symbolic,
+          dat = life_histories,
+          target.lambda = 1
+        )$minimum
+      },
+      error=function(cond) {
+        life_histories$S["s0"]
+      }
+    )
+  } else {
+    # Sensitivity-analysis mode: keep the raw fry survival so lambda
+    # responds to vital-rate perturbations instead of being re-tuned to 1
+    gets0 <- as.numeric(life_histories$S["s0"])
+  }
 
   s0_optim_min <- gets0
 
@@ -131,10 +147,13 @@ pop_model_matrix_elements_anadromous <- function(pop_mod_setup = NA) {
   }
   # MJB: end of density-independent growth
 
-  # Also, if any Beverton-Holt DD functions are present then set s0.1.det back to s0
-  bh_functions <- pop_mod_setup$life_pars[grep("bh_stage_", life_pars$Name), "Value"]
-
-  if(length(bh_functions) > 0) {
+  # If any BH/HS density-dependence flag is ENABLED (any spelling, any
+  # life stage) the run is in habitat-capacity mode and s0 keeps its raw
+  # file value. Only a run truly in compensation-ratio mode (no enabled
+  # flags) gets the lambda = 1 calibration. Checks flag VALUES via
+  # dd_flag_enabled() - flag rows that are all 0/blank mean CR mode and
+  # the calibration applies (previously row presence alone skipped it).
+  if (any_dd_flag_enabled(life_pars)) {
     life_histories$s0.1.det <- as.numeric(life_histories$S["s0"])
   }
 
@@ -159,7 +178,7 @@ pop_model_matrix_elements_anadromous <- function(pop_mod_setup = NA) {
 
 
 
-  if (!(all(pop_mod_setup$projection_matrix == M.1.pmx))) {
+  if (!isTRUE(all(pop_mod_setup$projection_matrix == M.1.pmx))) {
     message(
       "Anadromous: S0 adjusted to s0.1.det..."
     )
@@ -185,6 +204,15 @@ pop_model_matrix_elements_anadromous <- function(pop_mod_setup = NA) {
   # variation in natural mortality
   life_histories$M.cv <- life_pars["M.cv", "Value"]
   names(life_histories$M.cv) <- "M.cv"
+  if (!is.na(life_histories$M.cv) && life_histories$M.cv > 0.21) {
+    message(
+      "M.cv is ", life_histories$M.cv, ": at CVs above ~0.21 the mortality ",
+      "distribution is truncated at zero, so a fraction of yearly survival ",
+      "draws (including prespawn u and migration smig) will sit exactly at ",
+      "100% survival. Consider whether this much interannual variability ",
+      "is intended."
+    )
+  }
 
   # temporal correlation in natural mortality
   life_histories$M.rho <- life_pars["M.rho", "Value"]

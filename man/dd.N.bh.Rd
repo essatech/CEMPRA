@@ -11,10 +11,42 @@ dd.N.bh(
   N = NA,
   N_prev = NA,
   bh_dd_stages = NA,
-  smig = NA
+  A = NULL
 )
 }
+\arguments{
+\item{dat}{Life history data for the current year (K, K0, Nstage, ...).}
+
+\item{t}{Current year index.}
+
+\item{st}{List of stochastic survival vectors by year.}
+
+\item{N}{Projected population vector for the current year (N = A \%*\% N_prev).}
+
+\item{N_prev}{Population vector from the previous year.}
+
+\item{bh_dd_stages}{Character vector of DD flags (bh_stage_X, hs_stage_X, ...).}
+
+\item{A}{Realized projection matrix for the current year (stochastic draws,
+compensation-ratio and harm effects included). Used to decompose each stage
+into holdovers (\code{A[i,i] * N_prev[i]}) and inflow (\code{N[i]} - holdovers). If NULL,
+all stages are assumed to spend one year per stage (no holdovers).}
+}
 \description{
-Apply location and stage-specific Beverton-Holt density dependent constraints
+Apply location and stage-specific density-dependent capacity
+constraints (Beverton-Holt or hockey-stick) to the projected population
+vector.
+}
+\details{
+Stage capacities (K1, K2, ...) are the maximum TOTAL abundance of
+each stage: holdover individuals remaining in a multi-year stage plus this
+year's newcomers. Newcomers are admitted into the residual capacity
+(K minus holdovers) through a Beverton-Holt curve (bh_ flags), while hs_
+flags cap the stage total directly (hard ceiling). If holdovers alone
+exceed K (e.g., the year after a capacity stressor reduces K), the stage
+is trimmed down to K and no newcomers are admitted (habitat loss displaces
+residents). The egg and fry capacities (Ke, K0) remain flow caps: the
+egg -> fry -> stage-1 transition always completes within a single census
+year, so those transitions can never carry holdovers.
 }
 \keyword{internal}

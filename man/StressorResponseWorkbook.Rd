@@ -35,8 +35,26 @@ Uses \code{readxl::read_excel()} to load in workbook sheets:
 \item all additional stressor-response sheets in workbook
 \itemize{
 \item context specific stressor-response curve data
-\item sheet name must match stressor names in Main sheet, otherwise "Bad worksheet names" error message.
+\item sheet name must match (final) stressor names in Main sheet, otherwise a "Bad worksheet names" error is raised listing the mismatches.
 \item sheets must contain columns for \verb{<stressor_name>}, \verb{Mean System Capacity (\%)}, \code{SD}, \code{low.limit}, and \code{up.limit}
 }
 }
+
+Each stressor name may appear only once in the Main sheet: one stressor is
+always linked to exactly one stressor-response relationship. To link one
+stressor-response relationship to multiple life stages in the population
+model, use a comma-separated list in the Life_stages column (e.g.,
+"stage_1, stage_2"); to affect multiple parameters (e.g., survival and
+capacity), create separate stressors, each with its own worksheet.
+
+The Stressor_cat column is OPTIONAL and is normally a user label only
+(it is overwritten with the stressor name on load; the original value is
+preserved in \code{Stressor_cat_orig}). The one exception: if the same stressor
+name appears on several rows and every copy has a distinct, non-blank
+Stressor_cat, the rows are automatically renamed
+\code{"<Stressor>_<Stressor_cat>"} (with a warning). The curve worksheets and
+the stressor magnitude workbook must then use those full names. Note
+Excel limits worksheet names to 31 characters. The category value
+"Total_Mortality" is reserved (see \code{\link{StressorMagnitudeWorkbook}})
+and is never used to rename.
 }

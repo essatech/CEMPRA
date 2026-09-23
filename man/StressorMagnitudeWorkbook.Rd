@@ -24,4 +24,20 @@ used only by the population model to restrict a stressor (per HUC) to an activat
 window (active between \code{From_Year} and \code{To_Year}, inclusive); they are ignored by the
 Joe Model. Stressors with missing/blank values, or files without these columns, are
 applied to all years as before (backwards compatible).
+
+The \code{Stressor_cat} column is OPTIONAL and is normally a user label only
+(the original value is preserved in \code{Stressor_cat_orig}), with two
+exceptions. (1) The reserved value \code{"Total_Mortality"} (exact spelling)
+aggregates all rows so tagged into a single synthetic \code{Total_Mortality}
+stressor per HUC: the Means are summed and the SDs are pooled in
+quadrature (\code{sqrt(sum(SD^2))}), dropping NA components (all-NA -> 0). A
+matching \code{Total_Mortality} curve must exist in the stressor-response
+workbook for the aggregate to have an effect. Near-miss spellings warn.
+(2) If the stressor-response workbook disambiguated duplicate stressor
+names as \code{"<Stressor>_<Stressor_cat>"}, dose rows are aligned to those
+full names at model run time (see
+\code{\link{align_dose_stressor_names}}, with a warning). Duplicate
+stressor names within this workbook are otherwise left untouched:
+legacy files legitimately list multiple component rows per stressor
+with \code{Stressor_cat} as a component label.
 }

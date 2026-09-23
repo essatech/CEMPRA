@@ -24,12 +24,15 @@ Imports:
     MASS,
     pracma,
     popbio
-Suggests: 
+Suggests:
     knitr,
     rmarkdown,
     kableExtra,
     devtools,
     ggplot2,
+    openxlsx,
+    tibble,
+    writexl,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
