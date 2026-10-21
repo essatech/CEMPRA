@@ -71,6 +71,25 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
 
 
   # ==========================================
+  # A survival row that is present but BLANK previously crashed far
+  # downstream with an opaque error - name the offending row(s) up front
+  # ==========================================
+  surv_present <- life_cycles$Name[grepl("^surv_[0-9]+$", life_cycles$Name)]
+  if (length(surv_present) > 0) {
+    surv_vals <- suppressWarnings(as.numeric(
+      life_cycles$Value[match(surv_present, life_cycles$Name)]
+    ))
+    if (any(is.na(surv_vals))) {
+      stop(
+        "Life cycles input: blank or non-numeric survival value(s) for ",
+        "row(s): ", paste(surv_present[is.na(surv_vals)], collapse = ", "),
+        ". Fill in a numeric survival (0-1) for each age.",
+        call. = FALSE
+      )
+    }
+  }
+
+  # ==========================================
   # Fix Survival - cannot be 100%
   # ==========================================
   surv_100 <- which(life_cycles$Name %in% paste0("surv_", 1:1000) & life_cycles$Value == 1)
@@ -83,28 +102,30 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
   # ============================================================
   # Fix Survival - cannot be 0% surv in the middle of the chain
   # ============================================================
+  # A zero survival is only a problem when it sits BETWEEN nonzero
+  # survivals (a break in the middle of the life-stage chain). Trailing
+  # zeros are legitimate end-of-chain placeholders and are left alone.
+  # (Historically the "intermediate" cutoff was derived from the eps_x
+  # rows, which broke for legacy files with no per-age eps rows - max()
+  # of nothing is -Inf, so the repair never engaged - and the status
+  # message was raised whenever there were two or more zeros, flagging
+  # legitimate end-of-chain placeholders.)
   surv_fix <- life_cycles[life_cycles$Name %in% paste0("surv_", 1:1000), ]
-  surv_fix <- surv_fix[order(surv_fix$Name), ]
+  surv_ages <- as.numeric(gsub("surv_", "", surv_fix$Name))
+  surv_vals <- suppressWarnings(as.numeric(surv_fix$Value))
 
-  eps_check <- life_cycles[life_cycles$Name %in% paste0("eps_", 1:1000), ]
-  eps_check <- eps_check[order(eps_check$Name), ]
+  nonzero_ages <- surv_ages[!is.na(surv_vals) & surv_vals != 0]
+  zero_ages <- surv_ages[!is.na(surv_vals) & surv_vals == 0]
 
-  # Find max repo age - based on non-zero eps
-  # May not work if older format or only single eps defined.
-  max_repo_age <- suppressWarnings({ max(as.numeric(gsub("eps_", "", eps_check$Name[eps_check$Value > 0]))) })
-
-  surv_0 <- surv_fix$Name[surv_fix$Value == 0]
-
-  # More than one zero Pb endpoint
-  if(length(surv_0) > 1) {
-    # Fix surv zeros in the life stage chain
-    # Set surv_x where x < max_repo_age to 0.00001
-    for(k in 1:length(surv_0)) {
-      if(as.numeric(gsub("surv_", "", surv_0[k])) < max_repo_age) {
-        life_cycles$Value[life_cycles$Name == surv_0[k]] <- 0.00001
+  if (length(nonzero_ages) > 0 && length(zero_ages) > 0) {
+    intermediate_ages <- zero_ages[zero_ages < max(nonzero_ages)]
+    if (length(intermediate_ages) > 0) {
+      # Repair each mid-chain zero so the projection matrix stays valid
+      for (k in intermediate_ages) {
+        life_cycles$Value[life_cycles$Name == paste0("surv_", k)] <- 0.00001
       }
+      possible_error_state <- "Cannot have 0 survival in intermediate life stage"
     }
-    possible_error_state <- "Cannot have 0 survival in intermediate life stage"
   }
 
   # ==============================================================
@@ -185,14 +206,14 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
   Nstage <- Nstage + nrow(mature_spawners)
 
   # Age of earliest spawner
-  spanwing_years <- as.numeric(sapply(strsplit(mature_spawners$Name, "_"), `[`, 2))
+  spawning_years <- as.numeric(sapply(strsplit(mature_spawners$Name, "_"), `[`, 2))
 
   # Age-1 spawning is not supported: maturation flows from pre-breeder
   # stage (x - 1) into spawner class B_x, so a stage_B_1 class could never
   # receive individuals (it would exist as a permanently empty class that
   # distorts stage bookkeeping). The shortest supported anadromous life
   # cycle matures in its second year (e.g., pink salmon at age 2).
-  if (1 %in% spanwing_years) {
+  if (1 %in% spawning_years) {
     stop(
       "mat_1 > 0 is not supported for anadromous life cycles: spawning ",
       "cannot occur at age 1 (there is no pre-breeder stage to mature ",
@@ -202,11 +223,11 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
   }
 
   # First year of spawning
-  first_year_spawning <- min(spanwing_years)
+  first_year_spawning <- min(spawning_years)
 
   # Stage name vector is then Pb followed by B
   stage_names_Pb <- c(paste("stage", "Pb", 1:Nstage_Pb, sep = "_"))
-  stage_names_B <- c(paste("stage", "B", spanwing_years, sep = "_"))
+  stage_names_B <- c(paste("stage", "B", spawning_years, sep = "_"))
   stage_names <- c(stage_names_Pb, stage_names_B)
 
   # stage_names <- paste("stage", 1:Nstage, sep = "_") # MJB CHECK...
@@ -232,7 +253,7 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
 
   # Sexual maturity vector
   mat <-
-    life_pars[match(paste("mat", spanwing_years, sep = "_"), life_pars$Name), "Value"]
+    life_pars[match(paste("mat", spawning_years, sep = "_"), life_pars$Name), "Value"]
 
   names(survival) <- names(years) <- names(cr) <- stage_names_Pb
 
@@ -291,7 +312,7 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
     # and those that mature to regular stage3 (non-mature individuals)
     # ... and remember we are doing prebirth pulse census.
 
-    if ((i + 1) %in% spanwing_years) {
+    if ((i + 1) %in% spawning_years) {
       # mature to spawners or survive next stage
       # remember to offset mat by 1 year (moving into spawn year)
       cell_obj <- paste0("s", i, "*(1-", "mat", i + 1, ")", sep = "")
@@ -373,7 +394,7 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
   # stay density-independent.
   for (i in 1:Nstage)
   {
-    if ((i + 1) %in% spanwing_years) {
+    if ((i + 1) %in% spawning_years) {
       density_stage_symbols[grepl(paste0("_B_", (i + 1), "$"), stage_names), i] <-
         paste("s", i, sep = "")
     }
@@ -444,7 +465,7 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
   varNames <- c("sE",
                 "s0",
                 paste("s", 1:Nstage_Pb, sep = ""),
-                paste("b", spanwing_years, sep = ""))
+                paste("b", spawning_years, sep = ""))
 
 
 
@@ -505,7 +526,7 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
     life_stages_numeric <- gsub(paste0("eps", i), new_val, life_stages_numeric)
 
     if (any(is.na(life_stages_numeric))) {
-      warnings(paste0("Missing parameter for stage ", i))
+      warning(paste0("Missing parameter for stage ", i), call. = FALSE)
       possible_error_state <- paste0("Missing parameter for stage ", i)
     }
 
@@ -593,7 +614,7 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
 
   # maturity vector for stages 2+
   life_histories$mat <- mat
-  names(life_histories$mat) <- paste("mat", spanwing_years, sep = "")
+  names(life_histories$mat) <- paste("mat", spawning_years, sep = "")
 
   # spawning events per year
   life_histories$events <-
@@ -602,13 +623,13 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
   names(life_histories$events) <- "events"
 
   # eggs per spawner
-  life_histories$eps <- life_pars[paste("eps_", spanwing_years, sep = ""), "Value"]
+  life_histories$eps <- life_pars[paste("eps_", spawning_years, sep = ""), "Value"]
   # eps is onlye defined as a global fixed value
   if(any(is.na(life_histories$eps))) {
     # eps not defined for specific life stage
     life_histories$eps[which(is.na(life_histories$eps))] <- life_pars["eps", "Value"]
   }
-  names(life_histories$eps) <- paste("eps", spanwing_years, sep = "")
+  names(life_histories$eps) <- paste("eps", spawning_years, sep = "")
 
   # spawning intervals
   life_histories$int <- life_pars["int", "Value"]
@@ -623,12 +644,12 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
   names(life_histories$sR) <- "sR"
 
   # prespawn mortality
-  life_histories$u <- life_pars[paste("u_", spanwing_years, sep = ""), "Value"]
-  names(life_histories$u) <- paste("u", spanwing_years, sep = "")
+  life_histories$u <- life_pars[paste("u_", spawning_years, sep = ""), "Value"]
+  names(life_histories$u) <- paste("u", spawning_years, sep = "")
 
   # spawner migration mortality
-  life_histories$smig <- life_pars[paste("smig_", spanwing_years, sep = ""), "Value"]
-  names(life_histories$smig) <- paste("smig", spanwing_years, sep = "")
+  life_histories$smig <- life_pars[paste("smig_", spawning_years, sep = ""), "Value"]
+  names(life_histories$smig) <- paste("smig", spawning_years, sep = "")
 
 
 
@@ -651,7 +672,7 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
   ret_obj$Nstage <- Nstage
   ret_obj$density_stage_symbolic <- density_stage_symbolic
   ret_obj$possible_error_state <- possible_error_state
-  ret_obj$spanwing_years <- spanwing_years
+  ret_obj$spawning_years <- spawning_years
 
 
   return(ret_obj)

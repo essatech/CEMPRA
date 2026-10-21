@@ -21,7 +21,7 @@
 #' (50 to 100 percent; scaled beta distribution fit from Reed et al. 2003) of
 #' every life stage. Catastrophic mortality is therefore IN ADDITION to
 #' normal annual mortality, not a replacement for it.
-#' @param CE_df Cumulative effect data frame. Data frame identifying cumulative effects stressors targets system capacity or population parameter, or both, and target life stages.
+#' @param CE_df Cumulative effect data frame. Data frame identifying cumulative effects stressors targets system capacity or population parameter, or both, and target life stages. Note for hand-built tables: a stressor represented by a SINGLE row is treated as a constant effect applied to every simulation year - even if that row carries a Year value. To make an effect year-specific, supply one row per simulation year (with a Year column), or use the From_Year/To_Year activation-window columns; the workbook pathway (PopulationModel_Run) always builds full per-year rows.
 #' @param K_adj Boolean. DEPRECATED legacy pathway; defaults to FALSE and
 #' should generally stay FALSE. When TRUE, runs a slow 100-replicate
 #' stochastic calibration that inflates K by the ratio of the target adult
@@ -576,21 +576,15 @@ Projection_DD <- function(M.mx = NA,
     N <- rep(1, length(N))
   }
 
-  # number of Egg produced
+  # Number of adults at initialization. (The egg count E used for the
+  # egg/fry crowding terms is computed INSIDE the year loop, from the
+  # standing population at the start of each year with THAT year's rate
+  # draws - see the census-timing note in the loop.)
   if(anadromous) {
-    # assume max 1 year per stage pre-birth census
-    stage_1s <- N[1]
-    N_fry <- stage_1s / st[[1]]["s0"]
-    E <- N_fry / st[[1]]["sE"]
-    names(E) <- NULL
     # Vector of spawners is directly B classes
     Na <- sum(N[grepl("_B_", dat$stage_names)])
   } else {
     Na <- Nb_est(N[-1], new_dat$mat)
-    E <-
-      E_est(N = N[-1],
-            dat = c(new_dat, ft[[1]], st[[1]], new_dat$nYrs, new_dat$mat),
-            eps = ft[[1]])
   }
 
 
@@ -621,6 +615,30 @@ Projection_DD <- function(M.mx = NA,
     new_dat$K0 <- K0_list[[t + 1]]
     new_dat$K  <- K_list[[t + 1]]
     new_dat$stage_k_spawners <- Kspawners_list[[t + 1]]
+
+    # Census-timing convention for the egg/fry crowding terms (cr_E and
+    # cr_0 compensation ratios): the eggs "in the gravel" during year t's
+    # projection step are those laid by the CURRENT standing population
+    # (the spawners at the start of the step), evaluated with YEAR t's
+    # fecundity / pre-spawn survival draws - exactly the quantities the
+    # projection matrix A applies below. The fry count is those eggs times
+    # year t's egg survival. (Historically E was carried over from the end
+    # of the previous year - computed with the previous year's draws, and
+    # in anadromous runs back-calculated from a stage-1 count already
+    # reduced by capacity trimming and catastrophes - which smeared the
+    # crowding terms across two years' rates and deflated the egg count.)
+    if (anadromous) {
+      b_idx <- match(paste0("stage_B_", dat$spawning_years), dat$stage_names)
+      eps_yr <- ft[[t + 1]][paste0("eps", dat$spawning_years)]
+      u_yr <- ut[[t + 1]][paste0("u", dat$spawning_years)]
+      E <- sum(N[b_idx] * u_yr * new_dat$events * eps_yr *
+                 new_dat$sR / new_dat$int, na.rm = TRUE)
+      names(E) <- NULL
+    } else {
+      E <- E_est(N = N[-1],
+                 dat = c(new_dat, st[[t + 1]], ft[[t + 1]], new_dat$mat),
+                 eps = ft[[t + 1]])
+    }
 
     # Density-Dependent Survival
     if (is.null(D.mx) == FALSE) {
@@ -720,8 +738,6 @@ Projection_DD <- function(M.mx = NA,
       Na <- sum(N[grepl("_B_", dat$stage_names)])
       # Number of non-spawner stages
       Nj <- sum(N[grepl("_Pb_", dat$stage_names)])
-      # Number of eggs
-      E <- N[1] / (st[[t + 1]]["sE"] * st[[t + 1]]["s0"])
     } else {
 
       # For non-anadromous populations
@@ -729,11 +745,9 @@ Projection_DD <- function(M.mx = NA,
       Na <- Nb_est(N[-1], new_dat$mat)
       # Number of Juveniles
       Nj <- sum(N * c(1, 1 - new_dat$mat))
-      # number of Egg produced
-      E <-
-        E_est(N = N[-1], c(new_dat, st[[t + 1]], ft[[t + 1]], new_dat$mat),
-              eps = ft[[t + 1]])
     }
+    # (Egg count E for the crowding terms is recomputed at the start of
+    # the next year from the new standing population - see above)
 
 
 

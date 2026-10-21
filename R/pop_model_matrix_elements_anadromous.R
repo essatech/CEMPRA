@@ -195,7 +195,8 @@ pop_model_matrix_elements_anadromous <- function(pop_mod_setup = NA,
 
   # variation in eggs per spawner
   life_histories$eps_sd <- life_pars["eps_sd", "Value"]
-  names(life_histories$sR) <- "eps_sd"
+  # (label fixed 2026-09-24: this is the sex ratio, not eggs-per-spawner SD)
+  names(life_histories$sR) <- "sR"
 
   # temporal correlation in eggs per spawner
   life_histories$egg_rho <- life_pars["egg_rho", "Value"]
@@ -228,7 +229,7 @@ pop_model_matrix_elements_anadromous <- function(pop_mod_setup = NA,
 
 
   # Add spawning years for reference
-  life_histories$spanwing_years <- pop_mod_setup$spanwing_years
+  life_histories$spawning_years <- pop_mod_setup$spawning_years
 
   life_histories$anadromous <- TRUE
 

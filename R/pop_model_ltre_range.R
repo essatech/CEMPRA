@@ -199,9 +199,19 @@ pop_model_ltre_range <- function(life_cycle_params,
 
     # Check value is within bounds
     if (!is.na(mean_val) && (mean_val < low || mean_val > high)) {
+      if (dist_type == "pert") {
+        # rpert() hard-crashes downstream with a cryptic "mode must be
+        # between min and max" - stop up front with a clear message
+        stop("Value (", mean_val, ") is outside [Low_Limit, Up_Limit] = [",
+             low, ", ", high, "] for pert-distributed parameter '",
+             param_name, "'. The pert distribution requires ",
+             "Low_Limit <= Value <= Up_Limit.", call. = FALSE)
+      }
       warning("Value (", mean_val, ") is outside [Low_Limit, Up_Limit] = [",
               low, ", ", high, "] for parameter '", param_name,
-              "'. This may cause sampling issues.")
+              "'. Every sample for this parameter will sit at the ",
+              "out-of-bounds mean, so its PRCC sensitivity will be NA. ",
+              "Fix the Value or widen the limits.", call. = FALSE)
     }
 
     # Check SD for normal and beta distributions

@@ -43,7 +43,7 @@ dependence is applied - and then the catastrophe removes a random fraction
 every life stage. Catastrophic mortality is therefore IN ADDITION to
 normal annual mortality, not a replacement for it.}
 
-\item{CE_df}{Cumulative effect data frame. Data frame identifying cumulative effects stressors targets system capacity or population parameter, or both, and target life stages.}
+\item{CE_df}{Cumulative effect data frame. Data frame identifying cumulative effects stressors targets system capacity or population parameter, or both, and target life stages. Note for hand-built tables: a stressor represented by a SINGLE row is treated as a constant effect applied to every simulation year - even if that row carries a Year value. To make an effect year-specific, supply one row per simulation year (with a Year column), or use the From_Year/To_Year activation-window columns; the workbook pathway (PopulationModel_Run) always builds full per-year rows.}
 
 \item{K_adj}{Boolean. DEPRECATED legacy pathway; defaults to FALSE and
 should generally stay FALSE. When TRUE, runs a slow 100-replicate

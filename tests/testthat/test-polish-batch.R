@@ -101,14 +101,14 @@ test_that("dd_hs_spawners works as an alias of hs_spawners", {
   expect_true("hs_spawners" %in% bk$ret_bh_dd_stages)
 })
 
-test_that("NA survival values no longer crash the matrix builder guards", {
+test_that("NA survival values error up front naming the blank row", {
   lc <- read.csv(system.file("extdata", "life_cycles.csv", package = "CEMPRA"))
   lc$Value[lc$Name == "surv_2"] <- NA
-  # previously: "missing value where TRUE/FALSE needed" from the
-  # survival==1 repair or the symbolic-vs-QA comparison. Now the pipeline
-  # completes (the NA propagates into the matrix, visibly).
-  s <- pop_model_setup(life_cycles = lc)
-  expect_true(is.list(suppressMessages(pop_model_matrix_elements(s))))
+  # History: originally crashed deep in the matrix builders with
+  # "missing value where TRUE/FALSE needed"; the 2026-09-22 polish made
+  # the pipeline complete with a visible NA; the 2026-09-23 ruling made
+  # this a clear early error naming the offending row.
+  expect_error(pop_model_setup(life_cycles = lc), "surv_2")
 })
 
 test_that("lognormal dose with Mean <= 0 warns instead of silent zeros", {

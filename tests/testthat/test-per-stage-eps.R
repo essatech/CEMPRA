@@ -40,7 +40,7 @@ test_that("legacy single-eps files are bit-identical to pre-change results", {
     Nyears = 100, p.cat = 0, CE_df = NULL
   )
   expect_equal(base_run$pop$N[c(2, 51, 101)],
-               c(116.5019806604, 93.7296955379, 90.4276469924),
+               c(116.5019806604, 94.7992694554, 90.6772869360), # re-anchored 2026-09-24 (egg-DD timing fix, ~1% shift; year 2 unchanged),
                tolerance = 1e-9)
 
   # Seeded run with a generic CE fecundity stressor
@@ -57,7 +57,7 @@ test_that("legacy single-eps files are bit-identical to pre-change results", {
     Nyears = 60, p.cat = 0, CE_df = CE_df
   )
   expect_equal(ce_run$pop$N[c(2, 31, 61)],
-               c(119.9739230073, 89.5192501830, 101.1489537222),
+               c(119.9739230073, 89.8125566614, 100.8041549578), # re-anchored 2026-09-24 (egg-DD timing fix),
                tolerance = 1e-9)
 
   # The cleaned file must reproduce the identical model

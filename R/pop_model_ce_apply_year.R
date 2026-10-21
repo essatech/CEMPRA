@@ -176,6 +176,116 @@ canonical_ce_target <- function(life_stage, parameter, anadromous) {
 }
 
 
+#' Known CE life-stage tags per model mode
+#'
+#' Internal single source of truth for the accepted (normalized)
+#' life_stage tokens per parameter. Salmon-only tokens - pre-spawn (u),
+#' migration (smig) survival, pre-breeder (pb) stages and age-specific
+#' breeder/spawner capacity - are excluded in non-anadromous mode, where
+#' they would be silent no-ops.
+#'
+#' @noRd
+#' @keywords internal
+ce_known_tags <- function(anadromous) {
+  ss_rng <- 1:12
+  known_fecund <- c("eps", "stageb", "spawners", "adults",
+                    paste0("eps", ss_rng), paste0("stageb", ss_rng))
+  known_surv <- c("stagee", "se", "egg", "eggs", "stageegg", "stageeggs",
+                  "stage0", "s0", "so", "fry", "surv", "all", "adult",
+                  "u", "prespawn", "spawners", "smig", "spawnmig",
+                  paste0("stage", ss_rng), paste0("s", ss_rng),
+                  paste0("surv", ss_rng), paste0("stagepb", ss_rng),
+                  paste0("u", ss_rng), paste0("prespawn", ss_rng),
+                  paste0("smig", ss_rng), paste0("spawnmig", ss_rng))
+  known_cap <- c("se", "stagee", "egg", "eggs", "stageegg", "stageeggs", "ke",
+                 "s0", "so", "stage0", "fry", "k0", "adult", "all",
+                 "spawner", "spawners", "stageb", "spawn",
+                 paste0("stage", ss_rng), paste0("s", ss_rng),
+                 paste0("k", ss_rng), paste0("stagepb", ss_rng),
+                 paste0("p", ss_rng),
+                 paste0("spawn", ss_rng), paste0("spawners", ss_rng),
+                 paste0("b", ss_rng), paste0("stageb", ss_rng),
+                 paste0("spawner", ss_rng))
+
+  if (!anadromous) {
+    anad_only_surv <- c("u", "prespawn", "spawners", "smig", "spawnmig",
+                        paste0("stagepb", ss_rng),
+                        paste0("u", ss_rng), paste0("prespawn", ss_rng),
+                        paste0("smig", ss_rng), paste0("spawnmig", ss_rng))
+    known_surv <- setdiff(known_surv, anad_only_surv)
+    anad_only_cap <- c(paste0("stagepb", ss_rng), paste0("p", ss_rng),
+                       paste0("spawn", ss_rng), paste0("spawners", ss_rng),
+                       paste0("b", ss_rng), paste0("stageb", ss_rng),
+                       paste0("spawner", ss_rng))
+    known_cap <- setdiff(known_cap, anad_only_cap)
+  }
+
+  list(fecund = known_fecund, surv = known_surv, cap = known_cap)
+}
+
+
+#' Validate CE life-stage / parameter linkages for a model mode
+#'
+#' @description Checks whether stressor-response Life_stages / Parameters
+#' linkages are recognized by the population model in the given mode.
+#' Used by the Shiny app to flag badly-coded stressor-response rows
+#' before a run (unrecognized linkages are silent no-ops in the model).
+#'
+#' @param life_stage Character vector of Life_stages values as they appear
+#' in the workbook (comma-separated lists allowed, e.g. "stage_1, stage_2").
+#' @param parameter Character vector of Parameters values ("survival",
+#' "capacity", "fecundity"; "survivorship" is accepted as an alias).
+#' @param anadromous Logical. Model mode: salmon-only tags (u/prespawn,
+#' smig, pre-breeder stages, age-specific spawner capacity) are only valid
+#' when TRUE.
+#'
+#' @returns A character vector the same length as the inputs: "" when the
+#' linkage is recognized, otherwise a short plain-language problem
+#' description naming the offending tag.
+#'
+#' @export
+pop_model_ce_validate <- function(life_stage, parameter, anadromous = FALSE) {
+  known <- ce_known_tags(isTRUE(anadromous))
+  n <- max(length(life_stage), length(parameter))
+  life_stage <- rep_len(as.character(life_stage), n)
+  parameter <- rep_len(as.character(parameter), n)
+
+  out <- character(n)
+  for (i in seq_len(n)) {
+    par_i <- tolower(trimws(parameter[i]))
+    if (is.na(par_i) || par_i == "" || par_i == "na") {
+      next # Joe-Model-only rows (no parameter) are fine
+    }
+    if (par_i == "survivorship") par_i <- "survival"
+    if (!(par_i %in% c("survival", "capacity", "fecundity"))) {
+      out[i] <- paste0("unrecognized parameter '", parameter[i], "'")
+      next
+    }
+    known_set <- switch(par_i,
+                        survival = known$surv,
+                        capacity = known$cap,
+                        fecundity = known$fecund)
+    tokens <- strsplit(as.character(life_stage[i]), ",")[[1]]
+    tokens <- gsub("[ _]", "", tolower(trimws(tokens)))
+    tokens <- tokens[!(is.na(tokens)) & tokens != ""]
+    if (length(tokens) == 0) {
+      out[i] <- paste0("blank life stage tag (parameter '", par_i, "')")
+      next
+    }
+    bad <- tokens[!(tokens %in% known_set)]
+    if (length(bad) > 0) {
+      out[i] <- paste0(
+        "life stage tag '", paste(bad, collapse = "', '"),
+        "' is not recognized for ", par_i,
+        if (!isTRUE(anadromous)) " in a non-anadromous model" else "",
+        ""
+      )
+    }
+  }
+  out
+}
+
+
 #' Population Model CE Application to Vital Rates Year-Specific
 #'
 #' @description Utility function to apply cumulative effects to vital rates.
@@ -330,25 +440,13 @@ pop_model_ce_apply_year <- function(
   # Unrecognized values are silently skipped by the application blocks below
   # (a typo such as "stge_1" or an unsupported alias such as "age-1" would
   # have NO effect on the model) - warn so the user can fix the workbook.
-  ss_rng <- 1:12
-  known_fecund <- c("eps", "stageb", "spawners", "adults",
-                    paste0("eps", ss_rng), paste0("stageb", ss_rng))
-  known_surv <- c("stagee", "se", "egg", "eggs", "stageegg", "stageeggs",
-                  "stage0", "s0", "so", "fry", "surv", "all", "adult",
-                  "u", "prespawn", "spawners", "smig", "spawnmig",
-                  paste0("stage", ss_rng), paste0("s", ss_rng),
-                  paste0("surv", ss_rng), paste0("stagepb", ss_rng),
-                  paste0("u", ss_rng), paste0("prespawn", ss_rng),
-                  paste0("smig", ss_rng), paste0("spawnmig", ss_rng))
-  known_cap <- c("se", "stagee", "egg", "eggs", "stageegg", "stageeggs", "ke",
-                 "s0", "so", "stage0", "fry", "k0", "adult", "all",
-                 "spawner", "spawners", "stageb", "spawn",
-                 paste0("stage", ss_rng), paste0("s", ss_rng),
-                 paste0("k", ss_rng), paste0("stagepb", ss_rng),
-                 paste0("p", ss_rng),
-                 paste0("spawn", ss_rng), paste0("spawners", ss_rng),
-                 paste0("b", ss_rng), paste0("stageb", ss_rng),
-                 paste0("spawner", ss_rng))
+  # The accepted-tag sets are MODE-DEPENDENT: salmon-only tags (pre-spawn
+  # and migration survival, age-specific spawner capacity) are rejected in
+  # non-anadromous runs, where they would be silent no-ops.
+  known <- ce_known_tags(anadromous)
+  known_fecund <- known$fecund
+  known_surv <- known$surv
+  known_cap <- known$cap
 
   par_v <- CE_df$parameter
   ls_v <- CE_df$life_stage
@@ -446,12 +544,21 @@ pop_model_ce_apply_year <- function(
                           CE_fecund$HUC == index_row$HUC, ]
 
       if (any(is.na(trow$sys.cap))) {
-        # Skip is missing data
+        # Skip on missing data - warn so direct callers know the
+        # stressor is being dropped (once per stressor x life stage)
+        warning(
+          "CE stressor '", index_row$stressor, "' (fecundity, life stage '",
+          index_row$life_stage, "') has NA sys.cap value(s) - this ",
+          "stressor x life stage is skipped for all years.",
+          call. = FALSE
+        )
         next
       }
 
       # Fecundity is knocked down by a stressor
-      if (index_row$life_stage == "eps" | index_row$life_stage == "stage_b" | index_row$life_stage == "spawners" | index_row$life_stage == "adults" | index_row$life_stage == "stageb") {
+      # (the "stage_b" spelling can never reach here - underscores are
+      # stripped during normalization; "stageb" below covers it)
+      if (index_row$life_stage == "eps" | index_row$life_stage == "spawners" | index_row$life_stage == "adults" | index_row$life_stage == "stageb") {
 
         sys_caps <- align_sys_caps(trow, length(rates$ft))
 
@@ -506,7 +613,14 @@ pop_model_ce_apply_year <- function(
                         CE_surv$HUC == index_row$HUC, ]
 
       if (any(is.na(trow$sys.cap))) {
-        # Skip is missing data
+        # Skip on missing data - warn so direct callers know the
+        # stressor is being dropped (once per stressor x life stage)
+        warning(
+          "CE stressor '", index_row$stressor, "' (survival, life stage '",
+          index_row$life_stage, "') has NA sys.cap value(s) - this ",
+          "stressor x life stage is skipped for all years.",
+          call. = FALSE
+        )
         next
       }
 
@@ -680,7 +794,14 @@ pop_model_ce_apply_year <- function(
                        CE_cap$HUC == index_row$HUC, ]
 
       if (any(is.na(trow$sys.cap))) {
-        # Skip is missing data
+        # Skip on missing data - warn so direct callers know the
+        # stressor is being dropped (once per stressor x life stage)
+        warning(
+          "CE stressor '", index_row$stressor, "' (capacity, life stage '",
+          index_row$life_stage, "') has NA sys.cap value(s) - this ",
+          "stressor x life stage is skipped for all years.",
+          call. = FALSE
+        )
         next
       }
 
@@ -725,6 +846,17 @@ pop_model_ce_apply_year <- function(
       }
       if (isTRUE(names(rates$K_list[[1]])[1] == "stage_Pb_1")) {
         k_prefix <- "stage_Pb_"
+      }
+      if (is.na(k_prefix)) {
+        # Previously fell through to "object 'k_prefix' not found"
+        stop(
+          "Unrecognized capacity (K) column naming scheme in the life ",
+          "histories object: expected stage capacity names starting 'K1' ",
+          "(non-anadromous) or 'stage_Pb_1' (anadromous), got '",
+          paste(utils::head(names(rates$K_list[[1]]), 3), collapse = "', '"),
+          "'. Cannot apply capacity stressors.",
+          call. = FALSE
+        )
       }
 
       # For ss in 1:12, build "smig{ss}" and "spawnmig{ss}"

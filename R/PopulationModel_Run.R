@@ -26,8 +26,18 @@
 #'  Carlo simulations for the Population Model.
 #' @param stressors (optional) character vector of stressor
 #'  names to include in the Population Model. Leave the default
-#'  value as NA if you wish to include all stressors
-#'  applicable to the population model.
+#'  value as NA if you wish to include all stressors (and all
+#'  two-stressor interaction matrices) applicable to the population
+#'  model. The selection scopes BOTH regular stressors and interaction
+#'  matrices (use the MInt_ sheet name to select a matrix). A selected
+#'  matrix has its two axis stressors' doses computed internally to
+#'  feed the interpolation, but those mains only contribute their own
+#'  effects if they are also selected. Any combination works: main
+#'  effects only, matrix only, or both (acting multiplicatively). The
+#'  matrix's Main_Effect setting is ignored in the population model -
+#'  the selection is the control. Matrix CE rows are tagged with the
+#'  MInt_ sheet's Life_stages and Parameters header cells (e.g.,
+#'  "stage_1" / "survival").
 #' @param output_type (optional) character. Set to "full" for all data of "adults" for only adult data.
 #' @param s0_calibrate (optional) logical. If TRUE (default) fry survival
 #'  (s0) is re-calibrated so lambda = 1 when an adult capacity `k` is set
@@ -65,6 +75,15 @@ PopulationModel_Run <- function(dose = NA,
   # Run the population model time series projection for a target watershed
   #------------------------------------------------------------------------
 
+  # Two-stressor interaction matrices (sr_wb_dat$MInt) ARE applied in the
+  # population model (added 2026-09-23): each selected matrix is
+  # interpolated from its two axis stressors' per-year sampled doses and
+  # contributes its own CE rows, tagged with the matrix sheet's
+  # Life_stages / Parameters cells. Unlike the Joe Model, the matrix's
+  # Main_Effect setting is deliberately IGNORED here - the caller's
+  # `stressors` selection controls what contributes (main effects, the
+  # matrix, or both, acting multiplicatively like any other stressors).
+
   # Check to see if stressor-response data is missing and fill slots
   if (is.data.frame(dose)) {
     #------------------------------------------------------------------------
@@ -79,16 +98,57 @@ PopulationModel_Run <- function(dose = NA,
     ce_df_sub <- align_dose_stressor_names(ce_df_sub,
                                            sr_wb_dat$main_sheet$Stressors)
 
-    # Omit non-target stressors from the stressor magnitude and sr dataframes
-    if (any(!is.na(stressors))) {
-      # Subset the stressor magnitude dataframe to include only the target stressors
-      ce_df_sub <- ce_df_sub[which(ce_df_sub$Stressor %in% stressors), ]
-      # Subset the stressor response dataframe to include only the target stressors
-      sr_wb_dat$main_sheet <- sr_wb_dat$main_sheet[which(sr_wb_dat$main_sheet$Stressors %in% stressors), ]
-      sr_wb_dat$stressor_names <- sr_wb_dat$stressor_names[sr_wb_dat$stressor_names %in% stressors] # nolint
-      sr_wb_dat$sr_dat <- sr_wb_dat$sr_dat[which(names(sr_wb_dat$sr_dat) %in% stressors)]
+    # Interaction matrices: pull them aside so the internal JoeModel_Run
+    # call below never applies them (the pop model applies its own,
+    # without Main_Effect absorption)
+    mint_all <- sr_wb_dat$MInt
+    sr_wb_dat$MInt <- NULL
+    mint_names <- names(mint_all)
 
+    # Omit non-target stressors from the stressor magnitude and sr dataframes.
+    # The `stressors` argument scopes BOTH regular stressors and interaction
+    # matrices (MInt_ sheet names). Selected matrices need their two axis
+    # stressors' doses computed internally even when those mains are not
+    # selected - such helper rows are removed from the final CE_df below.
+    if (any(!is.na(stressors))) {
+
+      selected_mains <- stressors[!grepl("^MInt_", stressors)]
+      selected_matrices <- intersect(stressors, mint_names)
+      unknown_matrices <-
+        setdiff(stressors[grepl("^MInt_", stressors)], mint_names)
+      if (length(unknown_matrices) > 0) {
+        warning(
+          "Unknown interaction matrix name(s) in `stressors`: ",
+          paste(unknown_matrices, collapse = ", "),
+          call. = FALSE
+        )
+      }
+
+      # Axis stressors required to evaluate the selected matrices
+      axis_stressors <- unlist(lapply(mint_all[selected_matrices],
+                                      function(m) {
+                                        c(trimws(as.character(m$Columns)),
+                                          trimws(as.character(m$Rows)))
+                                      }))
+      keep_set <- union(selected_mains, axis_stressors)
+
+      # Subset the stressor magnitude dataframe to include only the target stressors
+      ce_df_sub <- ce_df_sub[which(ce_df_sub$Stressor %in% keep_set), ]
+      # Subset the stressor response dataframe to include only the target stressors
+      sr_wb_dat$main_sheet <- sr_wb_dat$main_sheet[which(sr_wb_dat$main_sheet$Stressors %in% keep_set), ]
+      sr_wb_dat$stressor_names <- sr_wb_dat$stressor_names[sr_wb_dat$stressor_names %in% keep_set] # nolint
+      sr_wb_dat$sr_dat <- sr_wb_dat$sr_dat[which(names(sr_wb_dat$sr_dat) %in% keep_set)]
+
+      explicit_selection <- TRUE
+
+    } else {
+      # Default: all stressors and all interaction matrices in the workbook
+      selected_mains <- NULL
+      selected_matrices <- mint_names
+      explicit_selection <- FALSE
     }
+
+    mint_sel <- mint_all[selected_matrices]
 
     # Multiple From_Year/To_Year activation windows for the same stressor
     # are NOT supported: the downstream dose pooling (SystemCapacity
@@ -168,7 +228,27 @@ PopulationModel_Run <- function(dose = NA,
     # Gather summary at stressor level
     dobj <- jm$sc.dose.df
 
-    # Ensure no NA values
+    # Apply two-stressor interaction matrices (if any): interpolate each
+    # matrix from its axis stressors' sampled doses per replicate-year.
+    # keep_main_effects retains BOTH axis stressors - the matrix's
+    # Main_Effect setting is deliberately ignored in the population
+    # model (the caller's selection controls what contributes; a matrix
+    # and its mains simply combine multiplicatively when both present).
+    if (length(mint_sel) > 0) {
+      for (mm in seq_along(mint_sel)) {
+        MInt <- mint_sel[[mm]]
+        dobj <- interaction_matrix_sys_cap(
+          MInt,
+          sc.dose.df = dobj,
+          adult_sys_cap = FALSE,
+          keep_main_effects = c(trimws(as.character(MInt$Columns)),
+                                trimws(as.character(MInt$Rows)))
+        )
+      }
+    }
+
+    # Ensure no NA values (a matrix with missing axis doses degrades to
+    # "no effect" here as well)
     dobj$sys.cap <- ifelse(is.na(dobj$sys.cap), 1, dobj$sys.cap)
 
     # Merge on MCMC sims and year
@@ -211,6 +291,26 @@ PopulationModel_Run <- function(dose = NA,
     merge_cols <-
       merge_cols[!(duplicated(merge_cols)), ]
 
+    # Interaction matrix rows: life stage and parameter linkages come
+    # from the MInt_ sheet's Life_stages / Parameters header cells
+    # (matrices have no dose rows or Main-sheet rows of their own).
+    # No From/To year window in the workbook path - applied to all years.
+    if (length(mint_sel) > 0) {
+      mint_rows <- do.call(rbind, lapply(mint_sel, function(m) {
+        r <- data.frame(
+          Stressor = as.character(m$Matrix_Name),
+          Life_stages = as.character(m$Life_stages),
+          Parameters = as.character(m$Parameters),
+          Stressor_cat = as.character(m$Matrix_Name),
+          stringsAsFactors = FALSE
+        )
+        if ("From_Year" %in% base_merge_cols) r$From_Year <- NA
+        if ("To_Year" %in% base_merge_cols) r$To_Year <- NA
+        r
+      }))
+      merge_cols <- rbind(merge_cols, mint_rows)
+    }
+
     m_all <-
       merge(
         merge_cols,
@@ -230,6 +330,18 @@ PopulationModel_Run <- function(dose = NA,
       "parameter"
     colnames(m_all)[colnames(m_all) == "Stressor_cat"] <-
       "Stressor_cat"
+
+    # Under an explicit `stressors` selection, only the selected
+    # stressors and matrices contribute - axis mains computed solely to
+    # feed a matrix are removed here
+    if (explicit_selection) {
+      mint_result_names <- unique(c(
+        names(mint_sel),
+        unlist(lapply(mint_sel, function(m) as.character(m$Matrix_Name)))
+      ))
+      m_all <-
+        m_all[m_all$Stressor %in% c(selected_mains, mint_result_names), ]
+    }
 
     # Return cleaned object
     CE_df <- m_all

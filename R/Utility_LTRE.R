@@ -86,8 +86,11 @@ rtruncnorm <- function(n, mean, sd, lower, upper) {
   # Check for extreme truncation
 
   if (upper_p - lower_p < 1e-10) {
-    warning("Truncation bounds are very extreme relative to mean/sd. ",
-            "Returning samples at the mode.")
+    warning("Truncation bounds [", lower, ", ", upper, "] are very extreme ",
+            "relative to mean = ", mean, ", sd = ", sd, ". Returning every ",
+            "sample at the mean - if the mean lies outside the bounds, all ",
+            "samples violate them and the parameter's PRCC will be NA.",
+            call. = FALSE)
     return(rep(mean, n))
   }
 
@@ -217,9 +220,18 @@ calculate_prcc <- function(X, y) {
       prcc_values[k] <- NA_real_
       p_values[k] <- NA_real_
     } else {
-      cor_test <- stats::cor.test(resid_x, resid_y)
-      prcc_values[k] <- cor_test$estimate
-      p_values[k] <- cor_test$p.value
+      # Partial correlation significance uses df = N - 2 - (number of
+      # OTHER parameters partialled out), per Marino et al. (2008).
+      # cor.test()'s default df = N - 2 was anti-conservative here.
+      r <- stats::cor(resid_x, resid_y)
+      prcc_values[k] <- r
+      df_adj <- length(resid_x) - 2 - length(other_cols)
+      if (df_adj > 0 && abs(r) < 1) {
+        t_stat <- r * sqrt(df_adj / (1 - r^2))
+        p_values[k] <- 2 * stats::pt(-abs(t_stat), df = df_adj)
+      } else {
+        p_values[k] <- NA_real_
+      }
     }
   }
 

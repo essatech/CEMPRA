@@ -4,7 +4,12 @@
 \alias{interaction_matrix_sys_cap}
 \title{Interaction Matrix System Capacity}
 \usage{
-interaction_matrix_sys_cap(MInt, sc.dose.df, adult_sys_cap)
+interaction_matrix_sys_cap(
+  MInt,
+  sc.dose.df,
+  adult_sys_cap,
+  keep_main_effects = character(0)
+)
 }
 \arguments{
 \item{MInt}{One item from object returned from StressorResponseWorkbook()}
@@ -14,6 +19,11 @@ and sys.cap.}
 
 \item{adult_sys_cap}{Should the Joe Model be run only with variables
 identified for adult system capacity.}
+
+\item{keep_main_effects}{(optional) character vector of main-effect
+stressor names that must stay in the returned sc.dose.df even when this
+matrix has Main_Effect = "Included" (used by JoeModel_Run when the caller
+explicitly selected those stressors). Defaults to none.}
 }
 \value{
 Updated sc.dose.df data frame with system capacity values

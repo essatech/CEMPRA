@@ -76,16 +76,44 @@ mean_Response <- function(n.stressors = NA, str.list = NA, main = NA) {
     this_data <- this_data[!(is.na(this_data$value)), ]
     this_data <- this_data[!(is.na(this_data$mean_system_capacity)), ]
 
+    # approxfun needs at least two points; an entirely blank (or
+    # non-numeric) value / Mean System Capacity column previously crashed
+    # much later with "need at least two non-NA values to interpolate"
+    if (nrow(this_data) < 2) {
+      stop(
+        "Stressor '", this_stressor, "': the stressor-response worksheet ",
+        "needs at least two rows with numeric entries in both the 'value' ",
+        "(dose) and 'Mean System Capacity (%)' columns (found ",
+        nrow(this_data), "). Check for blank or non-numeric cells.",
+        call. = FALSE
+      )
+    }
+
     # Set any NAs for SD to zero
     this_data$sd <- ifelse(is.na(this_data$sd), 0, this_data$sd)
 
-    # Set any NAs for lwr the median
-    m_lwr <- stats::median(this_data$lwr, na.rm = TRUE)
-    this_data$lwr <- ifelse(is.na(this_data$lwr), m_lwr, this_data$lwr)
+    # Blank limit columns take permissive defaults: no lower limit
+    # entered means 0%, no upper limit means 100%. Partially filled
+    # columns keep the historical median-fill for scattered blanks.
+    if (all(is.na(this_data$lwr))) {
+      message("Stressor '", this_stressor,
+              "': low.limit column is blank - assuming 0%.")
+      this_data$lwr <- 0
+    } else {
+      # Set any NAs for lwr the median
+      m_lwr <- stats::median(this_data$lwr, na.rm = TRUE)
+      this_data$lwr <- ifelse(is.na(this_data$lwr), m_lwr, this_data$lwr)
+    }
 
-    # Set any NAs for upr to the median
-    m_upr <- stats::median(this_data$upr, na.rm = TRUE)
-    this_data$upr <- ifelse(is.na(this_data$upr), m_upr, this_data$upr)
+    if (all(is.na(this_data$upr))) {
+      message("Stressor '", this_stressor,
+              "': up.limit column is blank - assuming 100%.")
+      this_data$upr <- 100
+    } else {
+      # Set any NAs for upr to the median
+      m_upr <- stats::median(this_data$upr, na.rm = TRUE)
+      this_data$upr <- ifelse(is.na(this_data$upr), m_upr, this_data$upr)
+    }
 
 
     # Interpolation axis. Curve x-values are entered in raw units of the

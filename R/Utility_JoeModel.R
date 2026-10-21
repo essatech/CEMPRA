@@ -32,16 +32,35 @@ tbeta_rnd <- function(mn_est,
     return(stats::qbeta(y, alpha, beta))
   }
 
+  # Clamp a deterministic value to the (possibly vectorized) truncation
+  # limits - the degenerate branches below return the curve mean directly,
+  # and previously bypassed the author's low/up limits entirely
+  clamp_to_limits <- function(x, i) {
+    lo <- if (length(low.limit) >= i) low.limit[i] else low.limit[1]
+    hi <- if (length(up.limit) >= i) up.limit[i] else up.limit[1]
+    if (!is.na(x) && !is.na(lo) && x < lo) x <- lo
+    if (!is.na(x) && !is.na(hi) && x > hi) x <- hi
+    x
+  }
+
   for (i in 1:length(mn_est)) {
+    # Invalid means (NA, or outside the 0-1 proportion scale) cannot be
+    # sampled - return NA rather than crashing on if(NA) downstream.
+    # Callers (SystemCapacity) warn with the stressor's name.
+    if (is.na(mn_est[i]) || mn_est[i] < 0 || mn_est[i] > 1) {
+      rnd.est[i] <- NA_real_
+      next
+    }
     if (sd_est[i] == 0 | is.na(sd_est[i])) {
-      # no variance in response
-      rnd.est[i] <- mn_est[i] # simply return the mean estimates
+      # no variance in response - return the mean estimate (clamped)
+      rnd.est[i] <- clamp_to_limits(mn_est[i], i)
     } else {
       f_beta <- beta_param(mn_est[i], sd_est[i])
 
       # Need to account for margins
       if (!(all(all(f_beta[2] > 0) & all(f_beta[1] > 0)))) {
-        rnd.est[i] <- mn_est[i] # simply return the mean estimates
+        # invalid beta parameters - return the mean estimate (clamped)
+        rnd.est[i] <- clamp_to_limits(mn_est[i], i)
       } else {
         suppressWarnings({
           rnd.est[i] <- truncateddist_rtbeta(

@@ -42,14 +42,14 @@ pmx_eval <- function(mx, vars, byrow = TRUE) {
 
 
 
-#' rbeta equivelent from TruncatedDistributions package
-#' @keywords internal
-rbeta2 <- function(n, shape1, shape2, ncp = 0) {
-  C_rbeta <- NULL
-  if (missing(ncp)) {
-    .Call(C_rbeta, n, shape1, shape2)
-  } else {
-    X <- stats::rchisq(n, 2 * shape1, ncp = ncp)
-    X / (X + stats::rchisq(n, 2 * shape2))
-  }
-}
+# rbeta2: commented out 2026-09-23 - dead code, see RESOLVED_ISSUES.
+# Never called anywhere; the default branch would fail (.Call on NULL).
+# rbeta2 <- function(n, shape1, shape2, ncp = 0) {
+#   C_rbeta <- NULL
+#   if (missing(ncp)) {
+#     .Call(C_rbeta, n, shape1, shape2)
+#   } else {
+#     X <- stats::rchisq(n, 2 * shape1, ncp = ncp)
+#     X / (X + stats::rchisq(n, 2 * shape2))
+#   }
+# }

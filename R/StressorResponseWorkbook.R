@@ -46,6 +46,20 @@
 #' @export
 StressorResponseWorkbook <- function(filename = NA) {
 
+  # The Main cover sheet must be the FIRST worksheet: downstream code
+  # (and the Shiny app) assume sheet 1 is the cover sheet, so an
+  # alphabetized or re-ordered workbook previously produced confusing
+  # failures far from the cause
+  all_sheets <- readxl::excel_sheets(filename)
+  if (all_sheets[1] != "Main") {
+    stop(
+      "The FIRST worksheet of the stressor response workbook must be ",
+      "named 'Main' (found '", all_sheets[1], "'). Move the Main cover ",
+      "sheet to the first position.",
+      call. = FALSE
+    )
+  }
+
   # File to read and view stressor-response relations
   main_sheet <- readxl::read_excel(filename, sheet = "Main")
 
@@ -182,15 +196,50 @@ StressorResponseWorkbook <- function(filename = NA) {
     dat <- readxl::read_xlsx(filename,
       sheet = sheet
     )
+    if (ncol(dat) < 5) {
+      stop(
+        "Stressor-response worksheet '", sheet, "' has only ", ncol(dat),
+        " column(s). Expected five columns: '<stressor name>' (dose values), ",
+        "'Mean System Capacity (%)', 'SD', 'low.limit', 'up.limit'.",
+        call. = FALSE
+      )
+    }
     dat <- dat[, c(1:5)] # Exclude other extraneous columns to right (if any)
-    # Make sure columns in the correct order
-    colnames(dat)[1] <- "value"
-    colnames(dat)[2] <- "Mean System Capacity (%)"
 
-    if (any(colnames(dat) != c("value", "Mean System Capacity (%)", "SD", "low.limit", "up.limit"))) {
-      return("Column names in stressor response workbook out of order")
+    # Validate the column layout up front. Columns 1 (dose axis, usually
+    # the stressor's own name) and 2 (the response - legacy workbooks use
+    # alternate labels like 'Scaled Response Values 0 to 100') keep their
+    # historical force-rename, but a SHIFTED sheet - where a limit/SD
+    # header lands in column 2, or columns 3-5 are out of order - is now
+    # a clear error instead of silently producing garbage.
+    found <- trimws(colnames(dat))
+    expected_345 <- c("SD", "low.limit", "up.limit")
+    shifted <- found[2] %in% c(expected_345, "value")
+    mismatch_345 <- which(found[3:5] != expected_345)
+    if (shifted || length(mismatch_345) > 0) {
+      stop(
+        "Stressor-response worksheet '", sheet, "' has unexpected column ",
+        "name(s)/order: ",
+        if (shifted) paste0("column 2 is '", found[2], "'; ") else "",
+        if (length(mismatch_345) > 0) {
+          paste0("column ", mismatch_345 + 2, " is '",
+                 found[3:5][mismatch_345], "' (expected '",
+                 expected_345[mismatch_345], "')", collapse = "; ")
+        } else "",
+        ". Columns must be: '<stressor name>' (dose values), ",
+        "'Mean System Capacity (%)' (the response), 'SD', 'low.limit', ",
+        "'up.limit'.",
+        call. = FALSE
+      )
     }
     colnames(dat) <- c("value", "mean_system_capacity", "sd", "lwr", "upr")
+
+    # Coerce to numeric early: one stray text cell (e.g. "TBD") otherwise
+    # turns a whole column into text and surfaces far away as
+    # "non-numeric argument to binary operator". Text cells become NA.
+    for (cc in colnames(dat)) {
+      dat[[cc]] <- suppressWarnings(as.numeric(as.character(dat[[cc]])))
+    }
     return(dat)
   }
 
@@ -213,13 +262,27 @@ StressorResponseWorkbook <- function(filename = NA) {
   if(any(grepl("MInt_", snames_all))) {
 
     mint_names <- snames_all[grepl("MInt_", snames_all)]
-    #stressor_names <- c(stressor_names, mint_names)
+    # NOTE: matrix names are deliberately NOT appended to stressor_names /
+    # pretty_names - they are exposed separately via ret_obj$MInt so that
+    # regular-stressor consumers (dose alignment, curve loops) never see
+    # them. The Shiny app lists them from names(sr_wb_dat$MInt).
 
-    # Get pretty names
-    full_names <- lapply(mint_obj, function(x) { x$Matrix_Name })
-    full_names <- unlist(full_names)
-    names(full_names) <- NULL
-    #pretty_names <- c(pretty_names, full_names)
+    # Validate each matrix's axis stressor names against the Main sheet -
+    # a typo or trailing space here previously surfaced only at run time
+    # (as a crash or a silent skip)
+    for (mn in names(mint_obj)) {
+      axes <- c(mint_obj[[mn]]$Columns, mint_obj[[mn]]$Rows)
+      missing_axes <- setdiff(axes, main_sheet$Stressors)
+      if (length(missing_axes) > 0) {
+        warning(
+          "Interaction matrix sheet '", mn, "': axis stressor name(s) not ",
+          "found in the Main sheet: ",
+          paste(missing_axes, collapse = ", "),
+          ". The matrix will be skipped at run time unless the names match.",
+          call. = FALSE
+        )
+      }
+    }
 
   }
 

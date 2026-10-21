@@ -4,7 +4,7 @@
 \alias{E_est_anadromous}
 \title{E_est_anadromous}
 \usage{
-E_est_anadromous(N, dat, spanwing_years)
+E_est_anadromous(N, dat, spawning_years)
 }
 \description{
 E_est_anadromous

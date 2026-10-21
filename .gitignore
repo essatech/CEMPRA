@@ -65,3 +65,6 @@ rsconnect/
 /doc/
 /Meta/
 .positai
+
+# Plot artifacts from test runs
+tests/testthat/Rplots.pdf

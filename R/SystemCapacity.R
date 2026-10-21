@@ -55,9 +55,22 @@ SystemCapacity <- function(f.dose.df,
       f.dose.df$SD[i] <- 0
     }
 
+    # Blank limits mean "unbounded": draw from the full distribution.
+    # (NA limits previously poisoned the truncated samplers - every draw
+    # became NA and the stressor silently dropped out of the CE product.)
+    low_lim <- f.dose.df$Low_Limit[i]
+    up_lim <- f.dose.df$Up_Limit[i]
+    if (is.na(up_lim)) {
+      up_lim <- Inf
+    }
 
     # Randomly generate doses based on mean, SD, limits and distribution type
     if (f.dose.df$Distribution[i] == "lognormal") {
+
+      # Lognormal support is positive - an unbounded lower limit is 0
+      if (is.na(low_lim)) {
+        low_lim <- 0
+      }
 
       # If mean < 0 change mean to minimum limit (can't have zero or negative on log scale)
       if (isTRUE(f.dose.df$Mean[i] <= 0)) {
@@ -65,13 +78,13 @@ SystemCapacity <- function(f.dose.df,
           "Stressor '", f.dose.df$Stressor[i], "': the lognormal ",
           "distribution requires a positive Mean (got ",
           f.dose.df$Mean[i], "); using Low_Limit (",
-          f.dose.df$Low_Limit[i], ") instead. If Low_Limit is 0, every ",
+          low_lim, ") instead. If Low_Limit is 0, every ",
           "sampled dose for this stressor will be 0.",
           call. = FALSE
         )
       }
       mn.val <- ifelse(f.dose.df$Mean[i] <= 0,
-        f.dose.df$Low_Limit[i],
+        low_lim,
         f.dose.df$Mean[i]
       )
 
@@ -83,12 +96,16 @@ SystemCapacity <- function(f.dose.df,
           n.sims,
           log(mn.val),
           f.dose.df$SD[i],
-          a = f.dose.df$Low_Limit[i],
-          b = f.dose.df$Up_Limit[i]
+          a = low_lim,
+          b = up_lim
         )
       }
     } else {
 
+      # Normal distribution: an unbounded lower limit is -Inf
+      if (is.na(low_lim)) {
+        low_lim <- -Inf
+      }
 
       # Normal distribution (lognormal is above)
       if (f.dose.df$SD[i] == 0) {
@@ -100,8 +117,8 @@ SystemCapacity <- function(f.dose.df,
             n.sims,
             f.dose.df$Mean[i],
             abs(f.dose.df$SD[i]), # ensure SD is never negative
-            a = f.dose.df$Low_Limit[i],
-            b = f.dose.df$Up_Limit[i]
+            a = low_lim,
+            b = up_lim
           )
       }
     }
@@ -182,11 +199,38 @@ SystemCapacity <- function(f.dose.df,
 
 
   # calculate system.capacity vector (x.dose is a vector)
+  mn_est <- f.mean.resp.list[[1]](x.dose)
+  sd_est <- f.mean.resp.list[[2]](x.dose)
+  ll_est <- f.mean.resp.list[[3]](x.dose)
+  ul_est <- f.mean.resp.list[[4]](x.dose)
+
+  # An invalid NON-NA mean capacity (below 0 or above 1 - e.g. a curve
+  # sheet cell of 110%) previously crashed the beta sampler with a bare
+  # "missing value where TRUE/FALSE needed" naming nothing - warn with
+  # the stressor's name. NA means (e.g., from missing dose values - a
+  # normal sparse-data situation) keep the long-standing silent-NA
+  # semantics and do NOT warn (warning per HUC flooded real runs).
+  # Either way the sampler is made safe by zeroing the SD for those
+  # draws: the deterministic branch passes the mean through, clamped to
+  # the curve limits (NA stays NA; strict_na semantics take over).
+  bad_rng <- !is.na(mn_est) & (mn_est < 0 | mn_est > 1)
+  if (any(bad_rng)) {
+    warning(
+      "Stressor '", f.main.df$Stressors[1], "': ", sum(bad_rng),
+      " sampled dose(s) produced a mean system capacity below 0% or ",
+      "above 100%. Check the stressor-response worksheet values are ",
+      "between 0 and 100.",
+      call. = FALSE
+    )
+  }
+  neutralize <- bad_rng | (is.na(mn_est) & !is.na(sd_est) & sd_est > 0)
+  sd_est[neutralize] <- 0
+
   sys.capacity <- tbeta_rnd(
-    mn_est = f.mean.resp.list[[1]](x.dose),
-    sd_est = f.mean.resp.list[[2]](x.dose),
-    low.limit = f.mean.resp.list[[3]](x.dose),
-    up.limit = f.mean.resp.list[[4]](x.dose)
+    mn_est = mn_est,
+    sd_est = sd_est,
+    low.limit = ll_est,
+    up.limit = ul_est
   )
 
 

@@ -21,7 +21,7 @@ JoeModel_Run(
 
 \item{MC_sims}{numeric. set number of Monte Carlo simulations for the Joe Model.}
 
-\item{stressors}{(optional) character vector of stressor names to include in the Joe Model. Leave the default value as NA if you wish to include all stressors applicable to the adult life stage or provide a character vector of stressors if you only want to run the model on a subset of the stressors.}
+\item{stressors}{(optional) character vector of stressor names to include in the Joe Model. Leave the default value as NA if you wish to include all stressors (and all interaction matrices) or provide a character vector if you only want to run the model on a subset. The selection scopes BOTH regular stressors and two-stressor interaction matrices (use the MInt_ sheet name to select a matrix): only selected items contribute to the cumulative effect. Matrix-only selections are supported - the matrix's two axis stressors are computed internally to feed the interaction surface but are excluded from the CE unless they are also selected. When a matrix and its main-effect stressors are BOTH selected, the matrix's Main_Effect setting governs composition exactly as in a full run ("Included" absorbs the mains into the matrix - never double-counted; "Excluded" keeps them standalone alongside the matrix). To run main effects without their matrix, simply leave the matrix out of the selection.}
 
 \item{adult_sys_cap}{Should the Joe Model be run only with variables identified for \code{adult} system capacity.}
 

@@ -50,21 +50,21 @@ stage_probs <- function(x, y) {
 }
 
 
-#' dd_calc
-#'
-#' @keywords internal
-dd_calc <- function(dat, varNames, Nmat) {
-  Nstage <- NULL
-  temp <- list()
-  for (i in 1:Nstage)
-  {
-    temp[[i]] <-
-      eval(as.expression(sapply(dd_stage(), proc)), c(dat, x = Nmat[, i]))
-  }
-  surv <- unlist(temp)
-  names(surv) <- varNames
-  return(surv)
-}
+# dd_calc: commented out 2026-09-23 - dead code, see RESOLVED_ISSUES.
+# Never called anywhere (superseded by d.vec.f) and carried a latent bug
+# (Nstage <- NULL followed by 1:Nstage).
+# dd_calc <- function(dat, varNames, Nmat) {
+#   Nstage <- NULL
+#   temp <- list()
+#   for (i in 1:Nstage)
+#   {
+#     temp[[i]] <-
+#       eval(as.expression(sapply(dd_stage(), proc)), c(dat, x = Nmat[, i]))
+#   }
+#   surv <- unlist(temp)
+#   names(surv) <- varNames
+#   return(surv)
+# }
 
 
 #' E_est
@@ -87,12 +87,12 @@ E_est <- function(N, dat, eps = dat[["eps"]]) {
 #' @details  Egg count - number of egg produced by pop annually for anadromous
 #'
 #' @keywords internal
-E_est_anadromous <- function(N, dat, spanwing_years) {
+E_est_anadromous <- function(N, dat, spawning_years) {
   # (u4 * events * eps4 * sE * s0 * sR)/int
-  E <- numeric(length(spanwing_years))
+  E <- numeric(length(spawning_years))
 
-  for (i in 1:length(spanwing_years)) {
-    x <- spanwing_years[i]
+  for (i in 1:length(spawning_years)) {
+    x <- spawning_years[i]
     m_func <- paste0("(u", x, " * events * eps", x, " * sE * s0 * sR)/int")
     # Update values in string
     m_func <- paste0(
@@ -252,8 +252,8 @@ d.vec.f <- function(df, Ks, Nv) {
     names(sN) <- names(df$S)
 
     # add on spawning stages
-    spawn_yr_names <- paste0("b", df$spanwing_years)
-    sB <- df$spanwing_years
+    spawn_yr_names <- paste0("b", df$spawning_years)
+    sB <- df$spawning_years
     # Since spawners (b) are a terminal stage class compensation
     # ratios have no effect on the projection matrix
     sB <- rep(1, length(sB))
@@ -392,11 +392,13 @@ s_rand <- function(mn, cv, rho) {
 
 
   # START MJB: Fix issue if surv 1.0 returns NA then 0
-  # allow 100% survival with no variability
+  # allow 100% survival with no variability. A mean of exactly 0
+  # (legitimate for a terminal stage) also passes through as 0 rather
+  # than NA.
   check_nas <- function(x, y) {
     if (is.na(x)) {
       # check if sample is NA
-      if (y > 0 & y <= 1.0) {
+      if (y >= 0 & y <= 1.0) {
         return(y)
       } else {
         return(x)
@@ -485,13 +487,13 @@ beta_stretch_val <- function(mn,
 }
 
 
-#' harm_k
-#'
-#' @keywords internal
-harm_k <- function(dat, stressors, Nstage, Korig) {
-  names(K_impacted) <- names(Korig)
-  return(K_impacted)
-}
+# harm_k: commented out 2026-09-23 - dead code, see RESOLVED_ISSUES.
+# Never called anywhere; referenced an undefined variable (K_impacted)
+# and would have errored on any call.
+# harm_k <- function(dat, stressors, Nstage, Korig) {
+#   names(K_impacted) <- names(Korig)
+#   return(K_impacted)
+# }
 
 
 

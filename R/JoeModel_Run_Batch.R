@@ -138,7 +138,7 @@ JoeModel_Run_Batch <-
     for (s in 1:length(sims)) {
 
       this_sim <- sims[s]
-      paste0("running scenario... ", this_sim)
+      message("running scenario... ", this_sim)
 
       # Adjust stressor magnitude values
       adj_sm <- raw_sm

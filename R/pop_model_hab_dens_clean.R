@@ -67,6 +67,28 @@ pop_model_hab_dens_clean <- function(hab_dens = NA, keep_cv = TRUE) {
 
   }
 
+  # Validate the normalized capacity column names: anything that is not a
+  # recognized stage / spawner capacity column is an authoring error (a
+  # stray column like "k_notes" previously had "_mean" silently appended
+  # and flowed onward as if it were a capacity estimate). Matching is
+  # case-insensitive on input (columns were lowercased above).
+  final_names <- colnames(hab_dens)[keepers]
+  recognized <-
+    grepl("^k_stage_(0|[0-9]+|pb_[0-9]+|b_[0-9]+|b)_(mean|cv)$",
+          tolower(final_names))
+  if (any(!recognized)) {
+    stop(
+      "Unrecognized capacity column name(s) in the habitat capacity file: ",
+      paste(unique(final_names[!recognized]), collapse = ", "),
+      ". Capacity columns must be named k_stage_<n>_mean (e.g., ",
+      "k_stage_1_mean), k_stage_0_mean, k_stage_pb_<n>_mean / ",
+      "k_stage_b_<n>_mean (anadromous), or k_stage_B_mean / k_spawners ",
+      "(spawner capacity), each with an optional matching _cv column. ",
+      "Remove or rename any other k_ columns.",
+      call. = FALSE
+    )
+  }
+
   hab_dens <- hab_dens[, c(1, 2, keepers), drop = FALSE]
 
   # Drop orphan cv columns (no matching _mean column)

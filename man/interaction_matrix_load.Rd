@@ -21,4 +21,10 @@ Load interaction Excel Matrices
 Load 2-factor interaction matrices from
 Excel workbook (if they exist). This function is run from
 within StressorResponseWorkbook().
+
+Only the "Mean System Capacity (\%)" block is required on each MInt_
+sheet (and must be completely filled). The "SD", "low.limit" and
+"up.limit" blocks are optional: an absent block - or blank cells
+within one - defaults to SD = 0 (deterministic), low.limit = 0 and
+up.limit = 100.
 }

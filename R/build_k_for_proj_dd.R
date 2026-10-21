@@ -274,7 +274,7 @@ build_k_for_proj_dd <- function(habitat_dd_k,
       # Non-spawner classes
 
       life_histories$stage_names
-      life_histories$spanwing_years
+      life_histories$spawning_years
 
       bh_dd_stages_set <- list()
       bh_dd_stages_set_qa <- list()

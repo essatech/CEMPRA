@@ -35,8 +35,18 @@ Carlo simulations for the Population Model.}
 
 \item{stressors}{(optional) character vector of stressor
 names to include in the Population Model. Leave the default
-value as NA if you wish to include all stressors
-applicable to the population model.}
+value as NA if you wish to include all stressors (and all
+two-stressor interaction matrices) applicable to the population
+model. The selection scopes BOTH regular stressors and interaction
+matrices (use the MInt_ sheet name to select a matrix). A selected
+matrix has its two axis stressors' doses computed internally to
+feed the interpolation, but those mains only contribute their own
+effects if they are also selected. Any combination works: main
+effects only, matrix only, or both (acting multiplicatively). The
+matrix's Main_Effect setting is ignored in the population model -
+the selection is the control. Matrix CE rows are tagged with the
+MInt_ sheet's Life_stages and Parameters header cells (e.g.,
+"stage_1" / "survival").}
 
 \item{output_type}{(optional) character. Set to "full" for all data of "adults" for only adult data.}
 

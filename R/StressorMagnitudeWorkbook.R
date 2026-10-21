@@ -77,6 +77,13 @@ StressorMagnitudeWorkbook <- function(filename = NA, scenario_worksheet = NA) {
     stop(paste0("Bad column names. Expect columns to be ", paste(target_columns, collapse = ", ")))
   }
 
+  # Comments is OPTIONAL - create it if absent so downstream rbind
+  # operations (the Total_Mortality aggregation writes a Comments field)
+  # cannot fail with a column-count mismatch
+  if (!("Comments" %in% colnames(data))) {
+    data$Comments <- NA
+  }
+
   # Trim whitespace on names and categories; preserve the user's original
   # category label for display/reference
   data$Stressor <- trimws(as.character(data$Stressor))
@@ -122,6 +129,13 @@ StressorMagnitudeWorkbook <- function(filename = NA, scenario_worksheet = NA) {
 
   data$SD <- as.numeric(data$SD)
   data$Mean <- as.numeric(data$Mean)
+
+  # Coerce the limit columns to numeric too: a text-formatted Excel column
+  # (or stray text cell) previously stayed character and crashed the
+  # truncated samplers downstream; blank cells become NA, which
+  # SystemCapacity() treats as "unbounded"
+  data$Low_Limit <- suppressWarnings(as.numeric(as.character(data$Low_Limit)))
+  data$Up_Limit <- suppressWarnings(as.numeric(as.character(data$Up_Limit)))
 
 
   # --------------------------------------------------------------------------
@@ -182,7 +196,17 @@ StressorMagnitudeWorkbook <- function(filename = NA, scenario_worksheet = NA) {
     nrow(data_mort_new)
 
     if (any(duplicated(data_mort_new$HUC_ID))) {
-      return("Duplicated values for total mortality...")
+      # Historically this "error" was returned as a text string, which
+      # callers carried forward as if it were a dose data frame
+      stop(
+        "Duplicated Total_Mortality rows for the same HUC_ID in the ",
+        "stressor magnitude workbook (HUC_ID: ",
+        paste(unique(data_mort_new$HUC_ID[duplicated(data_mort_new$HUC_ID)]),
+              collapse = ", "),
+        "). Each location may only have one set of Total_Mortality ",
+        "component rows.",
+        call. = FALSE
+      )
     }
 
     # Update summaries

@@ -14,54 +14,99 @@
 #' and sys.cap.
 #' @param adult_sys_cap Should the Joe Model be run only with variables
 #' identified for adult system capacity.
+#' @param keep_main_effects (optional) character vector of main-effect
+#' stressor names that must stay in the returned sc.dose.df even when this
+#' matrix has Main_Effect = "Included" (used by JoeModel_Run when the caller
+#' explicitly selected those stressors). Defaults to none.
 #'
 #' @returns Updated sc.dose.df data frame with system capacity values
 #'
 #'
 #' @export
 #'
-interaction_matrix_sys_cap <- function(MInt, sc.dose.df, adult_sys_cap) {
+interaction_matrix_sys_cap <- function(MInt, sc.dose.df, adult_sys_cap,
+                                       keep_main_effects = character(0)) {
 
   # interaction_matrix_sys_cap() should be run with apply on sr_wb_dat$MInt
 
-  col_var <- MInt$Columns
-  row_var <- MInt$Rows
+  m_name <- as.character(MInt$Matrix_Name)
 
-  # Check if adult filter should be used
-  if(adult_sys_cap) {
-    if(MInt$Life_stages != "adult") {
+  # Axis stressor names - trimmed so a stray space in the worksheet cell
+  # cannot cause a mismatch against the dose data
+  col_var <- trimws(as.character(MInt$Columns))
+  row_var <- trimws(as.character(MInt$Rows))
+
+  # Check if adult filter should be used (case/whitespace-insensitive;
+  # a missing Life_stages defaults to adult at load)
+  if (adult_sys_cap) {
+    life_stage <- tolower(trimws(as.character(MInt$Life_stages)))
+    if (!is.na(life_stage) && nchar(life_stage) > 0 && life_stage != "adult") {
       return(sc.dose.df)
     }
   }
 
+  # Both axis stressors must be present in the dose data - a partial match
+  # previously crashed downstream with "undefined columns selected"
+  have_axis <- c(col_var, row_var) %in% unique(as.character(sc.dose.df$Stressor))
+  if (!all(have_axis)) {
+    message(
+      "Interaction matrix '", m_name, "' skipped: axis stressor(s) not ",
+      "available in the dose data: ",
+      paste(c(col_var, row_var)[!have_axis], collapse = ", ")
+    )
+    return(sc.dose.df)
+  }
+
+  # Axis dose values from the mean matrix
   mmat <- MInt$mat_msc
   col_vals <- colnames(mmat)
   col_vals <- col_vals[2:length(col_vals)]
-  col_vals <- as.numeric(as.character(col_vals))
+  col_vals <- suppressWarnings(as.numeric(as.character(col_vals)))
 
   row_vals <- unlist(mmat[, 1])
-  row_vals <- as.numeric(as.character(row_vals))
+  row_vals <- suppressWarnings(as.numeric(as.character(row_vals)))
   names(row_vals) <- NULL
 
-  # Extract and clean inner matrix
-  Z <- mmat[, 2:ncol(mmat)]
-  Z <- as.matrix(Z)
-  colnames(Z) <- NULL
-  rownames(Z) <- NULL
-
+  # Drop non-numeric axis entries (e.g., stray note columns picked up by
+  # the loader) and sort both axes ascending - pracma::interp2 requires
+  # non-decreasing axis vectors and previously crashed on matrices
+  # authored with descending dose values
+  keep_c <- which(!is.na(col_vals))
+  keep_r <- which(!is.na(row_vals))
+  if (length(keep_c) < length(col_vals) || length(keep_r) < length(row_vals)) {
+    message(
+      "Interaction matrix '", m_name, "': dropping ",
+      (length(col_vals) - length(keep_c)) + (length(row_vals) - length(keep_r)),
+      " non-numeric axis entr(ies)."
+    )
+  }
+  if (length(keep_c) < 2 || length(keep_r) < 2) {
+    message("Interaction matrix '", m_name,
+            "' skipped: fewer than two numeric dose values on an axis.")
+    return(sc.dose.df)
+  }
+  ord_c <- keep_c[order(col_vals[keep_c])]
+  ord_r <- keep_r[order(row_vals[keep_r])]
+  col_vals <- col_vals[ord_c]
+  row_vals <- row_vals[ord_r]
 
   # Get dose values across HUCs and simulations
   dose_mat <- sc.dose.df[sc.dose.df$Stressor %in% c(col_var, row_var), ]
 
-  # If main effect variables are unavailable or
-  # already used in another matrix return original (skip)
-  if(nrow(dose_mat) == 0) {
-    message("Main effects not available...")
-    return(sc.dose.df)
+  # Duplicate rows for the same HUC/simulation/stressor would make dcast()
+  # aggregate doses to row COUNTS (garbage values) - keep the first row
+  dup_rows <- duplicated(dose_mat[, c("HUC", "simulation", "Stressor")])
+  if (any(dup_rows)) {
+    message(
+      "Interaction matrix '", m_name, "': duplicate dose rows detected ",
+      "for the same HUC/simulation/stressor - using the first row of each."
+    )
+    dose_mat <- dose_mat[!dup_rows, ]
   }
 
   # Prep format
-  dose_mat_wide <- reshape2::dcast(dose_mat, HUC + simulation ~ Stressor, value.var = "dose")
+  dose_mat_wide <- reshape2::dcast(dose_mat, HUC + simulation ~ Stressor,
+                                   value.var = "dose")
 
   # col values (x)
   xp <- dose_mat_wide[, col_var]
@@ -74,40 +119,45 @@ interaction_matrix_sys_cap <- function(MInt, sc.dose.df, adult_sys_cap) {
   yp <- ifelse(yp > max(row_vals), max(row_vals), yp)
   yp <- ifelse(yp < min(row_vals), min(row_vals), yp)
 
-  # Run two-dimensional Data Interpolation
-  preds <- pracma::interp2(x = col_vals, y = row_vals, Z = Z, xp = xp, yp = yp, method = "linear")
+  # NA doses cannot be interpolated (interp2 errors out) - those
+  # HUC/simulation combinations get NA system capacity instead
+  ok <- !is.na(xp) & !is.na(yp)
+  if (any(!ok)) {
+    message(
+      "Interaction matrix '", m_name, "': NA dose values for ", sum(!ok),
+      " HUC-simulation combination(s) - matrix system capacity is NA there."
+    )
+  }
 
-  # Get the SD (if any) and resample
-  mmat_sd <- MInt$mat_sd
-  Z_sd <- mmat_sd[, 2:ncol(mmat_sd)]
-  Z_sd <- as.matrix(Z_sd)
-  colnames(Z_sd) <- NULL
-  rownames(Z_sd) <- NULL
+  # Run two-dimensional Data Interpolation over one block (mean, SD,
+  # low limit or up limit), aligned to the cleaned/sorted axes
+  interp_surface <- function(block) {
+    Z <- as.matrix(block[, 2:ncol(block)])
+    colnames(Z) <- NULL
+    rownames(Z) <- NULL
+    Z <- Z[ord_r, ord_c, drop = FALSE]
+    mode(Z) <- "numeric"
+    out <- rep(NA_real_, length(xp))
+    if (any(ok)) {
+      out[ok] <- pracma::interp2(
+        x = col_vals, y = row_vals, Z = Z,
+        xp = xp[ok], yp = yp[ok], method = "linear"
+      )
+    }
+    out
+  }
 
-  preds_sd <- pracma::interp2(x = col_vals, y = row_vals, Z = Z_sd, xp = xp, yp = yp, method = "linear")
-
-  # Get the lower limit
-  mmat <- MInt$mat_ll
-  Z <- mmat[, 2:ncol(mmat)]
-  Z <- as.matrix(Z)
-  colnames(Z) <- NULL
-  rownames(Z) <- NULL
-  preds_ll <- pracma::interp2(x = col_vals, y = row_vals, Z = Z, xp = xp, yp = yp, method = "linear")
-
-  # Get the upper limit
-  mmat <- MInt$mat_ul
-  Z <- mmat[, 2:ncol(mmat)]
-  Z <- as.matrix(Z)
-  colnames(Z) <- NULL
-  rownames(Z) <- NULL
-  preds_ul <- pracma::interp2(x = col_vals, y = row_vals, Z = Z, xp = xp, yp = yp, method = "linear")
+  preds <- interp_surface(MInt$mat_msc)
+  preds_sd <- interp_surface(MInt$mat_sd)
+  preds_ll <- interp_surface(MInt$mat_ll)
+  preds_ul <- interp_surface(MInt$mat_ul)
 
   # calculate system.capacity vector (x.dose is a vector)
   sys.capacity <- tbeta_rnd(
-    mn_est = preds/100,
-    sd_est = preds_sd/100,
-    low.limit = preds_ll/100,
-    up.limit = preds_ul/100
+    mn_est = preds / 100,
+    sd_est = preds_sd / 100,
+    low.limit = preds_ll / 100,
+    up.limit = preds_ul / 100
   )
 
   sys.capacity <- round(sys.capacity, 4)
@@ -116,7 +166,7 @@ interaction_matrix_sys_cap <- function(MInt, sc.dose.df, adult_sys_cap) {
   # Update the corresponding data objects
   mat_data <- data.frame(
     HUC = dose_mat_wide$HUC,
-    Stressor = MInt$Matrix_Name,
+    Stressor = m_name,
     simulation = dose_mat_wide$simulation,
     dose = NA,
     sys.cap = sys.capacity
@@ -124,16 +174,18 @@ interaction_matrix_sys_cap <- function(MInt, sc.dose.df, adult_sys_cap) {
 
   # Determine if main effects should be included or excluded
   main_effect <- tolower(trimws(MInt$Main_Effect))
-  if(is.na(main_effect)) main_effect <- "included"
+  if (is.na(main_effect)) main_effect <- "included"
 
-  if(main_effect == "excluded") {
+  if (main_effect == "excluded") {
     # Keep main effects alongside the interaction matrix result
     sc.dose.df.ret <- sc.dose.df
     sc.dose.df.ret <- rbind(sc.dose.df.ret, mat_data)
   } else {
-    # Default: main effects are included in the matrix,
-    # so drop standalone main effects to avoid double-counting
-    sc.dose.df.ret <- sc.dose.df[!(sc.dose.df$Stressor %in% c(col_var, row_var)), ]
+    # Default: main effects are included in the matrix, so drop standalone
+    # main effects to avoid double-counting - except any the caller
+    # explicitly asked to keep (see JoeModel_Run's `stressors` argument)
+    drop_vars <- setdiff(c(col_var, row_var), keep_main_effects)
+    sc.dose.df.ret <- sc.dose.df[!(sc.dose.df$Stressor %in% drop_vars), ]
     sc.dose.df.ret <- rbind(sc.dose.df.ret, mat_data)
   }
 

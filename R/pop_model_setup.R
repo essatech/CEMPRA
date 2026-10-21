@@ -129,6 +129,22 @@ pop_model_setup <- function(life_cycles = NA) {
 
   stage_names <- paste("stage", 1:Nstage, sep = "_")
 
+  # A survival row that is present but BLANK previously crashed far
+  # downstream with "missing value where TRUE/FALSE needed" - name the
+  # offending row(s) up front instead
+  surv_req <- paste("surv", 1:Nstage, sep = "_")
+  surv_chk <- suppressWarnings(as.numeric(
+    life_pars[match(surv_req, life_pars$Name), "Value"]
+  ))
+  if (any(is.na(surv_chk))) {
+    stop(
+      "Life cycles input: blank or non-numeric survival value(s) for ",
+      "row(s): ", paste(surv_req[is.na(surv_chk)], collapse = ", "),
+      ". Fill in a numeric survival (0-1) for each stage.",
+      call. = FALSE
+    )
+  }
+
   survival <-
     life_pars[match(paste("surv", 1:Nstage, sep = "_"), life_pars$Name), "Value"]
   years <-
@@ -509,7 +525,7 @@ pop_model_setup <- function(life_cycles = NA) {
   ret_obj$Nstage <- Nstage
   ret_obj$density_stage_symbolic <- density_stage_symbolic
   ret_obj$possible_error_state <- possible_error_state
-  ret_obj$spanwing_years <- NULL
+  ret_obj$spawning_years <- NULL
 
 
   return(ret_obj)
