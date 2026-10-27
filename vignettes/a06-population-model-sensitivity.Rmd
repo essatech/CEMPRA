@@ -176,15 +176,26 @@ The LTRE range analysis requires an **extended life cycle CSV** with additional 
 |--------|-------------|
 | `Parameters` | Human-readable parameter description |
 | `Name` | Parameter code used by the model (e.g., `SE`, `surv_1`) |
-| `Value` | Central value (used as mean for normal/beta, mode for PERT) |
+| `Value` | Central value (mean for normal/beta, mode for PERT, ignored for uniform) |
 | `Notes` | Optional notes or data sources |
 | `Test_Parameter` | `TRUE` to include in sensitivity analysis, `FALSE` to hold fixed |
-| `Distribution` | Sampling distribution: `"normal"`, `"beta"`, or `"pert"` |
-| `SD` | Standard deviation (required for normal and beta distributions) |
+| `Distribution` | Sampling distribution: `"normal"`, `"beta"`, `"pert"`, or `"uniform"` (see below) |
+| `SD` | Standard deviation (required for normal and beta; ignored for pert and uniform) |
 | `Low_Limit` | Lower bound for sampling |
 | `Up_Limit` | Upper bound for sampling |
 
 Parameters marked `Test_Parameter = FALSE` (e.g., `Nstage`, compensation ratios) are held constant across all simulations. Only parameters marked `TRUE` are sampled and included in the PRCC analysis.
+
+#### Distribution types
+
+All four distributions keep every draw inside `[Low_Limit, Up_Limit]`; they differ in which columns they read and in the shape of the draws.
+
+| Distribution | Reads | Shape and typical use |
+|---|---|---|
+| `"normal"` | `Value` (mean), `SD`, limits | Truncated normal. Symmetric, bell-shaped uncertainty around a central estimate on any scale (e.g. fecundity). `Value` should lie inside the limits. |
+| `"beta"` | `Value` (mean, 0-1), `SD`, limits | Beta on the 0-1 scale for survival, maturity and other proportions. Draws are clamped to the limits, so let `SD` carry the spread and use the limits as a safety net. |
+| `"pert"` | `Low_Limit` (min), `Value` (mode), `Up_Limit` (max) | PERT, a rescaled beta used in expert elicitation. Density peaks at `Value` and tails to zero at both limits; skewed when `Value` is off-centre. `SD` is ignored. |
+| `"uniform"` | limits only | "Random between": every value in the range is equally likely. `Value` and `SD` are ignored. Use when only a plausible range is known. |
 
 ```{r load_ltre_data, message=FALSE, warning=FALSE}
 # Load the example LTRE input file

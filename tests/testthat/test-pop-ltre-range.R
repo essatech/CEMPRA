@@ -252,3 +252,42 @@ test_that("Test_Parameter handles various TRUE representations", {
   expect_equal(result$metadata$n_parameters_tested, expected_count)
 
 })
+
+
+# ------------------------------------------------------------------
+# "uniform" distribution: random between Low_Limit and Up_Limit,
+# Value and SD ignored
+# ------------------------------------------------------------------
+test_that("uniform distribution samples between limits and ignores Value/SD", {
+
+  lc_file <- system.file("extdata/ltre/life_cycles_input_ltre.csv", package = "CEMPRA")
+  lc <- read.csv(lc_file, stringsAsFactors = FALSE)
+
+  # Test only surv_2 as uniform; put Value and SD deliberately OUTSIDE/garbage
+  lc$Test_Parameter <- FALSE
+  i <- which(lc$Name == "surv_2")
+  lc$Test_Parameter[i] <- TRUE
+  lc$Distribution[i]   <- "Uniform"   # case-insensitive
+  lc$SD[i]             <- NA          # not required
+  lc$Low_Limit[i]      <- 0.30
+  lc$Up_Limit[i]       <- 0.60
+
+  # Need two tested params for PRCC to be well-defined; add eps_3 normal
+  j <- which(lc$Name == "eps_3")
+  lc$Test_Parameter[j] <- TRUE
+
+  res <- suppressMessages(pop_model_ltre_range(lc, n_samples = 200, seed = 7))
+
+  draws <- res$samples$surv_2
+  expect_true(all(draws >= 0.30 & draws <= 0.60))
+  # flat: mean near midpoint, not near the Value
+  expect_lt(abs(mean(draws) - 0.45), 0.03)
+  # spread spans the range (sd of U(a,b) = (b-a)/sqrt(12) ~ 0.0866)
+  expect_lt(abs(sd(draws) - 0.0866), 0.02)
+
+  # A Value outside the limits is harmless for uniform (no warning, no stop)
+  lc$Value[i] <- 0.95
+  expect_silent(suppressMessages(
+    pop_model_ltre_range(lc, n_samples = 50, seed = 7)
+  ))
+})

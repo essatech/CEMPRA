@@ -44,15 +44,62 @@ The input data frame must contain the following columns:
 \describe{
 \item{Parameters}{Parameter description}
 \item{Name}{Parameter name (e.g., "SE", "S0", "surv_1")}
-\item{Value}{Parameter value (used as mean for normal/beta, mode for PERT)}
+\item{Value}{Parameter value. Used as the mean for "normal" and "beta",
+the mode (most likely value) for "pert", and ignored for "uniform".}
 \item{Notes}{Optional notes}
 \item{Test_Parameter}{TRUE/FALSE indicating if parameter should be sampled}
-\item{Distribution}{Distribution type: "normal", "beta", or "pert"}
-\item{SD}{Standard deviation (required for normal and beta distributions)}
-\item{Low_Limit}{Lower bound for sampling}
-\item{Up_Limit}{Upper bound for sampling}
+\item{Distribution}{Distribution type: "normal", "beta", "pert", or
+"uniform" (case-insensitive). See the Distributions section below.}
+\item{SD}{Standard deviation (required for "normal" and "beta"; ignored
+for "pert" and "uniform")}
+\item{Low_Limit}{Lower bound for sampling (required for every tested
+parameter)}
+\item{Up_Limit}{Upper bound for sampling (required for every tested
+parameter)}
 }
 }
+\section{Distributions}{
+
+Every tested parameter is sampled independently, and every draw is
+guaranteed to fall inside \code{[Low_Limit, Up_Limit]}. The four
+distribution types differ in which columns they read and in the shape of
+the draws:
+\describe{
+\item{\code{"normal"}}{Truncated normal. \code{Value} is the mean and
+\code{SD} the standard deviation of the underlying normal; draws are
+restricted to the limits by inverse-CDF sampling (no clumping at the
+bounds). Best when you have a central estimate with symmetric,
+roughly bell-shaped uncertainty. Suitable for any parameter scale
+(e.g. fecundity in the thousands). \code{Value} should lie inside the
+limits; if it does not, every draw collapses to the mean and the
+parameter's PRCC is NA (a warning is issued).}
+\item{\code{"beta"}}{Beta on the 0-1 scale, intended for survival,
+maturity and other proportions. \code{Value} is the mean and
+\code{SD} the standard deviation; the two are converted to beta shape
+parameters with \code{beta_param()} (which caps very large SD
+values). \code{Value} must be strictly between 0 and 1. Draws are
+then clamped to the limits, so narrow limits relative to SD will pile
+mass at the bounds; use limits mainly as a safety net and let SD
+carry the spread.}
+\item{\code{"pert"}}{PERT (a rescaled beta used in expert elicitation).
+\code{Low_Limit} is the minimum, \code{Value} the most likely value
+(mode) and \code{Up_Limit} the maximum; \code{SD} is ignored. The
+density is zero at both limits, peaks at \code{Value}, and can be
+skewed when \code{Value} sits off-centre. The shape parameter is
+fixed at 4, giving a mean of \code{(Low + 4*Value + Up)/6}. Best when
+an expert can state a minimum, a most likely value and a maximum
+but not a standard deviation. \code{Value} must lie within the limits
+(hard error otherwise).}
+\item{\code{"uniform"}}{Uniform ("random between"). Every value in
+\code{[Low_Limit, Up_Limit]} is equally likely; both \code{Value} and
+\code{SD} are ignored for sampling. Use this when only a plausible
+range is known, or to give every parameter an equal-footing range
+screen for PRCC ranking. The parameter's \code{Value} still appears in
+\code{parameter_specs} for reference but has no influence on the
+draws.}
+}
+}
+
 \examples{
 \dontrun{
 library(CEMPRA)

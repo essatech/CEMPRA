@@ -97,6 +97,16 @@ pop_model_dat_clean <- function(dat, nstage_fill = NULL) {
   dat$Value <- ifelse(dat$Value == "FALSE", 0, dat$Value)
 
 
+  # Strip thousands separators (e.g. "2,315" from a formatted Excel
+  # export) so they parse as numbers instead of silently becoming NA.
+  # Commas are removed only where the de-commaed string is a valid
+  # number; anything else is left untouched for the coercion below.
+  val_chr <- trimws(as.character(dat$Value))
+  val_nocomma <- gsub(",", "", val_chr, fixed = TRUE)
+  has_comma <- !is.na(val_chr) & grepl(",", val_chr, fixed = TRUE)
+  is_num <- !is.na(suppressWarnings(as.numeric(val_nocomma)))
+  dat$Value[has_comma & is_num] <- val_nocomma[has_comma & is_num]
+
   # Make sure remaining rows are numeric
   dat$Value <- as.numeric(as.character(dat$Value))
 
