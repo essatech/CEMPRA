@@ -222,6 +222,26 @@ pop_model_setup_anadromous <- function(life_cycles = NA) {
     )
   }
 
+  # A spawning age must be reachable: maturation into B_k flows from
+  # pre-breeder stage (k - 1), which only exists while surv_(k-1) > 0
+  # (Nstage_Pb counts the non-zero survival rows). A mat_k > 0 beyond
+  # that point (e.g. a stale mat_5 = 1 left over from a 5-age profile
+  # after a 4-age profile is loaded) would otherwise crash much later
+  # with the baffling "object 's4' not found".
+  unreachable <- spawning_years[spawning_years - 1 > Nstage_Pb]
+  if (length(unreachable) > 0) {
+    stop(
+      "Maturity row(s) ", paste0("mat_", unreachable, collapse = ", "),
+      " are > 0 but no fish can reach that age: ",
+      paste0("surv_", unreachable - 1, collapse = ", "),
+      " is 0 or missing, so the last pre-breeder age is ", Nstage_Pb,
+      ". Set ", paste0("mat_", unreachable, collapse = ", "),
+      " to 0 (ages beyond the terminal spawning age must have mat = 0), ",
+      "or give the preceding survival row(s) a positive value.",
+      call. = FALSE
+    )
+  }
+
   # First year of spawning
   first_year_spawning <- min(spawning_years)
 

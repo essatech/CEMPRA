@@ -291,3 +291,21 @@ test_that("uniform distribution samples between limits and ignores Value/SD", {
     pop_model_ltre_range(lc, n_samples = 50, seed = 7)
   ))
 })
+
+
+test_that("failed samples report their underlying error message", {
+  lc_file <- system.file("extdata/ltre/life_cycles_input_ltre.csv", package = "CEMPRA")
+  lc <- read.csv(lc_file, stringsAsFactors = FALSE)
+  lc$Test_Parameter <- FALSE
+  i <- which(lc$Name == "surv_2"); lc$Test_Parameter[i] <- TRUE
+  j <- which(lc$Name == "eps_3"); lc$Test_Parameter[j] <- TRUE
+  # Break every sample: a blank maturity row makes setup fail every time
+  lc$Value[lc$Name == "mat_3"] <- NA
+  err <- tryCatch(suppressMessages(pop_model_ltre_range(lc, n_samples = 20, seed = 1)),
+                  error = function(e) conditionMessage(e))
+  expect_true(is.character(err))
+  expect_match(err, "Too few valid samples (0 of 20)", fixed = TRUE)
+  expect_match(err, "Most common error")
+  expect_match(err, "[20x]", fixed = TRUE)
+  expect_match(err, "mat_3")
+})

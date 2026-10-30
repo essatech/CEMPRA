@@ -26,7 +26,9 @@ prob_lambda_gt_1, prob_lambda_lt_1, n_valid, n_failed}
 log_lambda, and all sampled parameter values}
 \item{parameter_specs}{Data frame of parameter specifications for sampled
 parameters}
-\item{metadata}{List with run metadata: n_samples, n_parameters_tested, seed}
+\item{metadata}{List with run metadata: n_samples, n_parameters_tested,
+seed, and failure_reasons (a table of error messages from failed
+samples, NULL when every sample succeeded)}
 }
 }
 \description{

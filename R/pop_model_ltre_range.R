@@ -83,7 +83,9 @@
 #'     log_lambda, and all sampled parameter values}
 #'   \item{parameter_specs}{Data frame of parameter specifications for sampled
 #'     parameters}
-#'   \item{metadata}{List with run metadata: n_samples, n_parameters_tested, seed}
+#'   \item{metadata}{List with run metadata: n_samples, n_parameters_tested,
+#'     seed, and failure_reasons (a table of error messages from failed
+#'     samples, NULL when every sample succeeded)}
 #' }
 #'
 #' @importFrom rlang .data
@@ -308,6 +310,7 @@ pop_model_ltre_range <- function(life_cycle_params,
 
   lambda_values <- numeric(n_samples)
   log_lambda_values <- numeric(n_samples)
+  sample_errors <- character(n_samples)   # error message per failed sample
 
   # Prepare base life cycles data frame (standard columns only)
   base_cols <- c("Parameters", "Name", "Value", "Notes")
@@ -342,6 +345,7 @@ pop_model_ltre_range <- function(life_cycle_params,
     }, error = function(e) {
       lambda_values[s] <<- NA
       log_lambda_values[s] <<- NA
+      sample_errors[s] <<- conditionMessage(e)
     })
 
     # Progress message
@@ -359,14 +363,27 @@ pop_model_ltre_range <- function(life_cycle_params,
   n_valid <- sum(valid_idx)
   n_failed <- sum(!valid_idx)
 
+  # Summarise WHY samples failed (most common messages first) so the user
+  # sees the real cause instead of an opaque count
+  failure_summary <- character(0)
+  if (n_failed > 0) {
+    err_tab <- sort(table(sample_errors[!valid_idx]), decreasing = TRUE)
+    top <- utils::head(err_tab, 3)
+    failure_summary <- paste0(" Most common error", if (length(top) > 1) "s" else "",
+                              ": ", paste0("[", as.integer(top), "x] ",
+                                           names(top), collapse = " | "))
+  }
+
   if (n_valid < 10) {
-    stop("Too few valid samples (", n_valid, "). ",
-         "Check your parameter specifications for invalid combinations.")
+    stop("Too few valid samples (", n_valid, " of ", n_samples, "). ",
+         "Check your parameter specifications for invalid combinations.",
+         failure_summary, call. = FALSE)
   }
 
   if (n_failed > 0) {
     warning(n_failed, " samples failed (", round(100 * n_failed / n_samples, 1),
-            "%). PRCC calculated on ", n_valid, " valid samples.")
+            "%). PRCC calculated on ", n_valid, " valid samples.",
+            failure_summary, call. = FALSE)
   }
 
   # Calculate PRCC using log(lambda) as recommended for multiplicative processes
@@ -431,7 +448,8 @@ pop_model_ltre_range <- function(life_cycle_params,
     metadata = list(
       n_samples = n_samples,
       n_parameters_tested = n_test_params,
-      seed = seed
+      seed = seed,
+      failure_reasons = if (n_failed > 0) table(sample_errors[!valid_idx]) else NULL
     )
   )
 
